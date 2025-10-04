@@ -22,7 +22,6 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
 import streamlit as st
 import pandas as pd
-# Removed Plotly imports - using Streamlit native charts instead
 from apify_client import ApifyClient
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
