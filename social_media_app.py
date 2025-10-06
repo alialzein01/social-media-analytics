@@ -152,6 +152,13 @@ def analyze_sentiment_placeholder(text: str) -> str:
 # DATA NORMALIZATION
 # ============================================================================
 
+def _to_naive_dt(x):
+    """Convert input to timezone-naive datetime, returning None on failure."""
+    ts = pd.to_datetime(x, errors="coerce", utc=True)
+    if pd.isna(ts):
+        return None
+    return ts.tz_convert(None)
+
 def normalize_post_data(raw_data: List[Dict], platform: str) -> List[Dict]:
     """
     Normalize actor response into consistent schema.
@@ -208,20 +215,8 @@ def normalize_post_data(raw_data: List[Dict], platform: str) -> List[Dict]:
                     'comments_list': item.get('commentsList', []) or item.get('comments_data', [])
                 }
             
-            # Parse timestamp if string or int
-            if isinstance(post['published_at'], str):
-                try:
-                    post['published_at'] = pd.to_datetime(post['published_at'])
-                except:
-                    post['published_at'] = datetime.now()
-            elif isinstance(post['published_at'], (int, float)):
-                try:
-                    # Handle Unix timestamp
-                    post['published_at'] = pd.to_datetime(post['published_at'], unit='s')
-                except:
-                    post['published_at'] = datetime.now()
-            elif post['published_at'] is None or post['published_at'] == '':
-                post['published_at'] = datetime.now()
+            # Parse timestamp using robust helper
+            post['published_at'] = _to_naive_dt(post['published_at'])
             
             # Store original post URL for later comment fetching
             post_url = item.get('url') or item.get('postUrl') or item.get('link') or item.get('facebookUrl')
@@ -1279,11 +1274,13 @@ def main():
         display_df = df[['published_at', 'text', 'likes', 'comments_count', 'shares_count']].copy()
         display_df['text'] = display_df['text'].str[:100] + '...'
         
-        # Handle timezone-aware datetime objects for display
+        # Handle timezone-aware datetime objects and None values for display
         display_df['published_at'] = display_df['published_at'].apply(
             lambda x: x.tz_localize(None) if hasattr(x, 'tz') and x.tz is not None else x
         )
-        display_df['published_at'] = pd.to_datetime(display_df['published_at']).dt.strftime('%Y-%m-%d %H:%M')
+        display_df['published_at'] = display_df['published_at'].apply(
+            lambda x: x.strftime('%Y-%m-%d %H:%M') if pd.notna(x) else 'Unknown'
+        )
         display_df.columns = ['Date', 'Caption', 'Likes', 'Comments', 'Shares']
         
         st.dataframe(display_df, use_container_width=True, height=300)
@@ -1304,11 +1301,15 @@ def main():
             col1, col2 = st.columns([2, 1])
             with col1:
                 st.markdown(f"**Caption:** {selected_post['text']}")
-                # Handle timezone-aware datetime objects for display
+                # Handle timezone-aware datetime objects and None values for display
                 pub_date = selected_post['published_at']
-                if hasattr(pub_date, 'tz') and pub_date.tz is not None:
-                    pub_date = pub_date.tz_localize(None)
-                st.markdown(f"**Published:** {pub_date}")
+                if pub_date is None:
+                    pub_date_display = "Unknown"
+                else:
+                    if hasattr(pub_date, 'tz') and pub_date.tz is not None:
+                        pub_date = pub_date.tz_localize(None)
+                    pub_date_display = pub_date.strftime('%Y-%m-%d %H:%M') if pd.notna(pub_date) else "Unknown"
+                st.markdown(f"**Published:** {pub_date_display}")
             
             with col2:
                 st.metric("Shares", selected_post['shares_count'])
