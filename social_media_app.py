@@ -18,6 +18,8 @@ Instagram, and YouTube for the current month.
 
 import os
 import re
+import json
+import glob
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
 import streamlit as st
@@ -231,6 +233,228 @@ def filter_current_month(posts: List[Dict]) -> List[Dict]:
     
     return filtered
 
+def calculate_total_reactions(posts: List[Dict]) -> int:
+    """Calculate total reactions across all posts."""
+    total_reactions = 0
+    for post in posts:
+        reactions = post.get('reactions', {})
+        if isinstance(reactions, dict):
+            total_reactions += sum(reactions.values())
+        elif isinstance(reactions, int):
+            total_reactions += reactions
+    return total_reactions
+
+def calculate_average_engagement(posts: List[Dict]) -> float:
+    """Calculate average engagement per post (likes + comments + shares + reactions)."""
+    if not posts:
+        return 0.0
+    
+    total_engagement = 0
+    for post in posts:
+        # Ensure numeric values
+        likes = post.get('likes', 0)
+        if isinstance(likes, list):
+            likes = len(likes)  # If likes is a list, count the items
+        elif not isinstance(likes, (int, float)):
+            likes = 0
+        
+        comments = post.get('comments_count', 0)
+        if isinstance(comments, list):
+            comments = len(comments)
+        elif not isinstance(comments, (int, float)):
+            comments = 0
+        
+        shares = post.get('shares_count', 0)
+        if isinstance(shares, list):
+            shares = len(shares)
+        elif not isinstance(shares, (int, float)):
+            shares = 0
+        
+        reactions = post.get('reactions', {})
+        
+        # Calculate reactions total
+        reactions_total = 0
+        if isinstance(reactions, dict):
+            reactions_total = sum(reactions.values())
+        elif isinstance(reactions, int):
+            reactions_total = reactions
+        elif isinstance(reactions, list):
+            reactions_total = len(reactions)
+        
+        # Total engagement = likes + comments + shares + reactions
+        total_engagement += likes + comments + shares + reactions_total
+    
+    return total_engagement / len(posts)
+
+def aggregate_all_comments(posts: List[Dict]) -> List[str]:
+    """
+    Aggregate all comments from all posts into a single list.
+    Returns list of comment text strings.
+    """
+    all_comments = []
+    
+    for post in posts:
+        comments_list = post.get('comments_list', [])
+        
+        if isinstance(comments_list, list):
+            for comment in comments_list:
+                if isinstance(comment, str):
+                    all_comments.append(comment)
+                elif isinstance(comment, dict):
+                    # Extract text from comment object
+                    text = comment.get('text') or comment.get('comment') or comment.get('message', '')
+                    if text and text.strip():
+                        all_comments.append(text)
+        elif isinstance(comments_list, int):
+            # If comments_list is just a count, we can't extract individual comments
+            continue
+    
+    return all_comments
+
+def analyze_all_sentiments(comments: List[str]) -> Dict[str, int]:
+    """
+    Analyze sentiment for all comments and return count by sentiment type.
+    Returns dict with 'positive', 'negative', 'neutral' counts.
+    """
+    sentiment_counts = {'positive': 0, 'negative': 0, 'neutral': 0}
+    
+    for comment in comments:
+        if comment and comment.strip():
+            sentiment = analyze_sentiment_placeholder(comment)
+            sentiment_counts[sentiment] += 1
+    
+    return sentiment_counts
+
+# ============================================================================
+# FILE OPERATIONS
+# ============================================================================
+
+def save_data_to_files(raw_data: List[Dict], normalized_data: List[Dict], platform: str) -> tuple[str, str]:
+    """
+    Save raw and processed data to files.
+    Returns tuple of (json_file_path, csv_file_path)
+    """
+    try:
+        # Create timestamp for file naming
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        
+        # Ensure directories exist
+        os.makedirs("data/raw", exist_ok=True)
+        os.makedirs("data/processed", exist_ok=True)
+        
+        # Save raw JSON data
+        json_filename = f"data/raw/{platform.lower()}_{timestamp}.json"
+        with open(json_filename, 'w', encoding='utf-8') as f:
+            json.dump(raw_data, f, ensure_ascii=False, indent=2, default=str)
+        
+        # Prepare CSV data with required columns
+        csv_data = []
+        for post in normalized_data:
+            csv_row = {
+                'post_id': post.get('post_id', ''),
+                'published_at': post.get('published_at', ''),
+                'text': post.get('text', ''),
+                'likes': post.get('likes', 0),
+                'comments_count': post.get('comments_count', 0),
+                'shares_count': post.get('shares_count', 0),
+                'reactions': json.dumps(post.get('reactions', {}), ensure_ascii=False),
+                'comments_list': json.dumps(post.get('comments_list', []), ensure_ascii=False)
+            }
+            csv_data.append(csv_row)
+        
+        # Save processed CSV data
+        csv_filename = f"data/processed/{platform.lower()}_{timestamp}.csv"
+        df = pd.DataFrame(csv_data)
+        df.to_csv(csv_filename, index=False, encoding='utf-8')
+        
+        return json_filename, csv_filename
+        
+    except Exception as e:
+        st.error(f"Error saving files: {str(e)}")
+        return None, None
+
+def load_data_from_file(file_path: str) -> Optional[List[Dict]]:
+    """
+    Load data from a saved file (JSON or CSV).
+    Returns normalized data in the same format as from API.
+    """
+    try:
+        if file_path.endswith('.json'):
+            # Load raw JSON data
+            with open(file_path, 'r', encoding='utf-8') as f:
+                raw_data = json.load(f)
+            
+            # Extract platform from filename
+            filename = os.path.basename(file_path)
+            platform = filename.split('_')[0].title()
+            
+            # Normalize the data
+            normalized_data = normalize_post_data(raw_data, platform)
+            return normalized_data
+            
+        elif file_path.endswith('.csv'):
+            # Load processed CSV data
+            df = pd.read_csv(file_path, encoding='utf-8')
+            
+            # Convert back to list of dictionaries
+            normalized_data = []
+            for _, row in df.iterrows():
+                post = {
+                    'post_id': row.get('post_id', ''),
+                    'published_at': pd.to_datetime(row.get('published_at', '')),
+                    'text': row.get('text', ''),
+                    'likes': int(row.get('likes', 0)),
+                    'comments_count': int(row.get('comments_count', 0)),
+                    'shares_count': int(row.get('shares_count', 0)),
+                    'reactions': json.loads(row.get('reactions', '{}')),
+                    'comments_list': json.loads(row.get('comments_list', '[]'))
+                }
+                normalized_data.append(post)
+            
+            return normalized_data
+            
+    except Exception as e:
+        st.error(f"Error loading file: {str(e)}")
+        return None
+
+def get_saved_files() -> Dict[str, List[str]]:
+    """
+    Get list of saved files organized by platform.
+    Returns dict with platform as key and list of file paths as value.
+    """
+    try:
+        files = {
+            'Facebook': [],
+            'Instagram': [],
+            'YouTube': []
+        }
+        
+        # Get JSON files from raw directory
+        json_files = glob.glob("data/raw/*.json")
+        for file_path in json_files:
+            filename = os.path.basename(file_path)
+            platform = filename.split('_')[0].title()
+            if platform in files:
+                files[platform].append(file_path)
+        
+        # Get CSV files from processed directory
+        csv_files = glob.glob("data/processed/*.csv")
+        for file_path in csv_files:
+            filename = os.path.basename(file_path)
+            platform = filename.split('_')[0].title()
+            if platform in files:
+                files[platform].append(file_path)
+        
+        # Sort files by modification time (newest first)
+        for platform in files:
+            files[platform].sort(key=lambda x: os.path.getmtime(x), reverse=True)
+        
+        return files
+        
+    except Exception as e:
+        st.error(f"Error getting saved files: {str(e)}")
+        return {'Facebook': [], 'Instagram': [], 'YouTube': []}
+
 # ============================================================================
 # APIFY INTEGRATION
 # ============================================================================
@@ -359,7 +583,7 @@ def create_reaction_pie_chart(reactions: Dict[str, int]):
     reactions_df = reactions_df.set_index('Reaction')
     st.bar_chart(reactions_df)
 
-def create_wordcloud(comments: List[str]):
+def create_wordcloud(comments: List[str], width: int = 800, height: int = 400, figsize: tuple = (10, 5)):
     """Generate and display word cloud from comments."""
     if not comments:
         st.info("No comments available for word cloud")
@@ -375,8 +599,8 @@ def create_wordcloud(comments: List[str]):
     # Generate word cloud
     # Use a font that supports Arabic (you may need to specify font_path)
     wordcloud = WordCloud(
-        width=800,
-        height=400,
+        width=width,
+        height=height,
         background_color='white',
         colormap='viridis',
         relative_scaling=0.5,
@@ -384,9 +608,62 @@ def create_wordcloud(comments: List[str]):
     ).generate_from_frequencies(keywords)
     
     # Display
-    fig, ax = plt.subplots(figsize=(10, 5))
+    fig, ax = plt.subplots(figsize=figsize)
     ax.imshow(wordcloud, interpolation='bilinear')
     ax.axis('off')
+    st.pyplot(fig)
+
+def create_sentiment_pie_chart(sentiment_counts: Dict[str, int]):
+    """Create sentiment distribution pie chart with custom colors."""
+    if not sentiment_counts or sum(sentiment_counts.values()) == 0:
+        st.info("No sentiment data available")
+        return
+    
+    # Define colors
+    colors = {
+        'positive': '#2ecc71',  # Green
+        'negative': '#e74c3c',  # Red
+        'neutral': '#95a5a6'    # Gray
+    }
+    
+    # Prepare data
+    labels = []
+    sizes = []
+    color_list = []
+    
+    for sentiment, count in sentiment_counts.items():
+        if count > 0:
+            labels.append(sentiment.title())
+            sizes.append(count)
+            color_list.append(colors.get(sentiment, '#95a5a6'))
+    
+    if not sizes:
+        st.info("No sentiment data to display")
+        return
+    
+    # Calculate percentages
+    total = sum(sizes)
+    percentages = [f"{size/total*100:.1f}%" for size in sizes]
+    
+    # Create pie chart
+    fig, ax = plt.subplots(figsize=(8, 6))
+    wedges, texts, autotexts = ax.pie(
+        sizes, 
+        labels=labels, 
+        colors=color_list,
+        autopct='%1.1f%%',
+        startangle=90,
+        textprops={'fontsize': 12, 'weight': 'bold'}
+    )
+    
+    # Customize the chart
+    ax.set_title('Sentiment Distribution', fontsize=16, fontweight='bold', pad=20)
+    
+    # Add count information to legend
+    legend_labels = [f"{label}: {size} ({percent})" for label, size, percent in zip(labels, sizes, percentages)]
+    ax.legend(wedges, legend_labels, title="Sentiment Analysis", loc="center left", bbox_to_anchor=(1, 0, 0.5, 1))
+    
+    plt.tight_layout()
     st.pyplot(fig)
 
 # ============================================================================
@@ -435,26 +712,87 @@ def main():
     st.sidebar.markdown("---")
     st.sidebar.markdown(f"### Current Selection\n**{platform}**")
     
+    # Data Source Selection
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("### 📁 Data Source")
+    data_source = st.sidebar.radio(
+        "Choose data source:",
+        ["Fetch from API", "Load from File"],
+        help="Select whether to fetch new data from API or load previously saved data"
+    )
+    
+    # File selector for loading saved data
+    if data_source == "Load from File":
+        saved_files = get_saved_files()
+        platform_files = saved_files.get(platform, [])
+        
+        if platform_files:
+            st.sidebar.markdown("#### Available Files")
+            file_options = []
+            for file_path in platform_files:
+                filename = os.path.basename(file_path)
+                # Extract timestamp from filename for display
+                try:
+                    timestamp_part = filename.split('_', 1)[1].replace('.json', '').replace('.csv', '')
+                    display_name = f"{timestamp_part} ({'JSON' if file_path.endswith('.json') else 'CSV'})"
+                except:
+                    display_name = filename
+                file_options.append((display_name, file_path))
+            
+            selected_file_display = st.sidebar.selectbox(
+                "Select a file:",
+                options=[opt[0] for opt in file_options],
+                help="Choose a previously saved data file to load"
+            )
+            
+            # Get the actual file path
+            selected_file_path = None
+            for display_name, file_path in file_options:
+                if display_name == selected_file_display:
+                    selected_file_path = file_path
+                    break
+            
+            if selected_file_path and st.sidebar.button("📂 Load Selected File", type="primary"):
+                with st.spinner(f"Loading data from {os.path.basename(selected_file_path)}..."):
+                    loaded_data = load_data_from_file(selected_file_path)
+                
+                if loaded_data:
+                    st.session_state.posts_data = loaded_data
+                    st.success(f"✅ Successfully loaded {len(loaded_data)} posts from file")
+                    st.info(f"📁 File: {selected_file_path}")
+                    st.rerun()
+                else:
+                    st.error("Failed to load data from file")
+        else:
+            st.sidebar.info(f"No saved files found for {platform}")
+            st.sidebar.markdown("**Tip:** Fetch data from API first to create saved files")
+    
     # Initialize session state
     if 'posts_data' not in st.session_state:
         st.session_state.posts_data = None
     if 'selected_post_idx' not in st.session_state:
         st.session_state.selected_post_idx = None
     
-    # Main area - URL Input
-    st.header(f"{platform} Analysis")
-    
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        url = st.text_input(
-            f"Enter {platform} URL:",
-            placeholder=f"https://www.{platform.lower()}.com/...",
-            help=f"Paste the URL of the {platform} page/profile/channel"
-        )
-    
-    with col2:
-        st.markdown("<br>", unsafe_allow_html=True)
-        analyze_button = st.button("🔍 Analyze", type="primary", width='stretch')
+    # Main area - URL Input (only for API fetch)
+    if data_source == "Fetch from API":
+        st.header(f"{platform} Analysis")
+        
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            url = st.text_input(
+                f"Enter {platform} URL:",
+                placeholder=f"https://www.{platform.lower()}.com/...",
+                help=f"Paste the URL of the {platform} page/profile/channel"
+            )
+        
+        with col2:
+            st.markdown("<br>", unsafe_allow_html=True)
+            analyze_button = st.button("🔍 Analyze", type="primary", width='stretch')
+    else:
+        # For file loading, we don't need URL input
+        st.header(f"{platform} Analysis - Loaded from File")
+        analyze_button = False
+        url = ""
     
     # Refresh button
     if st.session_state.posts_data is not None:
@@ -485,6 +823,17 @@ def main():
         # Normalize and filter
         normalized_data = normalize_post_data(raw_data, platform)
         st.info(f"✅ Successfully processed {len(normalized_data)} posts")
+        
+        # Save data to files
+        with st.spinner("💾 Saving data to files..."):
+            json_path, csv_path = save_data_to_files(raw_data, normalized_data, platform)
+        
+        if json_path and csv_path:
+            st.success("✅ Data saved successfully!")
+            st.info(f"📄 Raw JSON: `{json_path}`")
+            st.info(f"📊 Processed CSV: `{csv_path}`")
+        else:
+            st.warning("⚠️ Failed to save data to files")
         
         # Option to show all posts or filter by current month
         filter_option = st.radio(
@@ -522,18 +871,121 @@ def main():
         posts = st.session_state.posts_data
         df = pd.DataFrame(posts)
         
-        # KPI Metrics
+        # Enhanced KPI Cards for Facebook Data
         st.markdown("### 📈 Monthly Overview")
+        
+        # Analysis Period Display
+        now = datetime.now()
+        month_year = now.strftime("%B %Y")
+        st.markdown(f"**Analysis Period:** {month_year}")
+        st.markdown("---")
+        
+        # Calculate metrics
+        total_reactions = calculate_total_reactions(posts)
+        total_comments = df['comments_count'].sum()
+        total_shares = df['shares_count'].sum()
+        avg_engagement = calculate_average_engagement(posts)
+        
+        # Create 4-column card layout
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            st.metric("Posts This Month", len(posts))
+            st.markdown("""
+            <div style="
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                padding: 1rem;
+                border-radius: 10px;
+                text-align: center;
+                color: white;
+                margin-bottom: 1rem;
+            ">
+                <h3 style="margin: 0; font-size: 2rem;">😊</h3>
+                <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Total Reactions</h2>
+            </div>
+            """, unsafe_allow_html=True)
+            st.metric("", f"{total_reactions:,}", help="Sum of all reaction types (like, love, wow, etc.)")
+        
         with col2:
-            st.metric("Total Likes", f"{df['likes'].sum():,}")
+            st.markdown("""
+            <div style="
+                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                padding: 1rem;
+                border-radius: 10px;
+                text-align: center;
+                color: white;
+                margin-bottom: 1rem;
+            ">
+                <h3 style="margin: 0; font-size: 2rem;">💬</h3>
+                <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Total Comments</h2>
+            </div>
+            """, unsafe_allow_html=True)
+            st.metric("", f"{total_comments:,}", help="Total number of comments across all posts")
+        
         with col3:
-            st.metric("Total Comments", f"{df['comments_count'].sum():,}")
+            st.markdown("""
+            <div style="
+                background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+                padding: 1rem;
+                border-radius: 10px;
+                text-align: center;
+                color: white;
+                margin-bottom: 1rem;
+            ">
+                <h3 style="margin: 0; font-size: 2rem;">📤</h3>
+                <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Total Shares</h2>
+            </div>
+            """, unsafe_allow_html=True)
+            st.metric("", f"{total_shares:,}", help="Total number of shares across all posts")
+        
         with col4:
-            st.metric("Total Shares", f"{df['shares_count'].sum():,}")
+            st.markdown("""
+            <div style="
+                background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+                padding: 1rem;
+                border-radius: 10px;
+                text-align: center;
+                color: white;
+                margin-bottom: 1rem;
+            ">
+                <h3 style="margin: 0; font-size: 2rem;">📊</h3>
+                <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Avg Engagement</h2>
+            </div>
+            """, unsafe_allow_html=True)
+            st.metric("", f"{avg_engagement:.1f}", help="Average engagement per post (likes + comments + shares + reactions)")
+        
+        st.markdown("---")
+        
+        # Monthly Insights Section
+        st.markdown("### 💡 Monthly Insights")
+        
+        # Aggregate all comments for analysis
+        all_comments = aggregate_all_comments(posts)
+        
+        if all_comments:
+            # Create two columns for insights
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("#### 💬 Most Discussed Topics This Month")
+                # Create larger word cloud for monthly insights
+                create_wordcloud(all_comments, width=1200, height=600, figsize=(15, 8))
+            
+            with col2:
+                st.markdown("#### 😊 Sentiment Distribution")
+                # Analyze sentiment for all comments
+                sentiment_counts = analyze_all_sentiments(all_comments)
+                create_sentiment_pie_chart(sentiment_counts)
+                
+                # Display summary statistics
+                total_comments = sum(sentiment_counts.values())
+                if total_comments > 0:
+                    st.markdown("**Summary:**")
+                    st.markdown(f"- **Total Comments Analyzed:** {total_comments:,}")
+                    st.markdown(f"- **Positive:** {sentiment_counts['positive']:,} ({sentiment_counts['positive']/total_comments*100:.1f}%)")
+                    st.markdown(f"- **Negative:** {sentiment_counts['negative']:,} ({sentiment_counts['negative']/total_comments*100:.1f}%)")
+                    st.markdown(f"- **Neutral:** {sentiment_counts['neutral']:,} ({sentiment_counts['neutral']/total_comments*100:.1f}%)")
+        else:
+            st.info("No comments available for monthly insights analysis")
         
         st.markdown("---")
         
