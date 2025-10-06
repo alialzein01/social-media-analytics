@@ -26,8 +26,8 @@ from typing import Dict, List, Optional, Any
 import streamlit as st
 import pandas as pd
 from apify_client import ApifyClient
-from wordcloud import WordCloud
-import matplotlib.pyplot as plt
+from wordcloud import WordCloud  # type: ignore
+import matplotlib.pyplot as plt  # type: ignore
 from collections import Counter
 
 # ============================================================================
@@ -939,9 +939,9 @@ def main():
     st.markdown("Analyze Facebook, Instagram, and YouTube content with AI-powered insights")
     
     # Check for API token
-    apify_token = os.environ.get('APIFY_TOKEN', 'apify_api_re9vmjOyu3JAE1OWdBVcglApVHBrYq3IDeIG')
+    apify_token = st.secrets.get("APIFY_TOKEN") or os.environ.get("APIFY_TOKEN")
     if not apify_token:
-        st.error("⚠️ APIFY_TOKEN environment variable not set!")
+        st.error("⚠️ APIFY_TOKEN not set (st.secrets or environment).")
         st.stop()
     
     # Sidebar - Platform Selection
@@ -1043,7 +1043,7 @@ def main():
         
         with col2:
             st.markdown("<br>", unsafe_allow_html=True)
-            analyze_button = st.button("🔍 Analyze", type="primary", width='stretch')
+            analyze_button = st.button("🔍 Analyze", type="primary", use_container_width=True)
     else:
         # For file loading, we don't need URL input
         st.header(f"{platform} Analysis - Loaded from File")
@@ -1286,7 +1286,7 @@ def main():
         display_df['published_at'] = pd.to_datetime(display_df['published_at']).dt.strftime('%Y-%m-%d %H:%M')
         display_df.columns = ['Date', 'Caption', 'Likes', 'Comments', 'Shares']
         
-        st.dataframe(display_df, width='stretch', height=300)
+        st.dataframe(display_df, use_container_width=True, height=300)
         
         # Post selection
         st.markdown("### 🎯 Select a Post for Detailed Analysis")
