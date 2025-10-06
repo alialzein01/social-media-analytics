@@ -66,9 +66,23 @@ ARABIC_STOPWORDS = {
     'متى', 'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for'
 }
 
+# Arabic text processing constants
+ARABIC_LETTERS = r"\u0621-\u064A\u0660-\u0669"
+TOKEN_RE = re.compile(fr"[{ARABIC_LETTERS}A-Za-z0-9]+", re.UNICODE)
+
 # ============================================================================
 # NLP UTILITIES (Arabic-capable, pluggable design)
 # ============================================================================
+
+# Optional Arabic text shaping support
+try:
+    import arabic_reshaper  # type: ignore
+    from bidi.algorithm import get_display  # type: ignore
+    def _reshape_for_wc(s: str) -> str:
+        return get_display(arabic_reshaper.reshape(s))
+except Exception:
+    def _reshape_for_wc(s: str) -> str:
+        return s
 
 def clean_arabic_text(text: str) -> str:
     """Clean Arabic text by removing diacritics, extra spaces, and noise."""
@@ -99,13 +113,10 @@ def clean_arabic_text(text: str) -> str:
     return text
 
 def tokenize_arabic(text: str) -> List[str]:
-    """Tokenize text and filter stopwords."""
+    """Tokenize text and filter stopwords using improved Arabic regex."""
     text = clean_arabic_text(text)
-    # Split on whitespace and punctuation
-    tokens = re.findall(r'\b\w+\b', text)
-    # Filter stopwords and short tokens
-    tokens = [t for t in tokens if t.lower() not in ARABIC_STOPWORDS and len(t) > 2]
-    return tokens
+    tokens = TOKEN_RE.findall(text)
+    return [t for t in tokens if t.lower() not in ARABIC_STOPWORDS and len(t) > 2]
 
 def extract_keywords_nlp(comments: List[str], top_n: int = 50) -> Dict[str, int]:
     """
@@ -839,8 +850,9 @@ def create_wordcloud(comments: List[str], width: int = 800, height: int = 400, f
         st.info("No keywords extracted from comments")
         return
     
-    # Generate word cloud
-    # Use a font that supports Arabic (you may need to specify font_path)
+    # Generate word cloud with optional Arabic shaping
+    wc_freqs = {_reshape_for_wc(k): v for k, v in keywords.items()}
+    # Optionally set font_path if available; otherwise keep as-is
     wordcloud = WordCloud(
         width=width,
         height=height,
@@ -848,7 +860,7 @@ def create_wordcloud(comments: List[str], width: int = 800, height: int = 400, f
         colormap='viridis',
         relative_scaling=0.5,
         min_font_size=10
-    ).generate_from_frequencies(keywords)
+    ).generate_from_frequencies(wc_freqs)
     
     # Display
     fig, ax = plt.subplots(figsize=figsize)
