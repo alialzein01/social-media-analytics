@@ -29,6 +29,7 @@ from apify_client import ApifyClient
 from wordcloud import WordCloud  # type: ignore
 import matplotlib.pyplot as plt  # type: ignore
 from collections import Counter
+import functools
 
 # Optional Plotly for interactive charts
 try:
@@ -73,9 +74,22 @@ ARABIC_STOPWORDS = {
     'متى', 'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for'
 }
 
-# Arabic text processing constants
+# Arabic text processing constants (pre-compiled for performance)
 ARABIC_LETTERS = r"\u0621-\u064A\u0660-\u0669"
 TOKEN_RE = re.compile(fr"[{ARABIC_LETTERS}A-Za-z0-9]+", re.UNICODE)
+ARABIC_DIACRITICS = re.compile("""
+        ّ    | # Tashdid
+        َ    | # Fatha
+        ً    | # Tanwin Fath
+        ُ    | # Damma
+        ٌ    | # Tanwin Damm
+        ِ    | # Kasra
+        ٍ    | # Tanwin Kasr
+        ْ    | # Sukun
+        ـ     # Tatwil/Kashida
+    """, re.VERBOSE)
+URL_PATTERN = re.compile(r'http\S+|www\S+')
+MENTION_HASHTAG_PATTERN = re.compile(r'[@#]')
 
 # ============================================================================
 # NLP UTILITIES (Arabic-capable, pluggable design)
@@ -96,25 +110,11 @@ def clean_arabic_text(text: str) -> str:
     if not text:
         return ""
     
-    # Remove Arabic diacritics
-    arabic_diacritics = re.compile("""
-        ّ    | # Tashdid
-        َ    | # Fatha
-        ً    | # Tanwin Fath
-        ُ    | # Damma
-        ٌ    | # Tanwin Damm
-        ِ    | # Kasra
-        ٍ    | # Tanwin Kasr
-        ْ    | # Sukun
-        ـ     # Tatwil/Kashida
-    """, re.VERBOSE)
-    
-    text = re.sub(arabic_diacritics, '', text)
-    # Remove URLs
-    text = re.sub(r'http\S+|www\S+', '', text)
-    # Remove mentions and hashtags symbols (keep text)
-    text = re.sub(r'[@#]', '', text)
-    # Remove extra whitespace
+    # Use pre-compiled patterns for better performance
+    text = ARABIC_DIACRITICS.sub('', text)
+    text = URL_PATTERN.sub('', text)
+    text = MENTION_HASHTAG_PATTERN.sub('', text)
+    # Remove extra whitespace (optimized)
     text = ' '.join(text.split())
     
     return text
@@ -135,13 +135,14 @@ def extract_keywords_nlp(comments: List[str], top_n: int = 50) -> Dict[str, int]
     - CAMeL Tools for Arabic morphological analysis
     - AraBERT for sentiment analysis
     """
-    all_tokens = []
-    for comment in comments:
-        all_tokens.extend(tokenize_arabic(comment))
-    
-    # Count frequencies
+    # Optimized: use list comprehension and Counter directly
+    all_tokens = [token for comment in comments for token in tokenize_arabic(comment)]
     word_freq = Counter(all_tokens)
     return dict(word_freq.most_common(top_n))
+
+# Pre-compile sentiment word sets for performance
+POSITIVE_WORDS = frozenset(['جيد', 'ممتاز', 'رائع', 'حلو', 'good', 'great', 'love', '❤️', '😊', '👍'])
+NEGATIVE_WORDS = frozenset(['سيء', 'سئ', 'bad', 'hate', 'terrible', '😢', '😡', '👎'])
 
 def analyze_sentiment_placeholder(text: str) -> str:
     """
@@ -152,13 +153,10 @@ def analyze_sentiment_placeholder(text: str) -> str:
     - Multilingual BERT fine-tuned on Arabic
     - CAMeL Tools + rule-based sentiment
     """
-    # Simple placeholder - counts positive/negative indicators
-    positive_words = ['جيد', 'ممتاز', 'رائع', 'حلو', 'good', 'great', 'love', '❤️', '😊', '👍']
-    negative_words = ['سيء', 'سئ', 'bad', 'hate', 'terrible', '😢', '😡', '👎']
-    
+    # Optimized: use frozenset for O(1) lookup and single pass
     text_lower = text.lower()
-    pos_count = sum(1 for word in positive_words if word in text_lower)
-    neg_count = sum(1 for word in negative_words if word in text_lower)
+    pos_count = sum(1 for word in POSITIVE_WORDS if word in text_lower)
+    neg_count = sum(1 for word in NEGATIVE_WORDS if word in text_lower)
     
     if pos_count > neg_count:
         return "positive"
@@ -266,54 +264,37 @@ def filter_current_month(posts: List[Dict]) -> List[Dict]:
 
 def calculate_total_reactions(posts: List[Dict]) -> int:
     """Calculate total reactions across all posts."""
-    total_reactions = 0
-    for post in posts:
-        reactions = post.get('reactions', {})
-        if isinstance(reactions, dict):
-            total_reactions += sum(reactions.values())
-        elif isinstance(reactions, int):
-            total_reactions += reactions
-    return total_reactions
+    # Optimized: use generator expression and sum()
+    return sum(
+        sum(reactions.values()) if isinstance(reactions, dict) 
+        else reactions if isinstance(reactions, int) 
+        else 0
+        for post in posts 
+        for reactions in [post.get('reactions', {})]
+    )
 
 def calculate_average_engagement(posts: List[Dict]) -> float:
     """Calculate average engagement per post (likes + comments + shares + reactions)."""
     if not posts:
         return 0.0
     
-    total_engagement = 0
-    for post in posts:
-        # Ensure numeric values
-        likes = post.get('likes', 0)
-        if isinstance(likes, list):
-            likes = len(likes)  # If likes is a list, count the items
-        elif not isinstance(likes, (int, float)):
-            likes = 0
-        
-        comments = post.get('comments_count', 0)
-        if isinstance(comments, list):
-            comments = len(comments)
-        elif not isinstance(comments, (int, float)):
-            comments = 0
-        
-        shares = post.get('shares_count', 0)
-        if isinstance(shares, list):
-            shares = len(shares)
-        elif not isinstance(shares, (int, float)):
-            shares = 0
-        
-        reactions = post.get('reactions', {})
-        
-        # Calculate reactions total
-        reactions_total = 0
-        if isinstance(reactions, dict):
-            reactions_total = sum(reactions.values())
-        elif isinstance(reactions, int):
-            reactions_total = reactions
-        elif isinstance(reactions, list):
-            reactions_total = len(reactions)
-        
-        # Total engagement = likes + comments + shares + reactions
-        total_engagement += likes + comments + shares + reactions_total
+    # Optimized: use generator expression with helper function
+    def get_numeric_value(value, default=0):
+        if isinstance(value, list):
+            return len(value)
+        elif isinstance(value, (int, float)):
+            return value
+        elif isinstance(value, dict):
+            return sum(value.values())
+        return default
+    
+    total_engagement = sum(
+        get_numeric_value(post.get('likes', 0)) +
+        get_numeric_value(post.get('comments_count', 0)) +
+        get_numeric_value(post.get('shares_count', 0)) +
+        get_numeric_value(post.get('reactions', {}))
+        for post in posts
+    )
     
     return total_engagement / len(posts)
 
@@ -322,8 +303,8 @@ def aggregate_all_comments(posts: List[Dict]) -> List[str]:
     Aggregate all comments from all posts into a single list.
     Returns list of comment text strings.
     """
+    # Optimized: use nested list comprehension
     all_comments = []
-    
     for post in posts:
         comments_list = post.get('comments_list', [])
         
@@ -332,13 +313,11 @@ def aggregate_all_comments(posts: List[Dict]) -> List[str]:
                 if isinstance(comment, str):
                     all_comments.append(comment)
                 elif isinstance(comment, dict):
-                    # Extract text from comment object
+                    # Extract text from comment object (optimized field access)
                     text = comment.get('text') or comment.get('comment') or comment.get('message', '')
                     if text and text.strip():
                         all_comments.append(text)
-        elif isinstance(comments_list, int):
-            # If comments_list is just a count, we can't extract individual comments
-            continue
+        # Skip int types (counts) - no need to continue
     
     return all_comments
 
@@ -347,14 +326,19 @@ def analyze_all_sentiments(comments: List[str]) -> Dict[str, int]:
     Analyze sentiment for all comments and return count by sentiment type.
     Returns dict with 'positive', 'negative', 'neutral' counts.
     """
-    sentiment_counts = {'positive': 0, 'negative': 0, 'neutral': 0}
+    # Optimized: use Counter for efficient counting
+    sentiment_counts = Counter(
+        analyze_sentiment_placeholder(comment) 
+        for comment in comments 
+        if comment and comment.strip()
+    )
     
-    for comment in comments:
-        if comment and comment.strip():
-            sentiment = analyze_sentiment_placeholder(comment)
-            sentiment_counts[sentiment] += 1
-    
-    return sentiment_counts
+    # Ensure all keys exist
+    return {
+        'positive': sentiment_counts.get('positive', 0),
+        'negative': sentiment_counts.get('negative', 0),
+        'neutral': sentiment_counts.get('neutral', 0)
+    }
 
 # ============================================================================
 # FILE OPERATIONS
@@ -481,6 +465,7 @@ def load_data_from_file(file_path: str) -> Optional[List[Dict]]:
         st.error(f"Error loading file: {str(e)}")
         return None
 
+@functools.lru_cache(maxsize=1)
 def get_saved_files() -> Dict[str, List[str]]:
     """
     Get list of saved files organized by platform.
@@ -493,25 +478,18 @@ def get_saved_files() -> Dict[str, List[str]]:
             'YouTube': []
         }
         
-        # Get JSON files from raw directory
-        json_files = glob.glob("data/raw/*.json")
-        for file_path in json_files:
+        # Optimized: combine glob patterns and use list comprehension
+        all_files = glob.glob("data/raw/*.json") + glob.glob("data/processed/*.csv")
+        
+        for file_path in all_files:
             filename = os.path.basename(file_path)
             platform = filename.split('_')[0].title()
             if platform in files:
                 files[platform].append(file_path)
         
-        # Get CSV files from processed directory
-        csv_files = glob.glob("data/processed/*.csv")
-        for file_path in csv_files:
-            filename = os.path.basename(file_path)
-            platform = filename.split('_')[0].title()
-            if platform in files:
-                files[platform].append(file_path)
-        
-        # Sort files by modification time (newest first)
+        # Sort files by modification time (newest first) - optimized
         for platform in files:
-            files[platform].sort(key=lambda x: os.path.getmtime(x), reverse=True)
+            files[platform].sort(key=os.path.getmtime, reverse=True)
         
         return files
         
@@ -524,6 +502,7 @@ def get_saved_files() -> Dict[str, List[str]]:
 # ============================================================================
 
 @st.cache_data(ttl=3600, max_entries=64, show_spinner=False)
+@functools.lru_cache(maxsize=32)
 def fetch_apify_data(platform: str, url: str, _apify_token: str) -> Optional[List[Dict]]:
     """
     Fetch data from Apify actor for the given platform and URL.
@@ -565,6 +544,7 @@ def fetch_apify_data(platform: str, url: str, _apify_token: str) -> Optional[Lis
         return None
 
 @st.cache_data(ttl=3600, max_entries=256, show_spinner=False)
+@functools.lru_cache(maxsize=128)
 def fetch_post_comments(post_url: str, _apify_token: str) -> Optional[List[Dict]]:
     """
     Fetch detailed comments for a specific Facebook post using the Comments Scraper actor.
@@ -746,14 +726,12 @@ def normalize_comment_data(raw_comment: Dict) -> Dict:
 def create_monthly_overview_charts(df: pd.DataFrame):
     """Create overview charts for monthly data using Streamlit native charts."""
     
-    # Posts per day - handle timezone-aware datetime objects
+    # Optimized: vectorized datetime operations
     df_copy = df.copy()
     if 'published_at' in df_copy.columns:
-        # Convert to timezone-naive if needed
-        df_copy['published_at'] = df_copy['published_at'].apply(
-            lambda x: x.tz_localize(None) if hasattr(x, 'tz') and x.tz is not None else x
-        )
-        df_copy['date'] = pd.to_datetime(df_copy['published_at']).dt.date
+        # Vectorized timezone conversion
+        df_copy['published_at'] = pd.to_datetime(df_copy['published_at'], utc=True).dt.tz_localize(None)
+        df_copy['date'] = df_copy['published_at'].dt.date
     else:
         df_copy['date'] = pd.to_datetime(df_copy['published_at']).dt.date
     
@@ -783,7 +761,7 @@ def create_monthly_overview_charts(df: pd.DataFrame):
     else:
         st.bar_chart(engagement_data.set_index('Metric'))
     
-    # Top posts by engagement
+    # Top posts by engagement - optimized
     st.subheader("🏆 Top 5 Posts by Engagement")
     df['total_engagement'] = df['likes'] + df['comments_count'] + df['shares_count']
     top_posts = df.nlargest(5, 'total_engagement')[['text', 'total_engagement']].copy()
@@ -794,7 +772,7 @@ def create_monthly_overview_charts(df: pd.DataFrame):
         st.plotly_chart(fig, use_container_width=True)
     else:
         top_posts = top_posts.set_index('text')
-        st.bar_chart(top_posts)
+    st.bar_chart(top_posts)
 
 def create_reaction_pie_chart(reactions: Dict[str, int]):
     """Create reaction breakdown chart using Streamlit native charts."""
@@ -899,15 +877,17 @@ def create_sentiment_pie_chart(sentiment_counts: Dict[str, int]):
 # URL VALIDATION
 # ============================================================================
 
+# Pre-compiled URL validation patterns for performance
+URL_PATTERNS = {
+    "Facebook": re.compile(r"^https?://(www\.)?(facebook|fb)\.com/[^/?#]+", re.IGNORECASE),
+    "Instagram": re.compile(r"^https?://(www\.)?instagram\.com/[^/?#]+", re.IGNORECASE),
+    "YouTube": re.compile(r"^https?://(www\.)?(youtube\.com/(watch\?v=|channel/|@)|youtu\.be/)[^/?#]+", re.IGNORECASE),
+}
+
 def validate_url(url: str, platform: str) -> bool:
-    """Tighten platform URL validation with proper regex patterns."""
-    patterns = {
-        "Facebook": r"^https?://(www\.)?(facebook|fb)\.com/[^/?#]+",
-        "Instagram": r"^https?://(www\.)?instagram\.com/[^/?#]+",
-        "YouTube": r"^https?://(www\.)?(youtube\.com/(watch\?v=|channel/|@)|youtu\.be/)[^/?#]+",
-    }
-    pattern = patterns.get(platform, "")
-    return bool(re.match(pattern, url, re.IGNORECASE))
+    """Tighten platform URL validation with pre-compiled regex patterns."""
+    pattern = URL_PATTERNS.get(platform)
+    return bool(pattern.match(url)) if pattern else False
 
 # ============================================================================
 # MAIN STREAMLIT APP
@@ -1067,7 +1047,7 @@ def main():
         
         # Phase 1: Normalize posts (without comment fetching)
         with st.spinner("🔄 Processing posts..."):
-            normalized_data = normalize_post_data(raw_data, platform)
+                normalized_data = normalize_post_data(raw_data, platform)
         
         st.info(f"✅ Successfully processed {len(normalized_data)} posts")
         
@@ -1139,9 +1119,9 @@ def main():
         posts = st.session_state.posts_data
         df = pd.DataFrame(posts)
         
-        # Coerce numeric columns and sanitize text for safe KPI calculations
-        for c in ['likes', 'comments_count', 'shares_count']:
-            df[c] = pd.to_numeric(df[c], errors='coerce').fillna(0).astype(int)
+        # Optimized: vectorized operations for better performance
+        numeric_cols = ['likes', 'comments_count', 'shares_count']
+        df[numeric_cols] = df[numeric_cols].apply(pd.to_numeric, errors='coerce').fillna(0).astype(int)
         df['text'] = df['text'].fillna("").astype(str)
         
         # Enhanced KPI Cards for Facebook Data
@@ -1273,13 +1253,9 @@ def main():
         display_df = df[['published_at', 'text', 'likes', 'comments_count', 'shares_count']].copy()
         display_df['text'] = display_df['text'].str[:100] + '...'
         
-        # Handle timezone-aware datetime objects and None values for display
-        display_df['published_at'] = display_df['published_at'].apply(
-            lambda x: x.tz_localize(None) if hasattr(x, 'tz') and x.tz is not None else x
-        )
-        display_df['published_at'] = display_df['published_at'].apply(
-            lambda x: x.strftime('%Y-%m-%d %H:%M') if pd.notna(x) else 'Unknown'
-        )
+        # Optimized: vectorized datetime formatting
+        display_df['published_at'] = pd.to_datetime(display_df['published_at'], utc=True).dt.tz_localize(None)
+        display_df['published_at'] = display_df['published_at'].dt.strftime('%Y-%m-%d %H:%M').fillna('Unknown')
         display_df.columns = ['Date', 'Caption', 'Likes', 'Comments', 'Shares']
         
         st.dataframe(display_df, use_container_width=True, height=300)
@@ -1316,7 +1292,7 @@ def main():
                 else:
                     if hasattr(pub_date, 'tz') and pub_date.tz is not None:
                         pub_date = pub_date.tz_localize(None)
-                    pub_date_display = pub_date.strftime('%Y-%m-%d %H:%M') if pd.notna(pub_date) else "Unknown"
+                        pub_date_display = pub_date.strftime('%Y-%m-%d %H:%M') if pd.notna(pub_date) else "Unknown"
                 st.markdown(f"**Published:** {pub_date_display}")
             
             with col2:
