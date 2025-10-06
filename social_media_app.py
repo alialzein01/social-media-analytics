@@ -532,38 +532,15 @@ def fetch_apify_data(platform: str, url: str, _apify_token: str) -> Optional[Lis
             st.error(f"No actor configured for {platform}")
             return None
         
-        # Configure input based on platform
-        # These are example inputs - adjust based on actual actor documentation
+        # Configure input based on platform with documented formats
         if platform == "Instagram":
-            # Instagram-specific input based on the actor documentation
-            run_input = {
-                "directUrls": [url],  # The Instagram profile URL
-                "resultsType": "posts",  # What to scrape
-                "resultsLimit": 10,  # Number of posts to fetch (reduced for testing)
-                "searchType": "hashtag",  # Search type
-                "searchLimit": 1,  # Search limit
-                "addParentData": False  # Whether to add parent data
-            }
+            run_input = {"directUrls": [url], "resultsType": "posts", "resultsLimit": 10}
         elif platform == "Facebook":
-            # Facebook-specific input based on the actor documentation
-            run_input = {
-                "startUrls": [{"url": url}],  # Facebook page URL
-                "resultsLimit": 10,  # Number of posts to fetch (reduced for testing)
-                "captionText": False  # Whether to include caption text
-            }
+            run_input = {"startUrls": [{"url": url}], "maxPosts": 10}
         elif platform == "YouTube":
-            # YouTube-specific input based on the actor documentation
-            run_input = {
-                "startUrls": [{"url": url}],  # YouTube video URL
-                "maxComments": 10,  # Maximum number of comments to fetch (reduced for testing)
-                "commentsSortBy": "1"  # Sort comments (1 = most relevant)
-            }
+            run_input = {"startUrls": [{"url": url}], "maxComments": 10, "commentsSortBy": "top"}
         else:
-            # Default input for unknown platforms
-            run_input = {
-                "startUrls": [{"url": url}],
-                "maxPosts": 100,  # Adjust as needed
-            }
+            run_input = {"startUrls": [{"url": url}], "maxPosts": 100}
         
         # Run the actor
         st.info(f"Calling Apify actor: {actor_name}")
@@ -594,31 +571,14 @@ def fetch_post_comments(post_url: str, _apify_token: str) -> Optional[List[Dict]
     
     client = ApifyClient(_apify_token)
     
-    # Try different actors and input formats
+    # Try different actors with unified input format
     actor_configs = [
-        {
-            "actor_id": "facebook-comments-scraper",
-            "input": {
-                "startUrls": [post_url],
-                "maxComments": 50,
-                "includeNestedComments": False
-            }
-        },
-        {
-            "actor_id": "apify/facebook-comments-scraper",
-            "input": {
-                "startUrls": [{"url": post_url}],
-                "maxComments": 50,
-                "includeNestedComments": False
-            }
-        },
-        {
-            "actor_id": "alien_force/facebook-posts-comments-scraper",
-            "input": {
-                "startUrls": [post_url],
-                "maxComments": 50
-            }
-        }
+        {"actor_id": "apify/facebook-comments-scraper",
+         "input": {"startUrls": [{"url": post_url}], "maxComments": 50, "includeNestedComments": False}},
+        {"actor_id": "facebook-comments-scraper",
+         "input": {"startUrls": [{"url": post_url}], "maxComments": 50, "includeNestedComments": False}},
+        {"actor_id": "alien_force/facebook-posts-comments-scraper",
+         "input": {"startUrls": [{"url": post_url}], "maxComments": 50}}
     ]
     
     for i, config in enumerate(actor_configs):
