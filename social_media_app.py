@@ -30,6 +30,13 @@ from wordcloud import WordCloud  # type: ignore
 import matplotlib.pyplot as plt  # type: ignore
 from collections import Counter
 
+# Optional Plotly for interactive charts
+try:
+    import plotly.express as px  # type: ignore
+    PLOTLY_AVAILABLE = True
+except ImportError:
+    PLOTLY_AVAILABLE = False
+
 # ============================================================================
 # CONFIGURATION
 # ============================================================================
@@ -754,7 +761,11 @@ def create_monthly_overview_charts(df: pd.DataFrame):
     
     # Posts per day line chart
     st.subheader("📈 Posts Per Day")
-    st.line_chart(posts_per_day.set_index('date'))
+    if PLOTLY_AVAILABLE:
+        fig = px.line(posts_per_day, x="date", y="count", markers=True, title="Posts Per Day")
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.line_chart(posts_per_day.set_index('date'))
     
     # Engagement comparison
     st.subheader("📊 Total Engagement Breakdown")
@@ -766,16 +777,24 @@ def create_monthly_overview_charts(df: pd.DataFrame):
             df['shares_count'].sum()
         ]
     })
-    st.bar_chart(engagement_data.set_index('Metric'))
+    if PLOTLY_AVAILABLE:
+        fig = px.bar(engagement_data, x="Metric", y="Count", title="Total Engagement Breakdown")
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.bar_chart(engagement_data.set_index('Metric'))
     
     # Top posts by engagement
     st.subheader("🏆 Top 5 Posts by Engagement")
     df['total_engagement'] = df['likes'] + df['comments_count'] + df['shares_count']
     top_posts = df.nlargest(5, 'total_engagement')[['text', 'total_engagement']].copy()
     top_posts['text'] = top_posts['text'].str[:50] + '...'
-    top_posts = top_posts.set_index('text')
-    
-    st.bar_chart(top_posts)
+    if PLOTLY_AVAILABLE:
+        fig = px.bar(top_posts.reset_index().rename(columns={'text':'Caption'}),
+                     x="Caption", y="total_engagement", title="Top 5 Posts by Engagement")
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        top_posts = top_posts.set_index('text')
+        st.bar_chart(top_posts)
 
 def create_reaction_pie_chart(reactions: Dict[str, int]):
     """Create reaction breakdown chart using Streamlit native charts."""
