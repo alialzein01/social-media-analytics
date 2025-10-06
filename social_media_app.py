@@ -765,7 +765,7 @@ def create_monthly_overview_charts(df: pd.DataFrame):
         fig = px.line(posts_per_day, x="date", y="count", markers=True, title="Posts Per Day")
         st.plotly_chart(fig, use_container_width=True)
     else:
-    st.line_chart(posts_per_day.set_index('date'))
+        st.line_chart(posts_per_day.set_index('date'))
     
     # Engagement comparison
     st.subheader("📊 Total Engagement Breakdown")
@@ -781,7 +781,7 @@ def create_monthly_overview_charts(df: pd.DataFrame):
         fig = px.bar(engagement_data, x="Metric", y="Count", title="Total Engagement Breakdown")
         st.plotly_chart(fig, use_container_width=True)
     else:
-    st.bar_chart(engagement_data.set_index('Metric'))
+        st.bar_chart(engagement_data.set_index('Metric'))
     
     # Top posts by engagement
     st.subheader("🏆 Top 5 Posts by Engagement")
@@ -793,8 +793,8 @@ def create_monthly_overview_charts(df: pd.DataFrame):
                      x="Caption", y="total_engagement", title="Top 5 Posts by Engagement")
         st.plotly_chart(fig, use_container_width=True)
     else:
-    top_posts = top_posts.set_index('text')
-    st.bar_chart(top_posts)
+        top_posts = top_posts.set_index('text')
+        st.bar_chart(top_posts)
 
 def create_reaction_pie_chart(reactions: Dict[str, int]):
     """Create reaction breakdown chart using Streamlit native charts."""
@@ -1016,18 +1016,18 @@ def main():
     
     # Main area - URL Input (only for API fetch)
     if data_source == "Fetch from API":
-    st.header(f"{platform} Analysis")
-    
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        url = st.text_input(
-            f"Enter {platform} URL:",
-            placeholder=f"https://www.{platform.lower()}.com/...",
-            help=f"Paste the URL of the {platform} page/profile/channel"
-        )
-    
-    with col2:
-        st.markdown("<br>", unsafe_allow_html=True)
+        st.header(f"{platform} Analysis")
+        
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            url = st.text_input(
+                f"Enter {platform} URL:",
+                placeholder=f"https://www.{platform.lower()}.com/...",
+                help=f"Paste the URL of the {platform} page/profile/channel"
+            )
+        
+        with col2:
+            st.markdown("<br>", unsafe_allow_html=True)
             analyze_button = st.button("🔍 Analyze", type="primary", use_container_width=True)
     else:
         # For file loading, we don't need URL input
@@ -1063,7 +1063,7 @@ def main():
         
         # Phase 1: Normalize posts (without comment fetching)
         with st.spinner("🔄 Processing posts..."):
-        normalized_data = normalize_post_data(raw_data, platform)
+            normalized_data = normalize_post_data(raw_data, platform)
         
         st.info(f"✅ Successfully processed {len(normalized_data)} posts")
         
@@ -1310,8 +1310,8 @@ def main():
                 if pub_date is None:
                     pub_date_display = "Unknown"
                 else:
-                if hasattr(pub_date, 'tz') and pub_date.tz is not None:
-                    pub_date = pub_date.tz_localize(None)
+                    if hasattr(pub_date, 'tz') and pub_date.tz is not None:
+                        pub_date = pub_date.tz_localize(None)
                     pub_date_display = pub_date.strftime('%Y-%m-%d %H:%M') if pd.notna(pub_date) else "Unknown"
                 st.markdown(f"**Published:** {pub_date_display}")
             
