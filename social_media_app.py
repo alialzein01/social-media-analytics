@@ -905,15 +905,14 @@ def create_sentiment_pie_chart(sentiment_counts: Dict[str, int]):
 # ============================================================================
 
 def validate_url(url: str, platform: str) -> bool:
-    """Basic URL validation by platform."""
+    """Tighten platform URL validation with proper regex patterns."""
     patterns = {
-        "Facebook": r'(facebook\.com|fb\.com)',
-        "Instagram": r'instagram\.com',
-        "YouTube": r'(youtube\.com|youtu\.be)'
+        "Facebook": r"^https?://(www\.)?(facebook|fb)\.com/[^/?#]+",
+        "Instagram": r"^https?://(www\.)?instagram\.com/[^/?#]+",
+        "YouTube": r"^https?://(www\.)?(youtube\.com/(watch\?v=|channel/|@)|youtu\.be/)[^/?#]+",
     }
-    
-    pattern = patterns.get(platform, '')
-    return bool(re.search(pattern, url, re.IGNORECASE))
+    pattern = patterns.get(platform, "")
+    return bool(re.match(pattern, url, re.IGNORECASE))
 
 # ============================================================================
 # MAIN STREAMLIT APP
