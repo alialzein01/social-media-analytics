@@ -230,25 +230,21 @@ def normalize_post_data(raw_data: List[Dict], platform: str) -> List[Dict]:
     return normalized
 
 def filter_current_month(posts: List[Dict]) -> List[Dict]:
-    """Filter posts to current month only."""
-    now = datetime.now()
-    month_start = datetime(now.year, now.month, 1)
-    month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
-    
-    filtered = []
-    for post in posts:
-        pub_date = post['published_at']
-        if isinstance(pub_date, str):
-            pub_date = pd.to_datetime(pub_date)
-        
-        # Convert to timezone-naive for comparison
-        if hasattr(pub_date, 'tz') and pub_date.tz is not None:
-            pub_date = pub_date.tz_localize(None)
-        
-        if month_start <= pub_date <= month_end:
-            filtered.append(post)
-    
-    return filtered
+    """Filter posts to current month only, skipping posts with invalid dates."""
+    if not posts:
+        return []
+    now = pd.Timestamp.now().normalize()
+    month_start = now.replace(day=1)
+    month_end = (month_start + pd.offsets.MonthEnd(1))
+    out = []
+    for p in posts:
+        d = p.get('published_at')
+        d = pd.to_datetime(d, errors="coerce")
+        if pd.isna(d):
+            continue
+        if month_start <= d <= month_end:
+            out.append(p)
+    return out
 
 def calculate_total_reactions(posts: List[Dict]) -> int:
     """Calculate total reactions across all posts."""
