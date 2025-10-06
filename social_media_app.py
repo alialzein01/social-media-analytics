@@ -440,9 +440,9 @@ def load_data_from_file(file_path: str) -> Optional[List[Dict]]:
                     'post_id': row.get('post_id', ''),
                     'published_at': pd.to_datetime(row.get('published_at', '')),
                     'text': row.get('text', ''),
-                    'likes': int(row.get('likes', 0)),
-                    'comments_count': int(row.get('comments_count', 0)),
-                    'shares_count': int(row.get('shares_count', 0)),
+                    'likes': int(pd.to_numeric(row.get('likes', 0), errors='coerce') or 0),
+                    'comments_count': int(pd.to_numeric(row.get('comments_count', 0), errors='coerce') or 0),
+                    'shares_count': int(pd.to_numeric(row.get('shares_count', 0), errors='coerce') or 0),
                     'reactions': json.loads(row.get('reactions', '{}')),
                     'comments_list': json.loads(row.get('comments_list', '[]'))
                 }
@@ -1139,6 +1139,11 @@ def main():
     if st.session_state.posts_data:
         posts = st.session_state.posts_data
         df = pd.DataFrame(posts)
+        
+        # Coerce numeric columns and sanitize text for safe KPI calculations
+        for c in ['likes', 'comments_count', 'shares_count']:
+            df[c] = pd.to_numeric(df[c], errors='coerce').fillna(0).astype(int)
+        df['text'] = df['text'].fillna("").astype(str)
         
         # Enhanced KPI Cards for Facebook Data
         st.markdown("### 📈 Monthly Overview")
