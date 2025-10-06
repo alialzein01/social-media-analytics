@@ -516,7 +516,7 @@ def get_saved_files() -> Dict[str, List[str]]:
 # APIFY INTEGRATION
 # ============================================================================
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600, max_entries=64, show_spinner=False)
 def fetch_apify_data(platform: str, url: str, _apify_token: str) -> Optional[List[Dict]]:
     """
     Fetch data from Apify actor for the given platform and URL.
@@ -557,7 +557,7 @@ def fetch_apify_data(platform: str, url: str, _apify_token: str) -> Optional[Lis
         st.error(f"Apify API Error: {str(e)}")
         return None
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600, max_entries=256, show_spinner=False)
 def fetch_post_comments(post_url: str, _apify_token: str) -> Optional[List[Dict]]:
     """
     Fetch detailed comments for a specific Facebook post using the Comments Scraper actor.
