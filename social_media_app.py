@@ -229,9 +229,9 @@ def normalize_post_data(raw_data: List[Dict], platform: str) -> List[Dict]:
             # Parse timestamp using robust helper
             post['published_at'] = _to_naive_dt(post['published_at'])
             
-            # Store original post URL for later comment fetching
+            # Store original post URL for traceability and comment fetching
             post_url = item.get('url') or item.get('postUrl') or item.get('link') or item.get('facebookUrl')
-            post['_post_url'] = post_url  # Store URL for later use
+            post['post_url'] = post_url
             
             normalized.append(post)
         except Exception as e:
@@ -636,14 +636,14 @@ def fetch_comments_for_posts(posts: List[Dict], apify_token: str) -> List[Dict]:
             isinstance(comments_list, int)  # If it's an int, it's a count, not actual comments
         )
         
-        if should_fetch and post.get('_post_url'):
+        if should_fetch and post.get('post_url'):
             try:
                 # Add rate limiting delay (2 seconds between calls)
                 if i > 0:  # Skip delay for first post
                     time.sleep(2)
                 
                 # Fetch comments for this post
-                raw_comments = fetch_post_comments(post['_post_url'], apify_token)
+                raw_comments = fetch_post_comments(post['post_url'], apify_token)
                 if raw_comments:
                     # Normalize comment data
                     normalized_comments = []
@@ -659,17 +659,12 @@ def fetch_comments_for_posts(posts: List[Dict], apify_token: str) -> List[Dict]:
                 st.warning(f"❌ Failed to fetch comments for post {post.get('post_id', 'Unknown')}: {str(e)}")
                 post['comments_list'] = []
         else:
-            if not post.get('_post_url'):
+            if not post.get('post_url'):
                 st.warning(f"⚠️ No URL found for post {post.get('post_id', 'Unknown')}, skipping comment fetch")
     
     # Clear progress indicators
     progress_bar.empty()
     status_text.empty()
-    
-    # Clean up temporary fields
-    for post in posts:
-        if '_post_url' in post:
-            del post['_post_url']
     
     return posts
 
