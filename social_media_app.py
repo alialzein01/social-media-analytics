@@ -391,6 +391,15 @@ def save_data_to_files(raw_data: List[Dict], normalized_data: List[Dict], platfo
                             'likes_count': comment.get('likes_count', 0)
                         }
                         comments_data.append(comment_row)
+                    elif isinstance(comment, str):
+                        comments_data.append({
+                            'post_id': post.get('post_id', ''),
+                            'comment_id': '',
+                            'text': comment,
+                            'author_name': '',
+                            'created_time': '',
+                            'likes_count': 0
+                        })
         
         # Save processed CSV data
         csv_filename = f"data/processed/{platform.lower()}_{timestamp}.csv"
