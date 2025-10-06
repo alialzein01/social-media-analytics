@@ -1,0 +1,1288 @@
+[
+  {
+    "facebookUrl": "https://www.facebook.com/nasa/",
+    "postId": "1347647323397307",
+    "pageName": "NASA",
+    "url": "https://www.facebook.com/NASA/videos/794876853469392/",
+    "time": "2025-09-30T21:26:24.000Z",
+    "timestamp": 1759267584,
+    "user": {
+      "id": "100044561550831",
+      "name": "NASA - National Aeronautics and Space Administration",
+      "profileUrl": "https://www.facebook.com/NASA",
+      "profilePic": "https://scontent-den2-1.xx.fbcdn.net/v/t39.30808-1/243095782_416661036495945_3843362260429099279_n.png?stp=cp0_dst-png_s40x40&_nc_cat=1&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=_m64k4-R0_UQ7kNvwFcK_1Q&_nc_oc=AdkCG1vHjbcAomBRD1i9NhLCv4qAWa7jAiVqZiUTNAzna7LNZpOVbveX6Age-7dBbbY&_nc_zt=24&_nc_ht=scontent-den2-1.xx&_nc_gid=ZjPRkur0ABNFwyINy_zn_w&oh=00_AfcKjb4w1HM8YUR7crRVjfM_vLcOG9WqoxEjgFeFRXZoAg&oe=68E8D015"
+    },
+    "text": "Keep an eye on the night sky in October—you might catch a falling star!\n\nThe Orionid meteor shower reaches its peak on the night of Oct. 21-22, with a new moon providing ideal skywatching conditions. The Draconids will also be visible earlier in the month. \n\nHere's what else to watch out for!",
+    "likes": 2522,
+    "comments": 192,
+    "shares": 569,
+    "topReactionsCount": 7,
+    "isVideo": true,
+    "viewsCount": 50335,
+    "media": [
+      {
+        "thumbnail": "https://scontent-den2-1.xx.fbcdn.net/v/t15.5256-10/556963712_24580110588275940_4753334821861262409_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=7965db&_nc_ohc=V0Tzz60rtbAQ7kNvwF8qYRT&_nc_oc=AdnvFKOB1rz_tcI9VGpwp-FUSaEi7SjccEHBZq7KhYFJhsjCi8jtl6q_5Hl-bHUa6ic&_nc_zt=23&_nc_ht=scontent-den2-1.xx&_nc_gid=ZjPRkur0ABNFwyINy_zn_w&oh=00_AfcZq8vV_cLhSMuS-kcrNVPlROd23Kw_yPUT7rUmxSimuw&oe=68E8E823",
+        "__typename": "Video",
+        "thumbnailImage": {
+          "uri": "https://scontent-den2-1.xx.fbcdn.net/v/t15.5256-10/556963712_24580110588275940_4753334821861262409_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=7965db&_nc_ohc=V0Tzz60rtbAQ7kNvwF8qYRT&_nc_oc=AdnvFKOB1rz_tcI9VGpwp-FUSaEi7SjccEHBZq7KhYFJhsjCi8jtl6q_5Hl-bHUa6ic&_nc_zt=23&_nc_ht=scontent-den2-1.xx&_nc_gid=ZjPRkur0ABNFwyINy_zn_w&oh=00_AfcZq8vV_cLhSMuS-kcrNVPlROd23Kw_yPUT7rUmxSimuw&oe=68E8E823"
+        },
+        "id": "794876853469392",
+        "is_clipping_enabled": false,
+        "live_rewind_enabled": false,
+        "owner": {
+          "__typename": "User",
+          "id": "100044561550831",
+          "__isVideoOwner": "User",
+          "has_professional_features_for_watch": true
+        },
+        "playable_duration_in_ms": 202635,
+        "is_huddle": false,
+        "url": "https://www.facebook.com/NASA/videos/794876853469392/",
+        "if_viewer_can_use_latency_menu": null,
+        "if_viewer_can_use_latency_menu_toggle": null,
+        "captions_url": null,
+        "video_available_captions_locales": [],
+        "if_viewer_can_see_community_moderation_tools": null,
+        "if_viewer_can_use_live_rewind": null,
+        "if_viewer_can_use_clipping": null,
+        "if_viewer_can_see_costreaming_tools": null,
+        "video_player_scrubber_base_content_renderer": null,
+        "video_player_scrubber_preview_renderer": {
+          "__typename": "XFBVideoPlayerScrubberDefaultPreviewRenderer",
+          "video": {
+            "scrubber_preview_thumbnail_information": {
+              "sprite_uris": [
+                "https://scontent-den2-1.xx.fbcdn.net/v/t15.5256-10/556650847_610330828712366_682161163813511451_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=62976d&_nc_ohc=iJdtfWUj7E0Q7kNvwGixu4J&_nc_oc=AdmmRD5ifupUe_BpyUxscqeIS6ruQoIT69tFVAGJvD-3AuiR-XBXDTMKH1IK9Mo9jIM&_nc_zt=23&_nc_ht=scontent-den2-1.xx&_nc_gid=ZjPRkur0ABNFwyINy_zn_w&oh=00_Afd7xEXS50c9jSgWBupRqlj8uYkRse6hoUjiE2bMzXz2cw&oe=68E8DA7E",
+                "https://scontent-den2-1.xx.fbcdn.net/v/t15.5256-10/558478467_1506708213701135_5220862124646186164_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=62976d&_nc_ohc=dkrD66KmE3gQ7kNvwFmCDKo&_nc_oc=Adk8O3I2g8gDTo4JP17EFTeMKiiQuG3ICTo26hPxztDGL-IPp22GmejQxe4i6HMtfXQ&_nc_zt=23&_nc_ht=scontent-den2-1.xx&_nc_gid=ZjPRkur0ABNFwyINy_zn_w&oh=00_AfcpBzyFR1up1_DfDid58BjYiPkId49HGK35vaYfqpumsg&oe=68E8DCE6",
+                "https://scontent-den2-1.xx.fbcdn.net/v/t15.5256-10/557600087_778040225015072_6151073277141750743_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=62976d&_nc_ohc=DZMF2KVFvR4Q7kNvwFd4Jsb&_nc_oc=Adm0IbgkNTUK3rf-9M1tJv2BEShOI2r3cVWesYtWyRCFKQAhSLh49olZcXV_stX1sLU&_nc_zt=23&_nc_ht=scontent-den2-1.xx&_nc_gid=ZjPRkur0ABNFwyINy_zn_w&oh=00_AfcrMfMwLLYaAHFXte_8RXt-DpLj-nGXuVaZSpfkR7aQJw&oe=68E8CA46"
+              ],
+              "thumbnail_width": 142,
+              "thumbnail_height": 80,
+              "has_preview_thumbnails": true,
+              "num_images_per_row": 10,
+              "max_number_of_images_per_sprite": 100,
+              "time_interval_between_image": 1
+            },
+            "id": "794876853469392"
+          },
+          "__module_operation_VideoPlayerScrubberPreview_video": {
+            "__dr": "VideoPlayerScrubberDefaultPreview_video$normalization.graphql"
+          },
+          "__module_component_VideoPlayerScrubberPreview_video": {
+            "__dr": "VideoPlayerScrubberDefaultPreview.react"
+          }
+        },
+        "recipient_group": null,
+        "music_attachment_metadata": null,
+        "video_container_type": "CONTAINED_POST_ATTACHMENT",
+        "breakingStatus": false,
+        "videoId": "794876853469392",
+        "isPremiere": false,
+        "liveViewerCount": 0,
+        "rehearsalInfo": null,
+        "is_gaming_video": false,
+        "is_live_audio_room_v2_broadcast": false,
+        "publish_time": 1759267040,
+        "live_speaker_count_indicator": null,
+        "can_viewer_share": false,
+        "end_cards_channel_info": {
+          "video_chaining_caller": "CHANNEL_VIEW_FROM_END_CARD",
+          "video_channel_entry_point": "PROFILE",
+          "video": {
+            "id": "794876853469392",
+            "can_viewer_share": false,
+            "creation_story": {
+              "shareable": null,
+              "id": "UzpfSTEwMDA0NDU2MTU1MDgzMTpWSzo3OTQ4NzY4NTM0NjkzOTI="
+            }
+          },
+          "__module_operation_useVideoPlayerWatchEndScreenWithActions_video": {
+            "__dr": "VideoPlayerWatchInlineEndScreen_info$normalization.graphql"
+          },
+          "__module_component_useVideoPlayerWatchEndScreenWithActions_video": {
+            "__dr": "VideoPlayerWatchInlineEndScreen.react"
+          }
+        },
+        "is_soundbites_video": false,
+        "is_looping": false,
+        "info": {
+          "video_chaining_caller": "CHANNEL_VIEW_FROM_END_CARD",
+          "video_channel_entry_point": "PROFILE",
+          "video_id": "794876853469392",
+          "__module_operation_useVideoPlayerWatchPauseScreenWithActions_video": {
+            "__dr": "VideoPlayerWatchInlinePauseScreen_info$normalization.graphql"
+          },
+          "__module_component_useVideoPlayerWatchPauseScreenWithActions_video": {
+            "__dr": "VideoPlayerWatchInlinePauseScreen.react"
+          }
+        },
+        "animated_image_caption": null,
+        "width": 1920,
+        "height": 1080,
+        "broadcaster_origin": null,
+        "broadcast_id": null,
+        "broadcast_status": null,
+        "is_live_streaming": false,
+        "is_live_trace_enabled": false,
+        "is_video_broadcast": false,
+        "is_podcast_video": false,
+        "loop_count": 0,
+        "is_spherical": false,
+        "is_spherical_enabled": true,
+        "unsupported_browser_message": null,
+        "can_play_undiscoverable": true,
+        "pmv_metadata": null,
+        "latency_sensitive_config": null,
+        "live_playback_instrumentation_configs": null,
+        "is_ncsr": false,
+        "permalink_url": "https://www.facebook.com/NASA/videos/794876853469392/",
+        "dash_prefetch_experimental": [
+          "831720542867332v",
+          "1965663871232147a"
+        ],
+        "video_status_type": "OK",
+        "can_use_oz": true,
+        "dash_manifest": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"urn:mpeg:dash:schema:mpd:2011 DASH-MPD.xsd\" profiles=\"urn:mpeg:dash:profile:isoff-on-demand:2011\" minBufferTime=\"PT2S\" type=\"static\" mediaPresentationDuration=\"PT202.666672S\" FBTagsetUsed=\"gen2hwbasicvp9\" FBManifestIdentifier=\"FgAYDmdlbjJod2Jhc2ljdnA5GVburLCQ6cDmAu6IrfPW2OYC7Kzli5/Y5wKIvpT4wJz6Aqai14zZ8P0GIhgQYXVkaW9fYWFjX2xuX3ZiciI2ChQAAA==\"><Period id=\"0\" duration=\"PT202.666672S\"><AdaptationSet id=\"0\" contentType=\"video\" frameRate=\"15360/512\" subsegmentAlignment=\"true\" par=\"16:9\" FBUnifiedUploadResolutionMos=\"360:75.2,480:75.2,720:75.2,1080:75.2\"><Representation id=\"831720542867332v\" bandwidth=\"693989\" codecs=\"vp09.00.21.08.00.01.01.01.00\" mimeType=\"video/mp4\" sar=\"1:1\" FBEncodingTag=\"dash_vp9-basic-gen2_360p\" FBPlaybackResolutionMos=\"0:100,360:71.9,480:65.5,720:55.7,1080:44.6\" FBPlaybackResolutionMosConfidenceLevel=\"high\" FBPlaybackResolutionCsvqm=\"0:100,360:86.5,480:80.6,720:70.8,1080:59.5\" width=\"640\" height=\"360\" FBDefaultQuality=\"1\" FBQualityClass=\"sd\" FBQualityLabel=\"360p\"><BaseURL>https://video-den2-1.xx.fbcdn.net/o1/v/t2/f2/m366/AQNoypISVoHQ5wZxcfoaJklao9C6OfQr6QitGE-ojCsjOj7xDN4wASwWXvdv_kYd9h8n5gGjaGBy06ansp_IMlgquECwp1GTLFgbHTnKEFMe6g.mp4?_nc_cat=102&amp;_nc_sid=9ca052&amp;_nc_ht=video-den2-1.xx.fbcdn.net&amp;_nc_ohc=YgpwFFW5obsQ7kNvwGT1LON&amp;efg=eyJ2ZW5jb2RlX3RhZyI6ImRhc2hfdnA5LWJhc2ljLWdlbjJfMzYwcCIsInZpZGVvX2lkIjo3OTQ4NzY4NTM0NjkzOTIsIm9pbF91cmxnZW5fYXBwX2lkIjowLCJjbGllbnRfbmFtZSI6InVua25vd24iLCJ4cHZfYXNzZXRfaWQiOjc5NDMwMzE1MzU1MDMzNiwidmlfdXNlY2FzZV9pZCI6MTAxMjIsImR1cmF0aW9uX3MiOjIwMiwidXJsZ2VuX3NvdXJjZSI6Ind3dyJ9&amp;ccb=17-1&amp;_nc_gid=ZjPRkur0ABNFwyINy_zn_w&amp;_nc_zt=28&amp;oh=00_AfePrehAjsM0w2Xt8Nv6l3Q-fADTFiwV1BPrpzHGYiitsA&amp;oe=68E8E896</BaseURL><SegmentBase indexRange=\"818-1341\" timescale=\"15360\" FBFirstSegmentRange=\"1342-75672\"><Initialization range=\"0-817\"/></SegmentBase></Representation><Representation id=\"788773817655863v\" bandwidth=\"1734919\" codecs=\"vp09.00.30.08.00.01.01.01.00\" mimeType=\"video/mp4\" sar=\"1:1\" FBEncodingTag=\"dash_vp9-basic-gen2_540p\" FBPlaybackResolutionMos=\"0:100,360:80,480:77.2,720:72.2,1080:65.1\" FBPlaybackResolutionMosConfidenceLevel=\"high\" FBPlaybackResolutionCsvqm=\"0:100,360:93.1,480:91.5,720:86.8,1080:80.2\" width=\"960\" height=\"540\" FBQualityClass=\"sd\" FBQualityLabel=\"540p\"><BaseURL>https://video-den2-1.xx.fbcdn.net/o1/v/t2/f2/m366/AQNJHq3wY0ZeakCaYirk40S8No_TLL8K81omBJs2DWdmPwNRBegBNiS9fCYjim_DM23-0xp5p9XLbEQiOiKpDsLDfN0getsi3MURAym2hzmf0A.mp4?_nc_cat=108&amp;_nc_sid=9ca052&amp;_nc_ht=video-den2-1.xx.fbcdn.net&amp;_nc_ohc=xkz04-hlOOQQ7kNvwFPL1w3&amp;efg=eyJ2ZW5jb2RlX3RhZyI6ImRhc2hfdnA5LWJhc2ljLWdlbjJfNTQwcCIsInZpZGVvX2lkIjo3OTQ4NzY4NTM0NjkzOTIsIm9pbF91cmxnZW5fYXBwX2lkIjowLCJjbGllbnRfbmFtZSI6InVua25vd24iLCJ4cHZfYXNzZXRfaWQiOjc5NDMwMzE1MzU1MDMzNiwidmlfdXNlY2FzZV9pZCI6MTAxMjIsImR1cmF0aW9uX3MiOjIwMiwidXJsZ2VuX3NvdXJjZSI6Ind3dyJ9&amp;ccb=17-1&amp;_nc_gid=ZjPRkur0ABNFwyINy_zn_w&amp;_nc_zt=28&amp;oh=00_AfdTZMWIG-wTheEa1iIv9rsnDJDa8GWweHMZJvT_BInVBw&amp;oe=68E8CB94</BaseURL><SegmentBase indexRange=\"818-1341\" timescale=\"15360\" FBFirstSegmentRange=\"1342-193385\"><Initialization range=\"0-817\"/></SegmentBase></Representation><Representation id=\"788363947150135v\" bandwidth=\"2977132\" codecs=\"vp09.00.31.08.00.01.01.01.00\" mimeType=\"video/mp4\" sar=\"1:1\" FBEncodingTag=\"dash_vp9-basic-gen2_720p\" FBPlaybackResolutionMos=\"0:100,360:86.4,480:83.2,720:79,1080:73.5\" FBPlaybackResolutionMosConfidenceLevel=\"high\" FBPlaybackResolutionCsvqm=\"0:100,360:95.4,480:94.4,720:92.6,1080:88.1\" width=\"1280\" height=\"720\" FBQualityClass=\"hd\" FBQualityLabel=\"720p\"><BaseURL>https://video-den2-1.xx.fbcdn.net/o1/v/t2/f2/m366/AQO21EH2Z-XSyj7-EcMK-wqLHZw3EEigBR0EsxN2H7YS6yRi1s508S11atFMbI0k6LhBd9d8dS8ow9q2Gba9Ryj_Mpgu0xMAkOdf2O3RzMpGmw.mp4?_nc_cat=101&amp;_nc_sid=9ca052&amp;_nc_ht=video-den2-1.xx.fbcdn.net&amp;_nc_ohc=-EGZPlSaJq0Q7kNvwFsFvmo&amp;efg=eyJ2ZW5jb2RlX3RhZyI6ImRhc2hfdnA5LWJhc2ljLWdlbjJfNzIwcCIsInZpZGVvX2lkIjo3OTQ4NzY4NTM0NjkzOTIsIm9pbF91cmxnZW5fYXBwX2lkIjowLCJjbGllbnRfbmFtZSI6InVua25vd24iLCJ4cHZfYXNzZXRfaWQiOjc5NDMwMzE1MzU1MDMzNiwidmlfdXNlY2FzZV9pZCI6MTAxMjIsImR1cmF0aW9uX3MiOjIwMiwidXJsZ2VuX3NvdXJjZSI6Ind3dyJ9&amp;ccb=17-1&amp;_nc_gid=ZjPRkur0ABNFwyINy_zn_w&amp;_nc_zt=28&amp;oh=00_AfcRyB9Tvfq_YAqzrpI1BqeV0SIx6jzVt6PA6hLiV7afCg&amp;oe=68E8F6DF</BaseURL><SegmentBase indexRange=\"818-1341\" timescale=\"15360\" FBFirstSegmentRange=\"1342-357712\"><Initialization range=\"0-817\"/></SegmentBase></Representation><Representation id=\"790965350345526v\" bandwidth=\"4584797\" codecs=\"vp09.00.40.08.00.01.01.01.00\" mimeType=\"video/mp4\" sar=\"1:1\" FBEncodingTag=\"dash_vp9-basic-gen2_1080p\" FBPlaybackResolutionMos=\"0:100,360:87.8,480:86,720:82.4,1080:78.5\" FBPlaybackResolutionMosConfidenceLevel=\"high\" FBPlaybackResolutionCsvqm=\"0:100,360:95.8,480:95.3,720:94.1,1080:92.3\" width=\"1920\" height=\"1080\" FBQualityClass=\"hd\" FBQualityLabel=\"1080p\"><BaseURL>https://video-den2-1.xx.fbcdn.net/o1/v/t2/f2/m366/AQNsCALIIqrVLp35TLz-jYh7TspePYt6v3jKTegy6n-xowRaXhrHcGAHX3mEPJRH0ACtkNPU2HdKlB8afgqaeSRUc9QElmrE3zAeB7q5oDoAmA.mp4?_nc_cat=102&amp;_nc_sid=9ca052&amp;_nc_ht=video-den2-1.xx.fbcdn.net&amp;_nc_ohc=kuPHfsYDWnsQ7kNvwFVQu2o&amp;efg=eyJ2ZW5jb2RlX3RhZyI6ImRhc2hfdnA5LWJhc2ljLWdlbjJfMTA4MHAiLCJ2aWRlb19pZCI6Nzk0ODc2ODUzNDY5MzkyLCJvaWxfdXJsZ2VuX2FwcF9pZCI6MCwiY2xpZW50X25hbWUiOiJ1bmtub3duIiwieHB2X2Fzc2V0X2lkIjo3OTQzMDMxNTM1NTAzMzYsInZpX3VzZWNhc2VfaWQiOjEwMTIyLCJkdXJhdGlvbl9zIjoyMDIsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&amp;ccb=17-1&amp;_nc_gid=ZjPRkur0ABNFwyINy_zn_w&amp;_nc_zt=28&amp;oh=00_AffO5gHfsVbx-uUMIr-mr5pEVBJr-MzW3SE-98EtpRL0Sg&amp;oe=68E8EA42</BaseURL><SegmentBase indexRange=\"818-1341\" timescale=\"15360\" FBFirstSegmentRange=\"1342-540774\"><Initialization range=\"0-817\"/></SegmentBase></Representation></AdaptationSet><AdaptationSet id=\"1\" contentType=\"audio\" subsegmentStartsWithSAP=\"1\" subsegmentAlignment=\"true\"><Representation id=\"1965663871232147a\" bandwidth=\"69616\" codecs=\"mp4a.40.5\" mimeType=\"audio/mp4\" FBAvgBitrate=\"69616\" audioSamplingRate=\"48000\" FBEncodingTag=\"dash_ln_heaac_vbr3_audio\" FBDefaultQuality=\"1\"><AudioChannelConfiguration schemeIdUri=\"urn:mpeg:dash:23003:3:audio_channel_configuration:2011\" value=\"2\"/><BaseURL>https://video-den2-1.xx.fbcdn.net/o1/v/t2/f2/m412/AQP6VUZMY5w8nGrc9Ymhim6EByzYR9CmkOZD-i8874Ru7YwjNbxjtSdApJEQuxeg4eEqAI9Y7PT0aPjiZqWO-5vgwWY_Q5EpUKQQleg.mp4?_nc_cat=109&amp;_nc_sid=9ca052&amp;_nc_ht=video-den2-1.xx.fbcdn.net&amp;_nc_ohc=JwBssHK9O_oQ7kNvwH7NpeB&amp;efg=eyJ2ZW5jb2RlX3RhZyI6ImRhc2hfbG5faGVhYWNfdmJyM19hdWRpbyIsInZpZGVvX2lkIjo3OTQ4NzY4NTM0NjkzOTIsIm9pbF91cmxnZW5fYXBwX2lkIjowLCJjbGllbnRfbmFtZSI6InVua25vd24iLCJ4cHZfYXNzZXRfaWQiOjc5NDMwMzE1MzU1MDMzNiwidmlfdXNlY2FzZV9pZCI6MTAxMjIsImR1cmF0aW9uX3MiOjIwMiwidXJsZ2VuX3NvdXJjZSI6Ind3dyJ9&amp;ccb=17-1&amp;_nc_gid=ZjPRkur0ABNFwyINy_zn_w&amp;_nc_zt=28&amp;oh=00_AfcHrS16zICLEzOuT_zZexdaSKIn3gNmDTCMSmRwbNWYcA&amp;oe=68E8F23E</BaseURL><SegmentBase indexRange=\"824-2079\" timescale=\"48000\" FBFirstSegmentRange=\"2080-20480\"><Initialization range=\"0-823\"/></SegmentBase></Representation></AdaptationSet></Period></MPD>\n",
+        "dash_manifest_url": "https://www.facebook.com/dash_mpd_debug.mpd?v=794876853469392&dummy=.mpd",
+        "min_quality_preference": null,
+        "audio_user_preferred_language": "en",
+        "is_rss_podcast_video": false,
+        "browser_native_sd_url": "https://video-den2-1.xx.fbcdn.net/o1/v/t2/f2/m412/AQMBzoieKPABCttuR81Ta_fuGcYtyfmVavmx1vXD45YLUHIJALYgANVPY8T8Oz_jB6qiAA8g6r4HHSvqdZVL9bjmss9q-4HeFZlFmgvhfg.mp4?_nc_cat=104&_nc_sid=8bf8fe&_nc_ht=video-den2-1.xx.fbcdn.net&_nc_ohc=uvxyYo-_SB0Q7kNvwHqVssm&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5GQUNFQk9PSy4uQzMuNjQwLnN2ZV9zZCIsInhwdl9hc3NldF9pZCI6Nzk0MzAzMTUzNTUwMzM2LCJ2aV91c2VjYXNlX2lkIjoxMDEyMiwiZHVyYXRpb25fcyI6MjAyLCJ1cmxnZW5fc291cmNlIjoid3d3In0%3D&ccb=17-1&_nc_gid=ZjPRkur0ABNFwyINy_zn_w&_nc_zt=28&oh=00_Afc5V2In54uo2svzic6CSEO8_w1yUs_TY-vGa5U0zY5c1w&oe=68E8E496&bitrate=212209&tag=sve_sd",
+        "browser_native_hd_url": "https://video-den2-1.xx.fbcdn.net/o1/v/t2/f2/m366/AQNfXDsKe21gg1CxFcLVAsmgDgkIssAN5iFpyA2zCYCUkt2mUlsHUJ1bO0S8NkgwuhC806iR_Q0M8E6yRN_q__lAnJEcs_mVWbBTdP7eHvrLag.mp4?_nc_cat=106&_nc_sid=5e9851&_nc_ht=video-den2-1.xx.fbcdn.net&_nc_ohc=t7D6GfNWqgoQ7kNvwGMxgWF&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5GQUNFQk9PSy4uQzMuMTI4MC5kYXNoX2gyNjQtYmFzaWMtZ2VuMl83MjBwIiwieHB2X2Fzc2V0X2lkIjo3OTQzMDMxNTM1NTAzMzYsInZpX3VzZWNhc2VfaWQiOjEwMTIyLCJkdXJhdGlvbl9zIjoyMDIsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=aba98a829aaddc18&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC8xRjRCNzM1M0U4MjczRUI0RjZBMzYwMzhGNzU0MzI5OF9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhhFZmJfZXBoZW1lcmFsL0QyNDFCRUVDMjc4MTQwQkYwNDlDQjI4OUM5MzEyREEwX210XzBfYXVkaW9fZGFzaGluaXQubXA0FQICyAESACgAGAAbAogHdXNlX29pbAExEnByb2dyZXNzaXZlX3JlY2lwZQExFQAAJoDQ_dTDmukCFQIoAkMzLBdAaVVP3ztkWhgZZGFzaF9oMjY0LWJhc2ljLWdlbjJfNzIwcBEAdQJllJ4BAA&_nc_gid=ZjPRkur0ABNFwyINy_zn_w&_nc_zt=28&oh=00_AfcBH7Zc4TsqX0P_ZRnRcx9SW3szTeM6dQZKnKxWHGhd8g&oe=68E8F7DE&bitrate=761398&tag=dash_h264-basic-gen2_720p",
+        "spherical_video_fallback_urls": null,
+        "is_latency_menu_enabled": false,
+        "fbls_tier": null,
+        "is_latency_sensitive_broadcast": false,
+        "comet_video_player_static_config": "{}",
+        "comet_video_player_context_sensitive_config": "{}",
+        "video_player_shaka_performance_logger_init": {
+          "__typename": "VideoPlayerShakaPerformanceLoggerInit",
+          "__module_operation_useVideoPlayerShakaPerformanceLoggerRelayImpl_video": {
+            "__dr": "useVideoPlayerShakaPerformanceLoggerRelayImpl_init$normalization.graphql"
+          },
+          "__module_component_useVideoPlayerShakaPerformanceLoggerRelayImpl_video": {
+            "__dr": "VideoPlayerShakaPerformanceLogger"
+          }
+        },
+        "video_player_shaka_performance_logger_should_sample": false,
+        "video_player_shaka_performance_logger_init2": {
+          "__typename": "VideoPlayerShakaPerformanceLoggerInit",
+          "__module_operation_useVideoPlayerShakaPerformanceLoggerBuilder_video": {
+            "__dr": "useVideoPlayerShakaPerformanceLoggerBuilder_init$normalization.graphql"
+          },
+          "__module_component_useVideoPlayerShakaPerformanceLoggerBuilder_video": {
+            "__dr": "VideoPlayerShakaPerformanceLoggerBuilder"
+          },
+          "per_session_sampling_rate": null
+        },
+        "autoplay_gating_result": "all_page_organic_allowed",
+        "viewer_autoplay_setting": "default_autoplay",
+        "can_autoplay": true,
+        "drm_info": "{\"video_license_uri_map\":{},\"graph_api_video_license_uri\":null,\"fairplay_cert\":null,\"widevine_cert\":\"CsECCAMSEBcFuRfMEgSGiwYzOi93KowYgrSCkgUijgIwggEKAoIBAQCZ7Vs7Mn2rXiTvw7YqlbWYUgrVvMs3UD4GRbgU2Ha430BRBEGtjOOtsRu4jE5yWl5KngeVKR1YWEAjp+GvDjipEnk5MAhhC28VjIeMfiG\\/+\\/7qd+EBnh5XgeikX0YmPRTmDoBYqGB63OBPrIRXsTeo1nzN6zNwXZg6IftO7L1KEMpHSQykfqpdQ4IY3brxyt4zkvE9b\\/tkQv0x4b9AsMYE0cS6TJUgpL+X7r1gkpr87vVbuvVk4tDnbNfFXHOggrmWEguDWe3OJHBwgmgNb2fG2CxKxfMTRJCnTuw3r0svAQxZ6ChD4lgvC2ufXbD8Xm7fZPvTCLRxG88SUAGcn1oJAgMBAAE6FGxpY2Vuc2Uud2lkZXZpbmUuY29tEoADrjRzFLWoNSl\\/JxOI+3u4y1J30kmCPN3R2jC5MzlRHrPMveoEuUS5J8EhNG79verJ1BORfm7BdqEEOEYKUDvBlSubpOTOD8S\\/wgqYCKqvS\\/zRnB3PzfV0zKwo0bQQQWz53ogEMBy9szTK\\/NDUCXhCOmQuVGE98K\\/PlspKkknYVeQrOnA+8XZ\\/apvTbWv4K+drvwy6T95Z0qvMdv62Qke4XEMfvKUiZrYZ\\/DaXlUP8qcu9u\\/r6DhpV51Wjx7zmVflkb1gquc9wqgi5efhn9joLK3\\/bNixbxOzVVdhbyqnFk8ODyFfUnaq3fkC3hR3f0kmYgI41sljnXXjqwMoW9wRzBMINk+3k6P8cbxfmJD4\\/Paj8FwmHDsRfuoI6Jj8M76H3CTsZCZKDJjM3BQQ6Kb2m+bQ0LMjfVDyxoRgvfF\\/\\/M\\/EEkPrKWyU2C3YBXpxaBquO4C8A0ujVmGEEqsxN1HX9lu6c5OMm8huDxwWFd7OHMs3avGpr7RP7DUnTikXrh6X0\"}",
+        "p2p_settings": null,
+        "audio_settings": null,
+        "captions_settings": null,
+        "broadcast_low_latency_config": null,
+        "audio_availability": "AVAILABLE",
+        "muted_segments": [],
+        "spherical_video_renderer": null,
+        "preferred_thumbnail": {
+          "image": {
+            "uri": "https://scontent-den2-1.xx.fbcdn.net/v/t15.5256-10/556963712_24580110588275940_4753334821861262409_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=be8305&_nc_ohc=V0Tzz60rtbAQ7kNvwF8qYRT&_nc_oc=AdnvFKOB1rz_tcI9VGpwp-FUSaEi7SjccEHBZq7KhYFJhsjCi8jtl6q_5Hl-bHUa6ic&_nc_zt=23&_nc_ht=scontent-den2-1.xx&_nc_gid=ZjPRkur0ABNFwyINy_zn_w&oh=00_AfcZq8vV_cLhSMuS-kcrNVPlROd23Kw_yPUT7rUmxSimuw&oe=68E8E823"
+          },
+          "image_preview_payload": "ACoY5/FSLGT/ADoHp61YQ4AU9AePxrUCExYOD64pUiLVbEeeSDTtu3I5BNFx2KhRUOfveo6VDirbJiodtO4rEXTvTg5HeiipAd5z+tNMjt3oooC4F29abz60UUAf/9k=",
+          "id": "24580110584942607"
+        },
+        "video_imf_data": null,
+        "original_width": 1920,
+        "original_height": 1080,
+        "original_rotation": "NO_ROTATE",
+        "if_viewer_can_see_pay_to_access_paywall": null,
+        "comet_video_player_audio_overlay_renderer": null,
+        "comet_video_player_audio_background_renderer": null,
+        "comet_video_player_music_sprout_background_renderer": null,
+        "clip_fallback_cover": null,
+        "is_clip": false,
+        "matcha_related_keywords_links": [
+          ""
+        ],
+        "is_music_clip": false,
+        "video_collaborator_page_or_delegate_page": null,
+        "video_anchor_tag_info": null,
+        "image": {
+          "uri": "https://scontent-den2-1.xx.fbcdn.net/v/t15.5256-10/556963712_24580110588275940_4753334821861262409_n.jpg?stp=dst-jpg_s526x296_tt6&_nc_cat=111&ccb=1-7&_nc_sid=7965db&_nc_ohc=V0Tzz60rtbAQ7kNvwF8qYRT&_nc_oc=AdnvFKOB1rz_tcI9VGpwp-FUSaEi7SjccEHBZq7KhYFJhsjCi8jtl6q_5Hl-bHUa6ic&_nc_zt=23&_nc_ht=scontent-den2-1.xx&_nc_gid=ZjPRkur0ABNFwyINy_zn_w&oh=00_Afdcyo_lfCLhmRLGTu2HtKzsE5c6NWUV027dVht_buCFwQ&oe=68E8E823"
+        },
+        "canonical_uri_with_fallback": "https://www.facebook.com/NASA/videos/whats-up-october-2025/794876853469392/"
+      }
+    ],
+    "feedbackId": "ZmVlZGJhY2s6MTM0NzY0NzMyMzM5NzMwNw==",
+    "topLevelUrl": "https://www.facebook.com/100044561550831/posts/1347647323397307",
+    "facebookId": "100044561550831",
+    "pageAdLibrary": {
+      "is_business_page_active": false,
+      "id": "54971236771"
+    },
+    "inputUrl": "https://www.facebook.com/nasa/"
+  },
+  {
+    "facebookUrl": "https://www.facebook.com/nasa/",
+    "postId": "1347620313400008",
+    "pageName": "NASA",
+    "url": "https://www.facebook.com/NASA/videos/2572281719785994/",
+    "time": "2025-09-30T20:30:36.000Z",
+    "timestamp": 1759264236,
+    "user": {
+      "id": "100044561550831",
+      "name": "NASA - National Aeronautics and Space Administration",
+      "profileUrl": "https://www.facebook.com/NASA",
+      "profilePic": "https://scontent-den2-1.xx.fbcdn.net/v/t39.30808-1/243095782_416661036495945_3843362260429099279_n.png?stp=cp0_dst-png_s40x40&_nc_cat=1&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=_m64k4-R0_UQ7kNvwFcK_1Q&_nc_oc=AdkCG1vHjbcAomBRD1i9NhLCv4qAWa7jAiVqZiUTNAzna7LNZpOVbveX6Age-7dBbbY&_nc_zt=24&_nc_ht=scontent-den2-1.xx&_nc_gid=ZjPRkur0ABNFwyINy_zn_w&oh=00_AfcKjb4w1HM8YUR7crRVjfM_vLcOG9WqoxEjgFeFRXZoAg&oe=68E8D015"
+    },
+    "text": "Last week, we announced our new class of astronaut candidates: 10 pilots, scientists, doctors, and explorers from across the United States. \n\nThey're starting two years of intensive training, after which they'll be eligible for missions to low Earth orbit, the Moon, and beyond. Come join the journey with us—follow our new candidates on social media: https://go.nasa.gov/4mLeL7j",
+    "textReferences": [
+      {
+        "url": "https://l.facebook.com/l.php?u=https%3A%2F%2Fgo.nasa.gov%2F4mLeL7j&h=AT05MrYsieUT2pT9OFRkFLSTqlK6DWlPCduow5xSBk-JTeCpkemF9Z7M5VYczR8jLn5fJK_YtnLjQ91A5uU79HGhiKwaKMTSNIJ4WZHJcJP0Kb2bXFFQ8kER5ixlOCFeETCd0RZV7X5m7Umj-1NYtpd3CF8g80ja&s=1",
+        "external_url": "https://go.nasa.gov/4mLeL7j",
+        "web_link": {
+          "__typename": "ExternalWebLink",
+          "url": "https://go.nasa.gov/4mLeL7j",
+          "fbclid": null,
+          "lynx_mode": "ASYNCLAZY"
+        },
+        "mobileUrl": "https://lm.facebook.com/l.php?u=https%3A%2F%2Fgo.nasa.gov%2F4mLeL7j&h=AT1iry-CrvKxM2wTIk9L8xAb9C5rfcTRh2dALNvqHFlC60oZr5nq-oX67s5gg9P35steUBM-qZX6cvSFlMAcxgVwlmvILyHqkp1g-OX9e8L6ezrL2RfWfA9lAOP_sM2zhcvYdMY3sODSURAJ3WWCNA_hDCzjH_wr&s=1",
+        "id": "NjQyMTgzOTU5MjA4MTA3Omh0dHBzXGEvL2dvLm5hc2EuZ292LzRtTGVMN2o6OkRlZmF1bHQ6OjoxMzQ3NjIwMzEzNDAwMDA4"
+      }
+    ],
+    "link": "https://go.nasa.gov/4mLeL7j",
+    "likes": 3165,
+    "comments": 353,
+    "shares": 318,
+    "topReactionsCount": 7,
+    "isVideo": true,
+    "viewsCount": 39530,
+    "media": [
+      {
+        "thumbnail": "https://scontent-den2-1.xx.fbcdn.net/v/t15.5256-10/557016767_786634297501056_3262757203267603317_n.jpg?stp=dst-jpg_s960x960_tt6&_nc_cat=108&ccb=1-7&_nc_sid=7965db&_nc_ohc=M2pjtEVZHeEQ7kNvwGcYaHQ&_nc_oc=AdnCn2BbNBIv7970v8Z8vaBZswPakIeyCCxoGmjvniQ5mVMLmoI96A84m_FqQgLj8s4&_nc_zt=23&_nc_ht=scontent-den2-1.xx&_nc_gid=ZjPRkur0ABNFwyINy_zn_w&oh=00_AfddptSxEyvJWU3cylSZdMFotQfM8bs4PTBwLLOZMG3YDQ&oe=68E8F530",
+        "__typename": "Video",
+        "thumbnailImage": {
+          "uri": "https://scontent-den2-1.xx.fbcdn.net/v/t15.5256-10/557016767_786634297501056_3262757203267603317_n.jpg?stp=dst-jpg_s960x960_tt6&_nc_cat=108&ccb=1-7&_nc_sid=7965db&_nc_ohc=M2pjtEVZHeEQ7kNvwGcYaHQ&_nc_oc=AdnCn2BbNBIv7970v8Z8vaBZswPakIeyCCxoGmjvniQ5mVMLmoI96A84m_FqQgLj8s4&_nc_zt=23&_nc_ht=scontent-den2-1.xx&_nc_gid=ZjPRkur0ABNFwyINy_zn_w&oh=00_AfddptSxEyvJWU3cylSZdMFotQfM8bs4PTBwLLOZMG3YDQ&oe=68E8F530"
+        },
+        "id": "2572281719785994",
+        "is_clipping_enabled": false,
+        "live_rewind_enabled": false,
+        "owner": {
+          "__typename": "User",
+          "id": "100044561550831",
+          "__isVideoOwner": "User",
+          "has_professional_features_for_watch": true
+        },
+        "playable_duration_in_ms": 34017,
+        "is_huddle": false,
+        "url": "https://www.facebook.com/NASA/videos/2572281719785994/",
+        "if_viewer_can_use_latency_menu": null,
+        "if_viewer_can_use_latency_menu_toggle": null,
+        "captions_url": null,
+        "video_available_captions_locales": [],
+        "if_viewer_can_see_community_moderation_tools": null,
+        "if_viewer_can_use_live_rewind": null,
+        "if_viewer_can_use_clipping": null,
+        "if_viewer_can_see_costreaming_tools": null,
+        "video_player_scrubber_base_content_renderer": null,
+        "video_player_scrubber_preview_renderer": {
+          "__typename": "XFBVideoPlayerScrubberDefaultPreviewRenderer",
+          "video": {
+            "scrubber_preview_thumbnail_information": {
+              "sprite_uris": [
+                "https://scontent-den2-1.xx.fbcdn.net/v/t15.5256-10/556072268_755100050835462_9090486839096943881_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=62976d&_nc_ohc=r01qIydt5C0Q7kNvwH3w4V_&_nc_oc=AdlRPSD6XyvdGGYftXuPEtioUl3iKTIUWOdzvvoVqpDscZLUrwNM-QwkQGHLWvtAiNk&_nc_zt=23&_nc_ht=scontent-den2-1.xx&_nc_gid=ZjPRkur0ABNFwyINy_zn_w&oh=00_AfdJApAazsbgTx-Mg4RTijjkjmB2ps_0ZCvsPyY_89twrA&oe=68E8F03A"
+              ],
+              "thumbnail_width": 100,
+              "thumbnail_height": 176,
+              "has_preview_thumbnails": true,
+              "num_images_per_row": 10,
+              "max_number_of_images_per_sprite": 100,
+              "time_interval_between_image": 1
+            },
+            "id": "2572281719785994"
+          },
+          "__module_operation_VideoPlayerScrubberPreview_video": {
+            "__dr": "VideoPlayerScrubberDefaultPreview_video$normalization.graphql"
+          },
+          "__module_component_VideoPlayerScrubberPreview_video": {
+            "__dr": "VideoPlayerScrubberDefaultPreview.react"
+          }
+        },
+        "recipient_group": null,
+        "music_attachment_metadata": null,
+        "video_container_type": "CONTAINED_POST_ATTACHMENT",
+        "breakingStatus": false,
+        "videoId": "2572281719785994",
+        "isPremiere": false,
+        "liveViewerCount": 0,
+        "rehearsalInfo": null,
+        "is_gaming_video": false,
+        "is_live_audio_room_v2_broadcast": false,
+        "publish_time": 1759260534,
+        "live_speaker_count_indicator": null,
+        "can_viewer_share": false,
+        "end_cards_channel_info": {
+          "video_chaining_caller": "CHANNEL_VIEW_FROM_END_CARD",
+          "video_channel_entry_point": "PROFILE",
+          "video": {
+            "id": "2572281719785994",
+            "can_viewer_share": false,
+            "creation_story": {
+              "shareable": null,
+              "id": "UzpfSTEwMDA0NDU2MTU1MDgzMTpWSzoyNTcyMjgxNzE5Nzg1OTk0"
+            }
+          },
+          "__module_operation_useVideoPlayerWatchEndScreenWithActions_video": {
+            "__dr": "VideoPlayerWatchInlineEndScreen_info$normalization.graphql"
+          },
+          "__module_component_useVideoPlayerWatchEndScreenWithActions_video": {
+            "__dr": "VideoPlayerWatchInlineEndScreen.react"
+          }
+        },
+        "is_soundbites_video": false,
+        "is_looping": false,
+        "info": {
+          "video_chaining_caller": "CHANNEL_VIEW_FROM_END_CARD",
+          "video_channel_entry_point": "PROFILE",
+          "video_id": "2572281719785994",
+          "__module_operation_useVideoPlayerWatchPauseScreenWithActions_video": {
+            "__dr": "VideoPlayerWatchInlinePauseScreen_info$normalization.graphql"
+          },
+          "__module_component_useVideoPlayerWatchPauseScreenWithActions_video": {
+            "__dr": "VideoPlayerWatchInlinePauseScreen.react"
+          }
+        },
+        "animated_image_caption": null,
+        "width": 1080,
+        "height": 1920,
+        "broadcaster_origin": null,
+        "broadcast_id": null,
+        "broadcast_status": null,
+        "is_live_streaming": false,
+        "is_live_trace_enabled": false,
+        "is_video_broadcast": false,
+        "is_podcast_video": false,
+        "loop_count": 0,
+        "is_spherical": false,
+        "is_spherical_enabled": true,
+        "unsupported_browser_message": null,
+        "can_play_undiscoverable": true,
+        "pmv_metadata": null,
+        "latency_sensitive_config": null,
+        "live_playback_instrumentation_configs": null,
+        "is_ncsr": false,
+        "permalink_url": "https://www.facebook.com/NASA/videos/2572281719785994/",
+        "dash_prefetch_experimental": [
+          "1375414750852608v",
+          "1389716249823303a"
+        ],
+        "video_status_type": "OK",
+        "can_use_oz": true,
+        "dash_manifest": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"urn:mpeg:dash:schema:mpd:2011 DASH-MPD.xsd\" profiles=\"urn:mpeg:dash:profile:isoff-on-demand:2011\" minBufferTime=\"PT2S\" type=\"static\" mediaPresentationDuration=\"PT34.040455S\" FBTagsetUsed=\"r2av1-r1gen2vp9\" FBManifestIdentifier=\"FgAYD3IyYXYxLXIxZ2VuMnZwORmWhtDdsYrY3wLU1/HiiJD8AvD2kcmajfIDorWNypatzASA2KW61rvxBI6hxvaQ/PcEjMW/zbvIlAWCstT4utayBbDVkP7DuIQGIhgQYXVkaW9fYWFjX2xuX3ZiciI2ChQAAA==\"><Period id=\"0\" duration=\"PT34.040455S\"><AdaptationSet id=\"0\" contentType=\"video\" frameRate=\"15360/512\" subsegmentAlignment=\"true\" par=\"9:16\" FBUnifiedUploadResolutionMos=\"360:70.8,480:70.8,720:70.8,1080:70.8\"><SupplementalProperty schemeIdUri=\"urn:mpeg:mpegB:cicp:MatrixCoefficients\" value=\"1\"/><SupplementalProperty schemeIdUri=\"urn:mpeg:mpegB:cicp:ColourPrimaries\" value=\"1\"/><SupplementalProperty schemeIdUri=\"urn:mpeg:mpegB:cicp:TransferCharacteristics\" value=\"1\"/><Representation id=\"1698617150805336v\" bandwidth=\"161462\" codecs=\"av01.0.05M.08.0.111.01.01.01.0\" mimeType=\"video/mp4\" sar=\"1:1\" FBEncodingTag=\"dash_r2av1-r1gen2vp9_q20\" FBPlaybackResolutionMos=\"0:100,360:61,480:59.4,720:59.1,1080:61\" FBPlaybackResolutionMosConfidenceLevel=\"high\" FBPlaybackResolutionCsvqm=\"0:100,360:87.3,480:83.7,720:77.6,1080:69.7\" width=\"720\" height=\"1280\" FBDefaultQuality=\"1\" FBQualityClass=\"hd\" FBQualityLabel=\"240p\"><BaseURL>https://video-den2-1.xx.fbcdn.net/o1/v/t2/f2/m366/AQMI9kOPr3R0ziH0W-6aGz4S41cEcbOIAM-6jHjLCkNKR89mBMGtm3_0aORjazOLDqZJ3ECuMfyLT1YOh0bVR7J1YyccMpYtO8Powqo.mp4?_nc_cat=107&amp;_nc_sid=9ca052&amp;_nc_ht=video-den2-1.xx.fbcdn.net&amp;_nc_ohc=qdDacBE44dQQ7kNvwGDlqCi&amp;efg=eyJ2ZW5jb2RlX3RhZyI6ImRhc2hfcjJhdjEtcjFnZW4ydnA5X3EyMCIsInZpZGVvX2lkIjoyNTcyMjgxNzE5Nzg1OTk0LCJvaWxfdXJsZ2VuX2FwcF9pZCI6MCwiY2xpZW50X25hbWUiOiJ1bmtub3duIiwieHB2X2Fzc2V0X2lkIjoxODY1NzAwNzg3MzUxNDY1LCJ2aV91c2VjYXNlX2lkIjoxMDEyMiwiZHVyYXRpb25fcyI6MzQsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&amp;ccb=17-1&amp;_nc_gid=ZjPRkur0ABNFwyINy_zn_w&amp;_nc_zt=28&amp;oh=00_Afcjl27Ac68C67JZ60RVMjTfP3uOCuQzH3n7OurBd2CxGw&amp;oe=68E8EBAC</BaseURL><SegmentBase indexRange=\"826-941\" timescale=\"15360\" FBFirstSegmentRange=\"942-85940\"><Initialization range=\"0-825\"/></SegmentBase></Representation><Representation id=\"1375414750852608v\" bandwidth=\"261074\" codecs=\"av01.0.05M.08.0.111.01.01.01.0\" mimeType=\"video/mp4\" sar=\"1:1\" FBEncodingTag=\"dash_r2av1-r1gen2vp9_q30\" FBPlaybackResolutionMos=\"0:100,360:71.5,480:69.6,720:68.4,1080:68.9\" FBPlaybackResolutionMosConfidenceLevel=\"high\" FBPlaybackResolutionCsvqm=\"0:100,360:92.7,480:90.1,720:85,1080:77.6\" width=\"720\" height=\"1280\" FBQualityClass=\"hd\" FBQualityLabel=\"270p\"><BaseURL>https://video-den2-1.xx.fbcdn.net/o1/v/t2/f2/m366/AQOWDlW0sY4V_z06KdUbTsKzsEZiecKB15uWmOon_O55ZRskts3kfNL-qozf2sMhux1ZejvUM3Bj8u1mwaP05-0NiJDfrpnkZPQdg8Y.mp4?_nc_cat=108&amp;_nc_sid=9ca052&amp;_nc_ht=video-den2-1.xx.fbcdn.net&amp;_nc_ohc=8Z_Y1Efkq7MQ7kNvwHbqg9z&amp;efg=eyJ2ZW5jb2RlX3RhZyI6ImRhc2hfcjJhdjEtcjFnZW4ydnA5X3EzMCIsInZpZGVvX2lkIjoyNTcyMjgxNzE5Nzg1OTk0LCJvaWxfdXJsZ2VuX2FwcF9pZCI6MCwiY2xpZW50X25hbWUiOiJ1bmtub3duIiwieHB2X2Fzc2V0X2lkIjoxODY1NzAwNzg3MzUxNDY1LCJ2aV91c2VjYXNlX2lkIjoxMDEyMiwiZHVyYXRpb25fcyI6MzQsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&amp;ccb=17-1&amp;_nc_gid=ZjPRkur0ABNFwyINy_zn_w&amp;_nc_zt=28&amp;oh=00_AfcZI8UeTxNhsaaYJh46VECDd2mzZY5PVjxtFPc4XePOcA&amp;oe=68E8F009</BaseURL><SegmentBase indexRange=\"826-941\" timescale=\"15360\" FBFirstSegmentRange=\"942-137471\"><Initialization range=\"0-825\"/></SegmentBase></Representation><Representation id=\"1095340485918136v\" bandwidth=\"359052\" codecs=\"av01.0.05M.08.0.111.01.01.01.0\" mimeType=\"video/mp4\" sar=\"1:1\" FBEncodingTag=\"dash_r2av1-r1gen2vp9_q40\" FBPlaybackResolutionMos=\"0:100,360:76.6,480:74.8,720:73.3,1080:73\" FBPlaybackResolutionMosConfidenceLevel=\"high\" FBPlaybackResolutionCsvqm=\"0:100,360:95.1,480:93.2,720:88.9,1080:82\" width=\"720\" height=\"1280\" FBQualityClass=\"hd\" FBQualityLabel=\"360p\"><BaseURL>https://video-den2-1.xx.fbcdn.net/o1/v/t2/f2/m366/AQOQ0-JLuYoIz5d49UIwzxndv1Ld94I8LMQ1S7NHrFKh6WNQ1_9MX-DaqW3CqJOl93p3fzwpP4vw4FH-f0rs4YiYV7rkAsU_eLdUEqQ.mp4?_nc_cat=111&amp;_nc_sid=9ca052&amp;_nc_ht=video-den2-1.xx.fbcdn.net&amp;_nc_ohc=ldOqecMB9F0Q7kNvwFMnhFu&amp;efg=eyJ2ZW5jb2RlX3RhZyI6ImRhc2hfcjJhdjEtcjFnZW4ydnA5X3E0MCIsInZpZGVvX2lkIjoyNTcyMjgxNzE5Nzg1OTk0LCJvaWxfdXJsZ2VuX2FwcF9pZCI6MCwiY2xpZW50X25hbWUiOiJ1bmtub3duIiwieHB2X2Fzc2V0X2lkIjoxODY1NzAwNzg3MzUxNDY1LCJ2aV91c2VjYXNlX2lkIjoxMDEyMiwiZHVyYXRpb25fcyI6MzQsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&amp;ccb=17-1&amp;_nc_gid=ZjPRkur0ABNFwyINy_zn_w&amp;_nc_zt=28&amp;oh=00_Afelt7DCETnj1-DbnQ1QS_Y7XtJIq7EwIQGkkJ4rKrzmsA&amp;oe=68E8F1C4</BaseURL><SegmentBase indexRange=\"826-941\" timescale=\"15360\" FBFirstSegmentRange=\"942-190595\"><Initialization range=\"0-825\"/></SegmentBase></Representation><Representation id=\"773370385511427v\" bandwidth=\"456996\" codecs=\"av01.0.05M.08.0.111.01.01.01.0\" mimeType=\"video/mp4\" sar=\"1:1\" FBEncodingTag=\"dash_r2av1-r1gen2vp9_q50\" FBPlaybackResolutionMos=\"0:100,360:80.2,480:77.7,720:76.2,1080:75.5\" FBPlaybackResolutionMosConfidenceLevel=\"high\" FBPlaybackResolutionCsvqm=\"0:100,360:96.5,480:95.1,720:91.3,1080:84.9\" width=\"720\" height=\"1280\" FBQualityClass=\"hd\" FBQualityLabel=\"480p\"><BaseURL>https://video-den2-1.xx.fbcdn.net/o1/v/t2/f2/m366/AQNANnG2vLjlt1ug8FKaeTqmJfwBvJEk9LkZwBZRxHeTVIlRY9qz9nma09m8mpMWzapXC6dfEnRx0owCRTnoVxnOVp1ReFrZO8JAeYo.mp4?_nc_cat=107&amp;_nc_sid=9ca052&amp;_nc_ht=video-den2-1.xx.fbcdn.net&amp;_nc_ohc=TZBZYpAKUpsQ7kNvwFmDjbc&amp;efg=eyJ2ZW5jb2RlX3RhZyI6ImRhc2hfcjJhdjEtcjFnZW4ydnA5X3E1MCIsInZpZGVvX2lkIjoyNTcyMjgxNzE5Nzg1OTk0LCJvaWxfdXJsZ2VuX2FwcF9pZCI6MCwiY2xpZW50X25hbWUiOiJ1bmtub3duIiwieHB2X2Fzc2V0X2lkIjoxODY1NzAwNzg3MzUxNDY1LCJ2aV91c2VjYXNlX2lkIjoxMDEyMiwiZHVyYXRpb25fcyI6MzQsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&amp;ccb=17-1&amp;_nc_gid=ZjPRkur0ABNFwyINy_zn_w&amp;_nc_zt=28&amp;oh=00_AffsbuNvRQ5u4omX5gqvWmvNg0kj5ChWufO8w8S86fVyCQ&amp;oe=68E8F680</BaseURL><SegmentBase indexRange=\"826-941\" timescale=\"15360\" FBFirstSegmentRange=\"942-241278\"><Initialization range=\"0-825\"/></SegmentBase></Representation><Representation id=\"1518811426229377v\" bandwidth=\"556493\" codecs=\"av01.0.05M.08.0.111.01.01.01.0\" mimeType=\"video/mp4\" sar=\"1:1\" FBEncodingTag=\"dash_r2av1-r1gen2vp9_q60\" FBPlaybackResolutionMos=\"0:100,360:82.6,480:80.3,720:78,1080:77\" FBPlaybackResolutionMosConfidenceLevel=\"high\" FBPlaybackResolutionCsvqm=\"0:100,360:97.2,480:96.2,720:93,1080:86.9\" width=\"720\" height=\"1280\" FBQualityClass=\"hd\" FBQualityLabel=\"540p\"><BaseURL>https://video-den2-1.xx.fbcdn.net/o1/v/t2/f2/m366/AQMUG4--zP40nzwqLdvCUEMjd8E-uR4e5PBth7O8_HwnVf4Co1vdPIoBQpbVkdZA_m-kqX1lkEtRHdVbaTaMr9xoROwqZvKmfZeoPhI.mp4?_nc_cat=100&amp;_nc_sid=9ca052&amp;_nc_ht=video-den2-1.xx.fbcdn.net&amp;_nc_ohc=yb4dQu-iL1EQ7kNvwHXBLNo&amp;efg=eyJ2ZW5jb2RlX3RhZyI6ImRhc2hfcjJhdjEtcjFnZW4ydnA5X3E2MCIsInZpZGVvX2lkIjoyNTcyMjgxNzE5Nzg1OTk0LCJvaWxfdXJsZ2VuX2FwcF9pZCI6MCwiY2xpZW50X25hbWUiOiJ1bmtub3duIiwieHB2X2Fzc2V0X2lkIjoxODY1NzAwNzg3MzUxNDY1LCJ2aV91c2VjYXNlX2lkIjoxMDEyMiwiZHVyYXRpb25fcyI6MzQsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&amp;ccb=17-1&amp;_nc_gid=ZjPRkur0ABNFwyINy_zn_w&amp;_nc_zt=28&amp;oh=00_AffFj6Q5M-vm88n3pfMYVC74Na-eifpJ9_u85EvJ8Kny1A&amp;oe=68E8CBA1</BaseURL><SegmentBase indexRange=\"826-941\" timescale=\"15360\" FBFirstSegmentRange=\"942-292869\"><Initialization range=\"0-825\"/></SegmentBase></Representation><Representation id=\"1293801798872401v\" bandwidth=\"734175\" codecs=\"av01.0.05M.08.0.111.01.01.01.0\" mimeType=\"video/mp4\" sar=\"1:1\" FBEncodingTag=\"dash_r2av1-r1gen2vp9_q70\" FBPlaybackResolutionMos=\"0:100,360:85.5,480:83.3,720:81.1,1080:79.4\" FBPlaybackResolutionMosConfidenceLevel=\"high\" FBPlaybackResolutionCsvqm=\"0:100,360:98,480:97.3,720:95.1,1080:89.5\" width=\"720\" height=\"1280\" FBQualityClass=\"hd\" FBQualityLabel=\"640p\"><BaseURL>https://video-den2-1.xx.fbcdn.net/o1/v/t2/f2/m366/AQP0vsXtKDy02EK8f8ZJb4Q2DglAb1RvdOclSW5msevLpAGi17yBXGZ8Sy5M1bmCxUSI1YwyQlkhmZvVsnjOrmuI47BggSGv4icTz3Q.mp4?_nc_cat=107&amp;_nc_sid=9ca052&amp;_nc_ht=video-den2-1.xx.fbcdn.net&amp;_nc_ohc=W8_0ZLfuqDAQ7kNvwFkweaR&amp;efg=eyJ2ZW5jb2RlX3RhZyI6ImRhc2hfcjJhdjEtcjFnZW4ydnA5X3E3MCIsInZpZGVvX2lkIjoyNTcyMjgxNzE5Nzg1OTk0LCJvaWxfdXJsZ2VuX2FwcF9pZCI6MCwiY2xpZW50X25hbWUiOiJ1bmtub3duIiwieHB2X2Fzc2V0X2lkIjoxODY1NzAwNzg3MzUxNDY1LCJ2aV91c2VjYXNlX2lkIjoxMDEyMiwiZHVyYXRpb25fcyI6MzQsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&amp;ccb=17-1&amp;_nc_gid=ZjPRkur0ABNFwyINy_zn_w&amp;_nc_zt=28&amp;oh=00_AfcCzO9dLR3ROFvjuBKZBtZlaYourgs42dzz5lrUIFyKVw&amp;oe=68E8C87C</BaseURL><SegmentBase indexRange=\"826-941\" timescale=\"15360\" FBFirstSegmentRange=\"942-388508\"><Initialization range=\"0-825\"/></SegmentBase></Representation><Representation id=\"1452600299352390v\" bandwidth=\"988383\" codecs=\"av01.0.05M.08.0.111.01.01.01.0\" mimeType=\"video/mp4\" sar=\"1:1\" FBEncodingTag=\"dash_r2av1-r1gen2vp9_q80\" FBPlaybackResolutionMos=\"0:100,360:87.8,480:85.9,720:83.7,1080:81.8\" FBPlaybackResolutionMosConfidenceLevel=\"high\" FBPlaybackResolutionCsvqm=\"0:100,360:98.67,480:98.19,720:96.6,1080:91.8\" width=\"720\" height=\"1280\" FBQualityClass=\"hd\" FBQualityLabel=\"720p\"><BaseURL>https://video-den2-1.xx.fbcdn.net/o1/v/t2/f2/m366/AQOT3g70IcGKDicMvpMpUN6UVBajW3zXJvjFXFtzkIj09LKaOmJ5rJWXxFkFeq1xfdl5EaG0PCY8VIyYTbq3TntzYwfGonNs1CDRD4U.mp4?_nc_cat=107&amp;_nc_sid=9ca052&amp;_nc_ht=video-den2-1.xx.fbcdn.net&amp;_nc_ohc=QuJH-qpLmxAQ7kNvwGESrig&amp;efg=eyJ2ZW5jb2RlX3RhZyI6ImRhc2hfcjJhdjEtcjFnZW4ydnA5X3E4MCIsInZpZGVvX2lkIjoyNTcyMjgxNzE5Nzg1OTk0LCJvaWxfdXJsZ2VuX2FwcF9pZCI6MCwiY2xpZW50X25hbWUiOiJ1bmtub3duIiwieHB2X2Fzc2V0X2lkIjoxODY1NzAwNzg3MzUxNDY1LCJ2aV91c2VjYXNlX2lkIjoxMDEyMiwiZHVyYXRpb25fcyI6MzQsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&amp;ccb=17-1&amp;_nc_gid=ZjPRkur0ABNFwyINy_zn_w&amp;_nc_zt=28&amp;oh=00_AfdeD925otZ-ANgbcEo3C4ynJ-iUC5esy0tSNzSfpUYFGA&amp;oe=68E8E99C</BaseURL><SegmentBase indexRange=\"826-941\" timescale=\"15360\" FBFirstSegmentRange=\"942-534167\"><Initialization range=\"0-825\"/></SegmentBase></Representation><Representation id=\"835904892450282v\" bandwidth=\"1464718\" codecs=\"av01.0.08M.08.0.111.01.01.01.0\" mimeType=\"video/mp4\" sar=\"1:1\" FBEncodingTag=\"dash_r2av1-r1gen2vp9_q90\" FBPlaybackResolutionMos=\"0:100,360:90.5,480:88.8,720:86.9,1080:86\" FBPlaybackResolutionMosConfidenceLevel=\"high\" FBPlaybackResolutionCsvqm=\"0:100,360:99.028,480:98.72,720:97.9,1080:96.1\" width=\"1080\" height=\"1920\" FBQualityClass=\"hd\" FBQualityLabel=\"1080p\"><BaseURL>https://video-den2-1.xx.fbcdn.net/o1/v/t2/f2/m366/AQOsMsWsCz1ai83rZkbDtuW_vTBr0jABmfWr6hylL9tJ42f-5lb9lHo0bUssChAIGCsRl82o-BbnR_HmbwtqFXktoxqOyRv_6Obgi08.mp4?_nc_cat=100&amp;_nc_sid=9ca052&amp;_nc_ht=video-den2-1.xx.fbcdn.net&amp;_nc_ohc=xXHVmZVA1KUQ7kNvwFDfbfR&amp;efg=eyJ2ZW5jb2RlX3RhZyI6ImRhc2hfcjJhdjEtcjFnZW4ydnA5X3E5MCIsInZpZGVvX2lkIjoyNTcyMjgxNzE5Nzg1OTk0LCJvaWxfdXJsZ2VuX2FwcF9pZCI6MCwiY2xpZW50X25hbWUiOiJ1bmtub3duIiwieHB2X2Fzc2V0X2lkIjoxODY1NzAwNzg3MzUxNDY1LCJ2aV91c2VjYXNlX2lkIjoxMDEyMiwiZHVyYXRpb25fcyI6MzQsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&amp;ccb=17-1&amp;_nc_gid=ZjPRkur0ABNFwyINy_zn_w&amp;_nc_zt=28&amp;oh=00_Afecazq7gza72yeHITx-MMTYdZZsXcYhnlf4dPhwXyfX_Q&amp;oe=68E8F621</BaseURL><SegmentBase indexRange=\"826-941\" timescale=\"15360\" FBFirstSegmentRange=\"942-818428\"><Initialization range=\"0-825\"/></SegmentBase></Representation></AdaptationSet><AdaptationSet id=\"1\" contentType=\"audio\" subsegmentStartsWithSAP=\"1\" subsegmentAlignment=\"true\"><Representation id=\"1389716249823303a\" bandwidth=\"65935\" codecs=\"mp4a.40.5\" mimeType=\"audio/mp4\" FBAvgBitrate=\"65935\" audioSamplingRate=\"44100\" FBEncodingTag=\"dash_ln_heaac_vbr3_audio\" FBDefaultQuality=\"1\"><AudioChannelConfiguration schemeIdUri=\"urn:mpeg:dash:23003:3:audio_channel_configuration:2011\" value=\"2\"/><BaseURL>https://video-den2-1.xx.fbcdn.net/o1/v/t2/f2/m412/AQM1B0pJ7I9hJZbuNk1Y5BPQ592t8tlUeaGUzV7UK2_87sA9R4_bWDuS6z-grh2UYUH9lxUHIoqWFGb-BKv4l59cSqBU1BosVCPDlCY.mp4?_nc_cat=111&amp;_nc_sid=9ca052&amp;_nc_ht=video-den2-1.xx.fbcdn.net&amp;_nc_ohc=4aIwItomYe4Q7kNvwF7Vxk-&amp;efg=eyJ2ZW5jb2RlX3RhZyI6ImRhc2hfbG5faGVhYWNfdmJyM19hdWRpbyIsInZpZGVvX2lkIjoyNTcyMjgxNzE5Nzg1OTk0LCJvaWxfdXJsZ2VuX2FwcF9pZCI6MCwiY2xpZW50X25hbWUiOiJ1bmtub3duIiwieHB2X2Fzc2V0X2lkIjoxODY1NzAwNzg3MzUxNDY1LCJ2aV91c2VjYXNlX2lkIjoxMDEyMiwiZHVyYXRpb25fcyI6MzQsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&amp;ccb=17-1&amp;_nc_gid=ZjPRkur0ABNFwyINy_zn_w&amp;_nc_zt=28&amp;oh=00_AfeLgh5rkGh6wmp8CpN9kAN5QCeOWvsrK9W4eWRPgw6e0A&amp;oe=68E8C6A0</BaseURL><SegmentBase indexRange=\"824-1071\" timescale=\"44100\" FBFirstSegmentRange=\"1072-17203\"><Initialization range=\"0-823\"/></SegmentBase></Representation></AdaptationSet></Period></MPD>\n",
+        "dash_manifest_url": "https://www.facebook.com/dash_mpd_debug.mpd?v=2572281719785994&dummy=.mpd",
+        "min_quality_preference": null,
+        "audio_user_preferred_language": "en",
+        "is_rss_podcast_video": false,
+        "browser_native_sd_url": "https://video-den2-1.xx.fbcdn.net/o1/v/t2/f2/m412/AQM0j-IoU95kXfeV6sT68p0GsmSGsuGNqtlMRqVeh9VYotddHMDLrqww2a_HatiKwrt230XYlFfbVwbuzgiSfqGN5uWugbQmod7IMroa0w.mp4?_nc_cat=102&_nc_sid=8bf8fe&_nc_ht=video-den2-1.xx.fbcdn.net&_nc_ohc=2BuQaw3ywlsQ7kNvwFb99s-&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5GQUNFQk9PSy4uQzMuMzYwLnN2ZV9zZCIsInhwdl9hc3NldF9pZCI6MTg2NTcwMDc4NzM1MTQ2NSwidmlfdXNlY2FzZV9pZCI6MTAxMjIsImR1cmF0aW9uX3MiOjM0LCJ1cmxnZW5fc291cmNlIjoid3d3In0%3D&ccb=17-1&_nc_gid=ZjPRkur0ABNFwyINy_zn_w&_nc_zt=28&oh=00_Afc9Qu-DGnrFnu3x-oEMv68yKRwkMuJkGya54WJFHEBcGA&oe=68E8D298&bitrate=335324&tag=sve_sd",
+        "browser_native_hd_url": "https://video-den2-1.xx.fbcdn.net/o1/v/t2/f2/m366/AQM1aNn8FOzEGAT3BdNd7iWbv11g_ndyo_NcDCLrRxyLf2hMCerfk7KtIZs7IVhxkPh7mtR8or_N6HDxnhPhjUkOJXIwuXACVoOM6Lzv4bHBpQ.mp4?_nc_cat=104&_nc_sid=5e9851&_nc_ht=video-den2-1.xx.fbcdn.net&_nc_ohc=FQi98vgHacMQ7kNvwEwZN7N&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5GQUNFQk9PSy4uQzMuNzIwLmRhc2hfaDI2NC1iYXNpYy1nZW4yXzcyMHAiLCJ4cHZfYXNzZXRfaWQiOjE4NjU3MDA3ODczNTE0NjUsInZpX3VzZWNhc2VfaWQiOjEwMTIyLCJkdXJhdGlvbl9zIjozNCwidXJsZ2VuX3NvdXJjZSI6Ind3dyJ9&ccb=17-1&vs=d3b61131ac5190a7&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC9GNjRCQzQ2ODA3ODY4QTRFRDQ2OEM3NzMyMDMyMzFBMV9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhhFZmJfZXBoZW1lcmFsLzZDNDk1RkQ5Rjg3NzlENDE5NEIzN0VCREE1QjQyRTk3X210XzBfYXVkaW9fZGFzaGluaXQubXA0FQICyAESACgAGAAbAogHdXNlX29pbAExEnByb2dyZXNzaXZlX3JlY2lwZQExFQAAJtK-_4qKttAGFQIoAkMzLBdAQQQ5WBBiThgZZGFzaF9oMjY0LWJhc2ljLWdlbjJfNzIwcBEAdQJllJ4BAA&_nc_gid=ZjPRkur0ABNFwyINy_zn_w&_nc_zt=28&oh=00_AfeopvAvNrtZGwDVHJekKh6g2NRQW11HGrAuItAE7QxAZg&oe=68E8CBF4&bitrate=1158945&tag=dash_h264-basic-gen2_720p",
+        "spherical_video_fallback_urls": null,
+        "is_latency_menu_enabled": false,
+        "fbls_tier": null,
+        "is_latency_sensitive_broadcast": false,
+        "comet_video_player_static_config": "{}",
+        "comet_video_player_context_sensitive_config": "{}",
+        "video_player_shaka_performance_logger_init": {
+          "__typename": "VideoPlayerShakaPerformanceLoggerInit",
+          "__module_operation_useVideoPlayerShakaPerformanceLoggerRelayImpl_video": {
+            "__dr": "useVideoPlayerShakaPerformanceLoggerRelayImpl_init$normalization.graphql"
+          },
+          "__module_component_useVideoPlayerShakaPerformanceLoggerRelayImpl_video": {
+            "__dr": "VideoPlayerShakaPerformanceLogger"
+          }
+        },
+        "video_player_shaka_performance_logger_should_sample": false,
+        "video_player_shaka_performance_logger_init2": {
+          "__typename": "VideoPlayerShakaPerformanceLoggerInit",
+          "__module_operation_useVideoPlayerShakaPerformanceLoggerBuilder_video": {
+            "__dr": "useVideoPlayerShakaPerformanceLoggerBuilder_init$normalization.graphql"
+          },
+          "__module_component_useVideoPlayerShakaPerformanceLoggerBuilder_video": {
+            "__dr": "VideoPlayerShakaPerformanceLoggerBuilder"
+          },
+          "per_session_sampling_rate": null
+        },
+        "autoplay_gating_result": "all_page_organic_allowed",
+        "viewer_autoplay_setting": "default_autoplay",
+        "can_autoplay": true,
+        "drm_info": "{\"video_license_uri_map\":{},\"graph_api_video_license_uri\":null,\"fairplay_cert\":null,\"widevine_cert\":\"CsECCAMSEBcFuRfMEgSGiwYzOi93KowYgrSCkgUijgIwggEKAoIBAQCZ7Vs7Mn2rXiTvw7YqlbWYUgrVvMs3UD4GRbgU2Ha430BRBEGtjOOtsRu4jE5yWl5KngeVKR1YWEAjp+GvDjipEnk5MAhhC28VjIeMfiG\\/+\\/7qd+EBnh5XgeikX0YmPRTmDoBYqGB63OBPrIRXsTeo1nzN6zNwXZg6IftO7L1KEMpHSQykfqpdQ4IY3brxyt4zkvE9b\\/tkQv0x4b9AsMYE0cS6TJUgpL+X7r1gkpr87vVbuvVk4tDnbNfFXHOggrmWEguDWe3OJHBwgmgNb2fG2CxKxfMTRJCnTuw3r0svAQxZ6ChD4lgvC2ufXbD8Xm7fZPvTCLRxG88SUAGcn1oJAgMBAAE6FGxpY2Vuc2Uud2lkZXZpbmUuY29tEoADrjRzFLWoNSl\\/JxOI+3u4y1J30kmCPN3R2jC5MzlRHrPMveoEuUS5J8EhNG79verJ1BORfm7BdqEEOEYKUDvBlSubpOTOD8S\\/wgqYCKqvS\\/zRnB3PzfV0zKwo0bQQQWz53ogEMBy9szTK\\/NDUCXhCOmQuVGE98K\\/PlspKkknYVeQrOnA+8XZ\\/apvTbWv4K+drvwy6T95Z0qvMdv62Qke4XEMfvKUiZrYZ\\/DaXlUP8qcu9u\\/r6DhpV51Wjx7zmVflkb1gquc9wqgi5efhn9joLK3\\/bNixbxOzVVdhbyqnFk8ODyFfUnaq3fkC3hR3f0kmYgI41sljnXXjqwMoW9wRzBMINk+3k6P8cbxfmJD4\\/Paj8FwmHDsRfuoI6Jj8M76H3CTsZCZKDJjM3BQQ6Kb2m+bQ0LMjfVDyxoRgvfF\\/\\/M\\/EEkPrKWyU2C3YBXpxaBquO4C8A0ujVmGEEqsxN1HX9lu6c5OMm8huDxwWFd7OHMs3avGpr7RP7DUnTikXrh6X0\"}",
+        "p2p_settings": null,
+        "audio_settings": null,
+        "captions_settings": null,
+        "broadcast_low_latency_config": null,
+        "audio_availability": "AVAILABLE",
+        "muted_segments": [],
+        "spherical_video_renderer": null,
+        "preferred_thumbnail": {
+          "image": {
+            "uri": "https://scontent-den2-1.xx.fbcdn.net/v/t15.5256-10/557016767_786634297501056_3262757203267603317_n.jpg?stp=dst-jpg_s960x960_tt6&_nc_cat=108&ccb=1-7&_nc_sid=be8305&_nc_ohc=M2pjtEVZHeEQ7kNvwGcYaHQ&_nc_oc=AdnCn2BbNBIv7970v8Z8vaBZswPakIeyCCxoGmjvniQ5mVMLmoI96A84m_FqQgLj8s4&_nc_zt=23&_nc_ht=scontent-den2-1.xx&_nc_gid=ZjPRkur0ABNFwyINy_zn_w&oh=00_AfddptSxEyvJWU3cylSZdMFotQfM8bs4PTBwLLOZMG3YDQ&oe=68E8F530"
+          },
+          "image_preview_payload": "ABgqx1t89qcbb2rWhiDDI5qGQOT8gOPXGc9s/TPFUlcTdjONv7UVrRIzcOMH+mcfzoosMggm2oQp5QEkHjIPBxjoVOCPxo3SBPOz8jHBXP4fqeaqw4KyMTg7ePfJqWRisAT/AGzn8M1poZ3ZetJ9xwMu5xgA9BkZznpxyfwFFU7c+VKSvygqR34JXPXr1oqGUuxnjy/U08eWe7f5/Gqq/wBKUdB9ai5RcCwnu/5f/XoqrGOKKAP/2Q==",
+          "id": "786634294167723"
+        },
+        "video_imf_data": null,
+        "original_width": 1080,
+        "original_height": 1920,
+        "original_rotation": "NO_ROTATE",
+        "if_viewer_can_see_pay_to_access_paywall": null,
+        "comet_video_player_audio_overlay_renderer": null,
+        "comet_video_player_audio_background_renderer": null,
+        "comet_video_player_music_sprout_background_renderer": null,
+        "clip_fallback_cover": null,
+        "is_clip": false,
+        "matcha_related_keywords_links": [
+          ""
+        ],
+        "is_music_clip": false,
+        "video_collaborator_page_or_delegate_page": null,
+        "video_anchor_tag_info": null,
+        "image": {
+          "uri": "https://scontent-den2-1.xx.fbcdn.net/v/t15.5256-10/557016767_786634297501056_3262757203267603317_n.jpg?stp=dst-jpg_p296x100_tt6&_nc_cat=108&ccb=1-7&_nc_sid=7965db&_nc_ohc=M2pjtEVZHeEQ7kNvwGcYaHQ&_nc_oc=AdnCn2BbNBIv7970v8Z8vaBZswPakIeyCCxoGmjvniQ5mVMLmoI96A84m_FqQgLj8s4&_nc_zt=23&_nc_ht=scontent-den2-1.xx&_nc_gid=ZjPRkur0ABNFwyINy_zn_w&oh=00_AffoAAYIQFyhZGvQUJbSm4QSKioM3YhRq5A5q_DNSTpS7Q&oe=68E8F530"
+        },
+        "canonical_uri_with_fallback": "https://www.facebook.com/NASA/videos/nasas-2025-astronaut-candidates/2572281719785994/"
+      }
+    ],
+    "feedbackId": "ZmVlZGJhY2s6MTM0NzYyMDMxMzQwMDAwOA==",
+    "topLevelUrl": "https://www.facebook.com/100044561550831/posts/1347620313400008",
+    "facebookId": "100044561550831",
+    "pageAdLibrary": {
+      "is_business_page_active": false,
+      "id": "54971236771"
+    },
+    "inputUrl": "https://www.facebook.com/nasa/"
+  },
+  {
+    "facebookUrl": "https://www.facebook.com/nasa/",
+    "postId": "1344096130419093",
+    "pageName": "NASA",
+    "url": "https://www.facebook.com/NASA/posts/pfbid02qnBdzrNrkDpYSLsE7SqSJaG36cvFD89S3viY3aFtMf2dMRZhR6EaDLAmWy9gm9tKl",
+    "time": "2025-09-26T15:35:01.000Z",
+    "timestamp": 1758900901,
+    "user": {
+      "id": "100044561550831",
+      "name": "NASA - National Aeronautics and Space Administration",
+      "profileUrl": "https://www.facebook.com/NASA",
+      "profilePic": "https://scontent-den2-1.xx.fbcdn.net/v/t39.30808-1/243095782_416661036495945_3843362260429099279_n.png?stp=cp0_dst-png_s40x40&_nc_cat=1&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=_m64k4-R0_UQ7kNvwFcK_1Q&_nc_oc=AdkCG1vHjbcAomBRD1i9NhLCv4qAWa7jAiVqZiUTNAzna7LNZpOVbveX6Age-7dBbbY&_nc_zt=24&_nc_ht=scontent-den2-1.xx&_nc_gid=ZjPRkur0ABNFwyINy_zn_w&oh=00_AfcKjb4w1HM8YUR7crRVjfM_vLcOG9WqoxEjgFeFRXZoAg&oe=68E8D015"
+    },
+    "text": "Earlier this week, we announced our newest class of astronaut candidates — and you may have already seen their bios and read their stories. But do you know what book they would take with them to a desert island?\n\nGet up-close and personal with our future explorers in today's episode of Houston, We Have A Podcast: go.nasa.gov/46D66h5",
+    "textReferences": [
+      {
+        "url": "https://l.facebook.com/l.php?u=https%3A%2F%2Fgo.nasa.gov%2F46D66h5&h=AT1FuJbU0amLvaPjQ9lOelnZUSq_9L0roEF7YYe1qywXP0yk5Lbsw8HSZyKs7O947X72AIjZB7ko-n9giK-1gy0kEhbbLyUO6brll3KtJIolW3uETiTU6-kKpxNxibX6d2x5YzIsV5tNojIWyV76F-C4LH1I0FgM&s=1",
+        "external_url": "http://go.nasa.gov/46D66h5",
+        "web_link": {
+          "__typename": "ExternalWebLink",
+          "url": "http://go.nasa.gov/46D66h5",
+          "fbclid": null,
+          "lynx_mode": "ASYNCLAZY"
+        },
+        "mobileUrl": "https://lm.facebook.com/l.php?u=https%3A%2F%2Fgo.nasa.gov%2F46D66h5&h=AT3MBxQnXEH1cFC5xc9JI8u9HqjIpMy-hakeQnBleKtALoEsXLYF06NlO190_kUEAITahyH2dZY1jv2sWly7xF2p4gEziKeHC71MsE2PgJ2KePVyy7r-Ultra0l-8HajJxsZZFKlGFHmGZnK-6Z1nwxOanWdToDf&s=1",
+        "id": "NjQyMTgzOTU5MjA4MTA3Omh0dHBcYS8vZ28ubmFzYS5nb3YvNDZENjZoNTo6RGVmYXVsdDo6OjEzNDQwOTYxMzA0MTkwOTM="
+      }
+    ],
+    "link": "http://go.nasa.gov/46D66h5",
+    "likes": 1034,
+    "comments": 117,
+    "shares": 111,
+    "topReactionsCount": 7,
+    "media": [
+      {
+        "thumbnail": "https://scontent-den2-1.xx.fbcdn.net/v/t39.30808-6/555417725_1344096120419094_6474134619844002031_n.jpg?stp=dst-jpg_s960x960_tt6&_nc_cat=103&ccb=1-7&_nc_sid=127cfc&_nc_ohc=Qmslzv3zIOUQ7kNvwFXP-1D&_nc_oc=AdngbeCIlUDQRrKgg5Cl_lz6EWQKjkCHbYT2OJxYhwGc7U1poszRbsFaiHazPHWwhp0&_nc_zt=23&_nc_ht=scontent-den2-1.xx&_nc_gid=ZjPRkur0ABNFwyINy_zn_w&oh=00_AfcHoVUJXWsgEbCh2zjhSlFJ0na_Y-Z19TH8IWCGEmWoYw&oe=68E8E8C8",
+        "__typename": "Photo",
+        "photo_image": {
+          "uri": "https://scontent-den2-1.xx.fbcdn.net/v/t39.30808-6/555417725_1344096120419094_6474134619844002031_n.jpg?stp=dst-jpg_s960x960_tt6&_nc_cat=103&ccb=1-7&_nc_sid=127cfc&_nc_ohc=Qmslzv3zIOUQ7kNvwFXP-1D&_nc_oc=AdngbeCIlUDQRrKgg5Cl_lz6EWQKjkCHbYT2OJxYhwGc7U1poszRbsFaiHazPHWwhp0&_nc_zt=23&_nc_ht=scontent-den2-1.xx&_nc_gid=ZjPRkur0ABNFwyINy_zn_w&oh=00_AfcHoVUJXWsgEbCh2zjhSlFJ0na_Y-Z19TH8IWCGEmWoYw&oe=68E8E8C8",
+          "height": 504,
+          "width": 960
+        },
+        "__isMedia": "Photo",
+        "accent_color": "FF69524D",
+        "photo_product_tags": [],
+        "url": "https://www.facebook.com/photo/?fbid=1344096117085761&set=a.416661013162614",
+        "id": "1344096117085761",
+        "ocrText": "May be an image of 10 people and text that says 'HOUSTON A AEHA WE HAVE PODCAST NASA Ay MIAC EPISODE 402 ON A DESERT ISLAND WITH THE 2025 CLASS OF ASTRONAUT CANDIDATES'"
+      }
+    ],
+    "feedbackId": "ZmVlZGJhY2s6MTM0NDA5NjEzMDQxOTA5Mw==",
+    "topLevelUrl": "https://www.facebook.com/100044561550831/posts/1344096130419093",
+    "facebookId": "100044561550831",
+    "pageAdLibrary": {
+      "is_business_page_active": false,
+      "id": "54971236771"
+    },
+    "inputUrl": "https://www.facebook.com/nasa/"
+  },
+  {
+    "facebookUrl": "https://www.facebook.com/nasa/",
+    "postId": "1343222297173143",
+    "pageName": "NASA",
+    "url": "https://www.facebook.com/NASA/posts/pfbid0313PUaYH9ZAsQfxpgyHwp14v6sD2nEAZtitMWMGPraPW6nXHs6kYVkcEbCkdiDFLtl",
+    "time": "2025-09-25T13:33:59.000Z",
+    "timestamp": 1758807239,
+    "user": {
+      "id": "100044561550831",
+      "name": "NASA - National Aeronautics and Space Administration",
+      "profileUrl": "https://www.facebook.com/NASA",
+      "profilePic": "https://scontent-sea1-1.xx.fbcdn.net/v/t39.30808-1/243095782_416661036495945_3843362260429099279_n.png?stp=cp0_dst-png_s40x40&_nc_cat=1&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=_m64k4-R0_UQ7kNvwHPCpM5&_nc_oc=Adnh5_oxKy7kG7FGftCsmLTaMQm7DNPtIn7At48tZ-wnBTuoa5qTNWzD78CuONxe95U&_nc_zt=24&_nc_ht=scontent-sea1-1.xx&_nc_gid=28z5Niw1PpW17Zg7hoPmJw&oh=00_AfcWMAfACNIbmX8jMZDlYkubvEP1GBl4a4URZIb6Xw-9Uw&oe=68E8D015"
+    },
+    "text": "",
+    "textReferences": [
+      {
+        "id": "100064698066408",
+        "url": "https://www.facebook.com/ISS",
+        "profile_url": "https://www.facebook.com/ISS",
+        "short_name": "International Space Station",
+        "work_info": null,
+        "work_foreign_entity_info": null,
+        "mobileUrl": "https://m.facebook.com/ISS/"
+      },
+      {
+        "url": "https://l.facebook.com/l.php?u=https%3A%2F%2Fgo.nasa.gov%2F46DjtOw&h=AT01huFGaZlJJptqHlXfgegKDDDCge3p8swyET7Ilk-UWdeaQtb_yVUbvvVqP2WEQJC5mFMIGseMW7CVFUKDg4hUlssv55C1mGuxIfDiHjKM5m1pov3G724objsCC6XkXJCO55RrCxNx2cW50ic1GgVdO4ILxAkl&s=1",
+        "external_url": "https://go.nasa.gov/46DjtOw",
+        "web_link": {
+          "__typename": "ExternalWebLink",
+          "url": "https://go.nasa.gov/46DjtOw",
+          "fbclid": null,
+          "lynx_mode": "ASYNCLAZY"
+        },
+        "mobileUrl": "https://lm.facebook.com/l.php?u=https%3A%2F%2Fgo.nasa.gov%2F46DjtOw&h=AT3xs-dPxj9-WVEPD9AxmvlOp-ick90MzWnoWUUnCc73BcV5RBkWmSnj9Q2xEkzMiddLPBW6BJDtlFKw7cVcekLTHfjvZqqd6vT4DwClSaKLJyURESr4yiiGaqqTayhi46ZoBixvfTCTDmCcqm8O11tz8FNWmXpJ&s=1",
+        "id": "NjQyMTgzOTU5MjA4MTA3Omh0dHBzXGEvL2dvLm5hc2EuZ292LzQ2RGp0T3c6OkRlZmF1bHQ6OjoxMjIxMjg5ODczMzc1Nzc1"
+      }
+    ],
+    "link": "https://go.nasa.gov/46DjtOw",
+    "likes": 1290,
+    "comments": 99,
+    "shares": 135,
+    "topReactionsCount": 7,
+    "feedbackId": "ZmVlZGJhY2s6MTM0MzIyMjI5NzE3MzE0Mw==",
+    "sharedPost": {
+      "pageName": {
+        "id": "100064843206422",
+        "name": "NASA Ames Research Center",
+        "profileUrl": "https://www.facebook.com/nasaames",
+        "profilePic": "https://scontent-sea1-1.xx.fbcdn.net/v/t39.30808-1/242249331_10157953961061394_1648744158636304903_n.png?stp=cp0_dst-png_s40x40&_nc_cat=104&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=5eDa5L7eK5MQ7kNvwFnGK4g&_nc_oc=AdkDU2h55WjVXgBfJjfoKkjQzqxYiY6ELyeYeVSa-eQOaUJiGRsxK5Lgu3igYFXZtjo&_nc_zt=24&_nc_ht=scontent-sea1-1.xx&_nc_gid=28z5Niw1PpW17Zg7hoPmJw&oh=00_AffbnCwKnix94LKiqY0nkoRn3Ife5Z6G-3vCYGBB-SpiFg&oe=68E8E9E3"
+      },
+      "url": "https://www.facebook.com/nasaames/posts/pfbid0Dx2SeGnYPhajh3ucuispk1wjimFEQRnNUnQs7cv6QLj8uhbfQmursZsDJydeqi9Dl",
+      "time": "2025-09-24T20:11:25.000Z",
+      "timestamp": 1758744685,
+      "user": {
+        "id": "100064843206422",
+        "name": "NASA Ames Research Center",
+        "profileUrl": "https://www.facebook.com/nasaames",
+        "profilePic": "https://scontent-sea1-1.xx.fbcdn.net/v/t39.30808-1/242249331_10157953961061394_1648744158636304903_n.png?stp=cp0_dst-png_s40x40&_nc_cat=104&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=5eDa5L7eK5MQ7kNvwFnGK4g&_nc_oc=AdkDU2h55WjVXgBfJjfoKkjQzqxYiY6ELyeYeVSa-eQOaUJiGRsxK5Lgu3igYFXZtjo&_nc_zt=24&_nc_ht=scontent-sea1-1.xx&_nc_gid=28z5Niw1PpW17Zg7hoPmJw&oh=00_AffbnCwKnix94LKiqY0nkoRn3Ife5Z6G-3vCYGBB-SpiFg&oe=68E8E9E3"
+      },
+      "text": "Buzz, buzz! Our Astrobee robots have been buzzing around the International Space Station for six years!\n\nFrom creating 3D maps to detecting and alerting astronauts about a simulated anomaly, the free-flying robots have marked multiple first-in-space milestones.\n\nNASA is continuing the Astrobee mission through a collaboration with Arkisys, Inc., which was awarded a reimbursable Space Act Agreement to sustain and maintain the robotic platform moving forward. As the agency returns astronauts to the Moon, robotic helpers like Astrobee could one day take over routine tasks and support future spacecraft.\n\nDiscover what’s next: https://go.nasa.gov/46DjtOw",
+      "textReferences": [
+        {
+          "id": "100064698066408",
+          "url": "https://www.facebook.com/ISS",
+          "profile_url": "https://www.facebook.com/ISS",
+          "short_name": "International Space Station",
+          "work_info": null,
+          "work_foreign_entity_info": null,
+          "mobileUrl": "https://m.facebook.com/ISS/"
+        },
+        {
+          "url": "https://l.facebook.com/l.php?u=https%3A%2F%2Fgo.nasa.gov%2F46DjtOw&h=AT01huFGaZlJJptqHlXfgegKDDDCge3p8swyET7Ilk-UWdeaQtb_yVUbvvVqP2WEQJC5mFMIGseMW7CVFUKDg4hUlssv55C1mGuxIfDiHjKM5m1pov3G724objsCC6XkXJCO55RrCxNx2cW50ic1GgVdO4ILxAkl&s=1",
+          "external_url": "https://go.nasa.gov/46DjtOw",
+          "web_link": {
+            "__typename": "ExternalWebLink",
+            "url": "https://go.nasa.gov/46DjtOw",
+            "fbclid": null,
+            "lynx_mode": "ASYNCLAZY"
+          },
+          "mobileUrl": "https://lm.facebook.com/l.php?u=https%3A%2F%2Fgo.nasa.gov%2F46DjtOw&h=AT3xs-dPxj9-WVEPD9AxmvlOp-ick90MzWnoWUUnCc73BcV5RBkWmSnj9Q2xEkzMiddLPBW6BJDtlFKw7cVcekLTHfjvZqqd6vT4DwClSaKLJyURESr4yiiGaqqTayhi46ZoBixvfTCTDmCcqm8O11tz8FNWmXpJ&s=1",
+          "id": "NjQyMTgzOTU5MjA4MTA3Omh0dHBzXGEvL2dvLm5hc2EuZ292LzQ2RGp0T3c6OkRlZmF1bHQ6OjoxMjIxMjg5ODczMzc1Nzc1"
+        }
+      ],
+      "link": "https://go.nasa.gov/46DjtOw",
+      "media": [
+        {
+          "mediaset_token": "pcb.1221289873375775",
+          "url": "https://www.facebook.com/nasaames/posts/pfbid0Dx2SeGnYPhajh3ucuispk1wjimFEQRnNUnQs7cv6QLj8uhbfQmursZsDJydeqi9Dl",
+          "comet_product_tag_feed_overlay_renderer": null
+        },
+        {
+          "thumbnail": "https://scontent-sea5-1.xx.fbcdn.net/v/t39.30808-6/552962434_1221289830042446_2480181090540090535_n.jpg?stp=dst-jpg_p526x395_tt6&_nc_cat=105&ccb=1-7&_nc_sid=127cfc&_nc_ohc=rK76jPsZhEUQ7kNvwHl7VFM&_nc_oc=Adk1iuwoKNrM2wMZaXkUZyYSy_NI5KB26x526i_qFe-PupOYiSpS96YOwEzR71mq2yU&_nc_zt=23&_nc_ht=scontent-sea5-1.xx&_nc_gid=28z5Niw1PpW17Zg7hoPmJw&oh=00_Afdnekq4ys0_Ggs8dyuNqDuhiJAry_s2Ve162qq9I7zTuA&oe=68E8F00B",
+          "__typename": "Photo",
+          "is_playable": false,
+          "image": {
+            "uri": "https://scontent-sea5-1.xx.fbcdn.net/v/t39.30808-6/552962434_1221289830042446_2480181090540090535_n.jpg?stp=dst-jpg_p526x395_tt6&_nc_cat=105&ccb=1-7&_nc_sid=127cfc&_nc_ohc=rK76jPsZhEUQ7kNvwHl7VFM&_nc_oc=Adk1iuwoKNrM2wMZaXkUZyYSy_NI5KB26x526i_qFe-PupOYiSpS96YOwEzR71mq2yU&_nc_zt=23&_nc_ht=scontent-sea5-1.xx&_nc_gid=28z5Niw1PpW17Zg7hoPmJw&oh=00_Afdnekq4ys0_Ggs8dyuNqDuhiJAry_s2Ve162qq9I7zTuA&oe=68E8F00B",
+            "height": 395,
+            "width": 593
+          },
+          "id": "1221289823375780",
+          "__isMedia": "Photo",
+          "photo_cix_screen": null,
+          "copyright_banner_info": null,
+          "owner": {
+            "__typename": "User",
+            "id": "100064843206422"
+          },
+          "ocrText": "NASA astronaut Megan McArthur poses with the Astrobee robotic free-flyers in support of the Kibo Robot Programming Challenge (Robo-Pro Challenge). The Kibo-RPC, allows students to create programs to control Astrobee, a free-flying robot aboard the International Space Station (ISS)."
+        },
+        {
+          "thumbnail": "https://scontent-sea5-1.xx.fbcdn.net/v/t39.30808-6/552848275_1221289816709114_7710135618839827508_n.jpg?stp=dst-jpg_p526x395_tt6&_nc_cat=102&ccb=1-7&_nc_sid=127cfc&_nc_ohc=TgovCDpldKEQ7kNvwHF9kmY&_nc_oc=Adn2jzKVKNlWmgXxaVtkHfkBb_616f4LseWuP1p_is-Q_cX2aej9UQpUf8v3s8LKvrw&_nc_zt=23&_nc_ht=scontent-sea5-1.xx&_nc_gid=28z5Niw1PpW17Zg7hoPmJw&oh=00_AfeRFf-NdrcqTWN6uJhB5VBU6qn_iS4Vvz5L0UuxsEMaPQ&oe=68E8EF0F",
+          "__typename": "Photo",
+          "is_playable": false,
+          "image": {
+            "uri": "https://scontent-sea5-1.xx.fbcdn.net/v/t39.30808-6/552848275_1221289816709114_7710135618839827508_n.jpg?stp=dst-jpg_p526x395_tt6&_nc_cat=102&ccb=1-7&_nc_sid=127cfc&_nc_ohc=TgovCDpldKEQ7kNvwHF9kmY&_nc_oc=Adn2jzKVKNlWmgXxaVtkHfkBb_616f4LseWuP1p_is-Q_cX2aej9UQpUf8v3s8LKvrw&_nc_zt=23&_nc_ht=scontent-sea5-1.xx&_nc_gid=28z5Niw1PpW17Zg7hoPmJw&oh=00_AfeRFf-NdrcqTWN6uJhB5VBU6qn_iS4Vvz5L0UuxsEMaPQ&oe=68E8EF0F",
+            "height": 395,
+            "width": 593
+          },
+          "id": "1221289806709115",
+          "__isMedia": "Photo",
+          "photo_cix_screen": null,
+          "copyright_banner_info": null,
+          "owner": {
+            "__typename": "User",
+            "id": "100064843206422"
+          },
+          "ocrText": "Astronaut and Expedition 69 Flight Engineer Sultan Alneyadi observes a free-flying Astrobee robotic assistant during the testing of its operations for an upcoming student competition to control the robotic devices."
+        },
+        {
+          "thumbnail": "https://scontent-sea5-1.xx.fbcdn.net/v/t39.30808-6/554202544_1221289796709116_1937598993170636609_n.jpg?stp=dst-jpg_p526x395_tt6&_nc_cat=105&ccb=1-7&_nc_sid=127cfc&_nc_ohc=WmEsyA1kNH8Q7kNvwFr9-ip&_nc_oc=AdnReUrbcrhQUK3gKIc-v5a-NnvMD2Z7hEbvt4CaUNdDTp0mBQXNpxK82sBSNcT2new&_nc_zt=23&_nc_ht=scontent-sea5-1.xx&_nc_gid=28z5Niw1PpW17Zg7hoPmJw&oh=00_AfdGg2pD9b_w65Mq97VqDHWpemlVwd9NWj0lsBPYXwl_1g&oe=68E8EC5D",
+          "__typename": "Photo",
+          "is_playable": false,
+          "image": {
+            "uri": "https://scontent-sea5-1.xx.fbcdn.net/v/t39.30808-6/554202544_1221289796709116_1937598993170636609_n.jpg?stp=dst-jpg_p526x395_tt6&_nc_cat=105&ccb=1-7&_nc_sid=127cfc&_nc_ohc=WmEsyA1kNH8Q7kNvwFr9-ip&_nc_oc=AdnReUrbcrhQUK3gKIc-v5a-NnvMD2Z7hEbvt4CaUNdDTp0mBQXNpxK82sBSNcT2new&_nc_zt=23&_nc_ht=scontent-sea5-1.xx&_nc_gid=28z5Niw1PpW17Zg7hoPmJw&oh=00_AfdGg2pD9b_w65Mq97VqDHWpemlVwd9NWj0lsBPYXwl_1g&oe=68E8EC5D",
+            "height": 395,
+            "width": 593
+          },
+          "id": "1221289793375783",
+          "__isMedia": "Photo",
+          "photo_cix_screen": null,
+          "copyright_banner_info": null,
+          "owner": {
+            "__typename": "User",
+            "id": "100064843206422"
+          },
+          "ocrText": "One of the International Space Station's free-flying robots, Astrobee, was pictured by NASA astronaut and Expedition 71 Flight Engineer Tracy C. Dyson during a Zero Robotics tech demonstration. Zero Robotics allows students on Earth to write software to control the robots and observe their performance inside the orbiting laboratory."
+        }
+      ]
+    },
+    "topLevelUrl": "https://www.facebook.com/100044561550831/posts/1343222297173143",
+    "facebookId": "100044561550831",
+    "pageAdLibrary": {
+      "is_business_page_active": false,
+      "id": "54971236771"
+    },
+    "inputUrl": "https://www.facebook.com/nasa/"
+  },
+  {
+    "facebookUrl": "https://www.facebook.com/nasa/",
+    "postId": "1341008907394482",
+    "pageName": "NASA",
+    "url": "https://www.facebook.com/NASA/posts/pfbid0HHmHjogjKbovT3sz7C3VoPL3QNTpYmwhmRESXG3jkHuGMT3jGLbm9aKRTvEo2Wxfl",
+    "time": "2025-09-22T20:50:57.000Z",
+    "timestamp": 1758574257,
+    "user": {
+      "id": "100044561550831",
+      "name": "NASA - National Aeronautics and Space Administration",
+      "profileUrl": "https://www.facebook.com/NASA",
+      "profilePic": "https://scontent-sea1-1.xx.fbcdn.net/v/t39.30808-1/243095782_416661036495945_3843362260429099279_n.png?stp=cp0_dst-png_s40x40&_nc_cat=1&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=_m64k4-R0_UQ7kNvwHPCpM5&_nc_oc=Adnh5_oxKy7kG7FGftCsmLTaMQm7DNPtIn7At48tZ-wnBTuoa5qTNWzD78CuONxe95U&_nc_zt=24&_nc_ht=scontent-sea1-1.xx&_nc_gid=28z5Niw1PpW17Zg7hoPmJw&oh=00_AfcWMAfACNIbmX8jMZDlYkubvEP1GBl4a4URZIb6Xw-9Uw&oe=68E8D015"
+    },
+    "text": "",
+    "textReferences": [
+      {
+        "id": "100044561550831",
+        "url": "https://www.facebook.com/NASA",
+        "profile_url": "https://www.facebook.com/NASA",
+        "short_name": "NASA - National Aeronautics and Space Administration",
+        "work_info": null,
+        "work_foreign_entity_info": null,
+        "mobileUrl": "https://m.facebook.com/NASA/"
+      }
+    ],
+    "link": "https://go.nasa.gov/4n9J9Jq",
+    "previewTitle": "NASA Selects All-American 2025 Class of Astronaut Candidates - NASA",
+    "previewDescription": "NASA’s 10 new astronaut candidates were introduced Monday following a competitive selection process of more than 8,000 applicants from across the United",
+    "previewSource": "nasa.gov",
+    "previewTarget": {
+      "__typename": "ExternalUrl",
+      "article_author": null,
+      "external_url": "https://go.nasa.gov/4n9J9Jq",
+      "id": "226547524203272:1179924357582933"
+    },
+    "likes": 1330,
+    "comments": 269,
+    "shares": 222,
+    "topReactionsCount": 7,
+    "feedbackId": "ZmVlZGJhY2s6MTM0MTAwODkwNzM5NDQ4Mg==",
+    "sharedPost": {
+      "pageName": {
+        "id": "100066961399786",
+        "name": "NASA's Johnson Space Center",
+        "profileUrl": "https://www.facebook.com/NASAJSC",
+        "profilePic": "https://scontent-sea5-1.xx.fbcdn.net/v/t39.30808-1/320051371_814137286552871_2298523932649599660_n.jpg?stp=cp0_dst-jpg_s40x40_tt6&_nc_cat=105&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=ako94B_Qs1wQ7kNvwEOGUFd&_nc_oc=AdkMOp_KLEO5u8N3Q2iDZJRt13RssWdZV6Fum1hG6lg2qB9UK65gCL2OM2zDBzn_Fuw&_nc_zt=24&_nc_ht=scontent-sea5-1.xx&_nc_gid=28z5Niw1PpW17Zg7hoPmJw&oh=00_AfdOHSJybT1cVCUPqQyxIV-bqvaC3w1D1TAUWO9NARDtuw&oe=68E8DE7A"
+      },
+      "url": "https://www.facebook.com/NASAJSC/posts/pfbid0262U9mTbrDiKMWpkrxsT1DKsgM2HH5iRfV3req6wocfiBS8D3TbmWVdrBcyRQeYvHl",
+      "time": "2025-09-22T16:56:05.000Z",
+      "timestamp": 1758560165,
+      "user": {
+        "id": "100066961399786",
+        "name": "NASA's Johnson Space Center",
+        "profileUrl": "https://www.facebook.com/NASAJSC",
+        "profilePic": "https://scontent-sea5-1.xx.fbcdn.net/v/t39.30808-1/320051371_814137286552871_2298523932649599660_n.jpg?stp=cp0_dst-jpg_s40x40_tt6&_nc_cat=105&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=ako94B_Qs1wQ7kNvwEOGUFd&_nc_oc=AdkMOp_KLEO5u8N3Q2iDZJRt13RssWdZV6Fum1hG6lg2qB9UK65gCL2OM2zDBzn_Fuw&_nc_zt=24&_nc_ht=scontent-sea5-1.xx&_nc_gid=28z5Niw1PpW17Zg7hoPmJw&oh=00_AfdOHSJybT1cVCUPqQyxIV-bqvaC3w1D1TAUWO9NARDtuw&oe=68E8DE7A"
+      },
+      "text": "NASA - National Aeronautics and Space Administration’s 10 new astronaut candidates were introduced Monday following a competitive selection process of more than 8,000 applicants from across the United States. The class now will complete nearly two years of training before becoming eligible for flight assignments supporting future science and exploration missions to low Earth orbit, the Moon, and Mars. ",
+      "textReferences": [
+        {
+          "id": "100044561550831",
+          "url": "https://www.facebook.com/NASA",
+          "profile_url": "https://www.facebook.com/NASA",
+          "short_name": "NASA - National Aeronautics and Space Administration",
+          "work_info": null,
+          "work_foreign_entity_info": null,
+          "mobileUrl": "https://m.facebook.com/NASA/"
+        }
+      ],
+      "link": "https://go.nasa.gov/4n9J9Jq",
+      "previewTitle": "NASA Selects All-American 2025 Class of Astronaut Candidates - NASA",
+      "previewDescription": "NASA’s 10 new astronaut candidates were introduced Monday following a competitive selection process of more than 8,000 applicants from across the United",
+      "previewSource": "nasa.gov",
+      "previewTarget": {
+        "__typename": "ExternalUrl",
+        "article_author": null,
+        "external_url": "https://go.nasa.gov/4n9J9Jq",
+        "id": "226547524203272:1179924357582933"
+      },
+      "media": [
+        {
+          "thumbnail": "https://external-sea1-1.xx.fbcdn.net/emg1/v/t13/577054684044482247?url=https%3A%2F%2Fwww.nasa.gov%2Fwp-content%2Fuploads%2F2025%2F09%2Fascans-2-003.jpg&fb_obo=1&utld=nasa.gov&stp=c0.5000x0.5000f_dst-jpg_flffffff_p500x261_q75_tt6&_nc_gid=28z5Niw1PpW17Zg7hoPmJw&_nc_oc=AdnYlC5YTR_1o5_Pxw4hz0Y2lzG6Q_-atHVCXFJzovrOeC8vpLq-_MBPcs0ijenaCR4&ccb=13-1&oh=06_Q3-3Ae71toB-WOJQkTu3J-pqXzOcyuLkY9hqlsJ_hctC3xIX&oe=68E4EFA6&_nc_sid=139b9a",
+          "__typename": "GenericAttachmentMedia",
+          "__isMedia": "GenericAttachmentMedia",
+          "flexible_height_share_image": null,
+          "large_share_image": {
+            "height": 261,
+            "uri": "https://external-sea1-1.xx.fbcdn.net/emg1/v/t13/577054684044482247?url=https%3A%2F%2Fwww.nasa.gov%2Fwp-content%2Fuploads%2F2025%2F09%2Fascans-2-003.jpg&fb_obo=1&utld=nasa.gov&stp=c0.5000x0.5000f_dst-jpg_flffffff_p500x261_q75_tt6&_nc_gid=28z5Niw1PpW17Zg7hoPmJw&_nc_oc=AdnYlC5YTR_1o5_Pxw4hz0Y2lzG6Q_-atHVCXFJzovrOeC8vpLq-_MBPcs0ijenaCR4&ccb=13-1&oh=06_Q3-3Ae71toB-WOJQkTu3J-pqXzOcyuLkY9hqlsJ_hctC3xIX&oe=68E4EFA6&_nc_sid=139b9a",
+            "width": 500
+          },
+          "id": "1179924357582933"
+        }
+      ]
+    },
+    "topLevelUrl": "https://www.facebook.com/100044561550831/posts/1341008907394482",
+    "facebookId": "100044561550831",
+    "pageAdLibrary": {
+      "is_business_page_active": false,
+      "id": "54971236771"
+    },
+    "inputUrl": "https://www.facebook.com/nasa/"
+  },
+  {
+    "facebookUrl": "https://www.facebook.com/nasa/",
+    "postId": "1340958837399489",
+    "pageName": "NASA",
+    "url": "https://www.facebook.com/NASA/posts/pfbid02b6Lz83SmTorK2dpMQYR7BG3VjUkx9NPcvQ6Gd9gqkPNfhq3LmzwSsGEhAfkPDSDJl",
+    "time": "2025-09-22T19:15:01.000Z",
+    "timestamp": 1758568501,
+    "user": {
+      "id": "100044561550831",
+      "name": "NASA - National Aeronautics and Space Administration",
+      "profileUrl": "https://www.facebook.com/NASA",
+      "profilePic": "https://scontent-sea1-1.xx.fbcdn.net/v/t39.30808-1/243095782_416661036495945_3843362260429099279_n.png?stp=cp0_dst-png_s40x40&_nc_cat=1&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=_m64k4-R0_UQ7kNvwHPCpM5&_nc_oc=Adnh5_oxKy7kG7FGftCsmLTaMQm7DNPtIn7At48tZ-wnBTuoa5qTNWzD78CuONxe95U&_nc_zt=24&_nc_ht=scontent-sea1-1.xx&_nc_gid=28z5Niw1PpW17Zg7hoPmJw&oh=00_AfcWMAfACNIbmX8jMZDlYkubvEP1GBl4a4URZIb6Xw-9Uw&oe=68E8D015"
+    },
+    "text": "Sept. 22 is the autumnal equinox in the Northern Hemisphere. On this day, our planet isn't tilted toward or away from the Sun, and both day and night are almost exactly 12 hours (with a few small exceptions).\n \nHow will you celebrate the start of fall?",
+    "likes": 3986,
+    "comments": 331,
+    "shares": 512,
+    "topReactionsCount": 7,
+    "media": [
+      {
+        "thumbnail": "https://scontent-sea1-1.xx.fbcdn.net/v/t39.30808-6/550499569_1340958824066157_7018039464617943834_n.jpg?stp=dst-jpg_p180x540_tt6&_nc_cat=104&ccb=1-7&_nc_sid=127cfc&_nc_ohc=yV8R-npr06cQ7kNvwHJFPD0&_nc_oc=Adl7HiRtT_b3DOzZZRQQWDzr5nhx8fMaDPWgEBuJjBqBARNN0lXUIDHY2cS2PoA14io&_nc_zt=23&_nc_ht=scontent-sea1-1.xx&_nc_gid=28z5Niw1PpW17Zg7hoPmJw&oh=00_AffB4e5scICiufjInFf-iPw2YkzebO7y4rbzTfvBjQYgRg&oe=68E8E2EB",
+        "__typename": "Photo",
+        "photo_image": {
+          "uri": "https://scontent-sea1-1.xx.fbcdn.net/v/t39.30808-6/550499569_1340958824066157_7018039464617943834_n.jpg?stp=dst-jpg_p180x540_tt6&_nc_cat=104&ccb=1-7&_nc_sid=127cfc&_nc_ohc=yV8R-npr06cQ7kNvwHJFPD0&_nc_oc=Adl7HiRtT_b3DOzZZRQQWDzr5nhx8fMaDPWgEBuJjBqBARNN0lXUIDHY2cS2PoA14io&_nc_zt=23&_nc_ht=scontent-sea1-1.xx&_nc_gid=28z5Niw1PpW17Zg7hoPmJw&oh=00_AffB4e5scICiufjInFf-iPw2YkzebO7y4rbzTfvBjQYgRg&oe=68E8E2EB",
+          "height": 540,
+          "width": 810
+        },
+        "__isMedia": "Photo",
+        "accent_color": "FF5A605A",
+        "photo_product_tags": [],
+        "url": "https://www.facebook.com/photo/?fbid=1340958820732824&set=a.416661013162614",
+        "id": "1340958820732824",
+        "ocrText": "Orange tree leaves cover the left side of the aerial image of Ottawa, Canada. To the right, streets, buildings, and other city infrastructure is visible. A waterway splits the image horizontally through the middle; another river also travels from top to bottom slightly right of center. Credit: NASA"
+      }
+    ],
+    "feedbackId": "ZmVlZGJhY2s6MTM0MDk1ODgzNzM5OTQ4OQ==",
+    "topLevelUrl": "https://www.facebook.com/100044561550831/posts/1340958837399489",
+    "facebookId": "100044561550831",
+    "pageAdLibrary": {
+      "is_business_page_active": false,
+      "id": "54971236771"
+    },
+    "inputUrl": "https://www.facebook.com/nasa/"
+  },
+  {
+    "facebookUrl": "https://www.facebook.com/nasa/",
+    "postId": "1338506847644688",
+    "pageName": "NASA",
+    "url": "https://www.facebook.com/NASA/posts/pfbid02VEbLDYTuJYpMf63nr7QKF8XRgKxGM18ptwRtaNoe8RrwNVYgjM32SgKgatzD3NUZl",
+    "time": "2025-09-19T21:02:03.000Z",
+    "timestamp": 1758315723,
+    "user": {
+      "id": "100044561550831",
+      "name": "NASA - National Aeronautics and Space Administration",
+      "profileUrl": "https://www.facebook.com/NASA",
+      "profilePic": "https://scontent-iad3-1.xx.fbcdn.net/v/t39.30808-1/243095782_416661036495945_3843362260429099279_n.png?stp=cp0_dst-png_s40x40&_nc_cat=1&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=_m64k4-R0_UQ7kNvwF0fmnr&_nc_oc=AdncRD2CJNN9uPRY-kqrtil83RsG7gP8yl5njBR-8JFoCZxWUEK7O2GThcTLcGAK7fyHc73DL-FIBOEJrC3cVUHj&_nc_zt=24&_nc_ht=scontent-iad3-1.xx&_nc_gid=7cBJfsnfta73RKKJ533YFw&oh=00_AfeJvlk8pmzOLih0msXRfuT8_QZ-JSW8VbBe_zJEo4-_8A&oe=68E8D015"
+    },
+    "text": "",
+    "textReferences": [
+      {
+        "url": "https://l.facebook.com/l.php?u=https%3A%2F%2Fgo.nasa.gov%2F47NrRx3&h=AT1kRw4tKfuzzlDrKXAvgNcxsoLOhNnuJGVRbGsqcbH_s6vxWVpDEvmn5rNFkerfXSfEBxMcGF2YDnKFR9cCiJwKUYzdcz5DMcFy31ze9EG3MO6IVCiEVTWNMDT2qOdKfQYkKynGIsZzkb_1vxbKiiNQ20wx6gBddAzAg8Sc3DPULjyI&s=1",
+        "external_url": "https://go.nasa.gov/47NrRx3",
+        "web_link": {
+          "__typename": "ExternalWebLink",
+          "url": "https://go.nasa.gov/47NrRx3",
+          "fbclid": null,
+          "lynx_mode": "ASYNCLAZY"
+        },
+        "mobileUrl": "https://lm.facebook.com/l.php?u=https%3A%2F%2Fgo.nasa.gov%2F47NrRx3&h=AT15DDCaRtq5pdYMC7hwYrdODjau_468PZFsVxQG53i1IHl1mzW4-UW54T50JC7qXd8w7-sHogRHZK4D84r4x09QoE_2VRYdh_dv49q7sxO4nokWycyOgrhweMG0wgoeYBeHY3N-PYXxkt6-UUG9Vk9aigEtayfEUu8uo0qv2yZkq1j4&s=1",
+        "id": "NjQyMTgzOTU5MjA4MTA3Omh0dHBzXGEvL2dvLm5hc2EuZ292LzQ3TnJSeDM6OkRlZmF1bHQ6OjoxMjMwOTk1MzIyNDAwMjIy"
+      }
+    ],
+    "link": "https://go.nasa.gov/47NrRx3",
+    "likes": 1287,
+    "comments": 248,
+    "shares": 172,
+    "topReactionsCount": 7,
+    "feedbackId": "ZmVlZGJhY2s6MTMzODUwNjg0NzY0NDY4OA==",
+    "sharedPost": {
+      "pageName": {
+        "id": "100064692966620",
+        "name": "NASA Science",
+        "profileUrl": "https://www.facebook.com/NASAScience",
+        "profilePic": "https://scontent-iad3-1.xx.fbcdn.net/v/t39.30808-1/555545605_1237324698433951_6584911843890652025_n.jpg?stp=cp0_dst-jpg_s40x40_tt6&_nc_cat=108&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=tRU235blDeEQ7kNvwG9CkLn&_nc_oc=AdnALVp_huKr7nHIoCiYfS4EoBfBpHUygWODHiye4VpFNQ8QvkcUNpIoHXX1omm15ljcEtlAH9DR4wwPw928SeHp&_nc_zt=24&_nc_ht=scontent-iad3-1.xx&_nc_gid=7cBJfsnfta73RKKJ533YFw&oh=00_AfeMAKIoNK3oN_abSntq3pQfXq6Vl4ZnFa14b7w1I7aW9g&oe=68E8DFE6"
+      },
+      "url": "https://www.facebook.com/NASAScience/posts/pfbid0324oGpnrYayeobvg3tqeV3JaZ1tqyFnxey5ibxyGCapiSE7oV2b7GbkmKx4bNEL1dl",
+      "time": "2025-09-19T20:44:48.000Z",
+      "timestamp": 1758314688,
+      "user": {
+        "id": "100064692966620",
+        "name": "NASA Science",
+        "profileUrl": "https://www.facebook.com/NASAScience",
+        "profilePic": "https://scontent-iad3-1.xx.fbcdn.net/v/t39.30808-1/555545605_1237324698433951_6584911843890652025_n.jpg?stp=cp0_dst-jpg_s40x40_tt6&_nc_cat=108&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=tRU235blDeEQ7kNvwG9CkLn&_nc_oc=AdnALVp_huKr7nHIoCiYfS4EoBfBpHUygWODHiye4VpFNQ8QvkcUNpIoHXX1omm15ljcEtlAH9DR4wwPw928SeHp&_nc_zt=24&_nc_ht=scontent-iad3-1.xx&_nc_gid=7cBJfsnfta73RKKJ533YFw&oh=00_AfeMAKIoNK3oN_abSntq3pQfXq6Vl4ZnFa14b7w1I7aW9g&oe=68E8DFE6"
+      },
+      "text": "After exploring innovative and cost-effective approaches, NASA has selected Blue Origin to deliver the VIPER rover to the Moon! 🌕 VIPER will search for vital resources like water ice to support a long-term human presence on the lunar surface. \n\nRead more:  https://go.nasa.gov/47NrRx3",
+      "textReferences": [
+        {
+          "url": "https://l.facebook.com/l.php?u=https%3A%2F%2Fgo.nasa.gov%2F47NrRx3&h=AT1kRw4tKfuzzlDrKXAvgNcxsoLOhNnuJGVRbGsqcbH_s6vxWVpDEvmn5rNFkerfXSfEBxMcGF2YDnKFR9cCiJwKUYzdcz5DMcFy31ze9EG3MO6IVCiEVTWNMDT2qOdKfQYkKynGIsZzkb_1vxbKiiNQ20wx6gBddAzAg8Sc3DPULjyI&s=1",
+          "external_url": "https://go.nasa.gov/47NrRx3",
+          "web_link": {
+            "__typename": "ExternalWebLink",
+            "url": "https://go.nasa.gov/47NrRx3",
+            "fbclid": null,
+            "lynx_mode": "ASYNCLAZY"
+          },
+          "mobileUrl": "https://lm.facebook.com/l.php?u=https%3A%2F%2Fgo.nasa.gov%2F47NrRx3&h=AT15DDCaRtq5pdYMC7hwYrdODjau_468PZFsVxQG53i1IHl1mzW4-UW54T50JC7qXd8w7-sHogRHZK4D84r4x09QoE_2VRYdh_dv49q7sxO4nokWycyOgrhweMG0wgoeYBeHY3N-PYXxkt6-UUG9Vk9aigEtayfEUu8uo0qv2yZkq1j4&s=1",
+          "id": "NjQyMTgzOTU5MjA4MTA3Omh0dHBzXGEvL2dvLm5hc2EuZ292LzQ3TnJSeDM6OkRlZmF1bHQ6OjoxMjMwOTk1MzIyNDAwMjIy"
+        }
+      ],
+      "link": "https://go.nasa.gov/47NrRx3",
+      "media": [
+        {
+          "thumbnail": "https://scontent-iad3-1.xx.fbcdn.net/v/t39.30808-6/550235831_1230995302400224_2285219311057569313_n.jpg?stp=dst-jpg_s720x720_tt6&_nc_cat=101&ccb=1-7&_nc_sid=127cfc&_nc_ohc=__N-w3_VJL4Q7kNvwHvXUKQ&_nc_oc=AdmY8XWTtywtWbDfeVGgOnU4kLdVk9_PusPL2yKYslZtXa5-6DPaKKeIMhWOjhsyoJB_AWhVDBZMiS7K7EnXKQOq&_nc_zt=23&_nc_ht=scontent-iad3-1.xx&_nc_gid=7cBJfsnfta73RKKJ533YFw&oh=00_AfdDQ47KXSOyWbSTAcwod0rbmhi5fe9ygrNf204ydaB3Lw&oe=68E8E5C2",
+          "__typename": "Photo",
+          "photo_image": {
+            "uri": "https://scontent-iad3-1.xx.fbcdn.net/v/t39.30808-6/550235831_1230995302400224_2285219311057569313_n.jpg?stp=dst-jpg_s720x720_tt6&_nc_cat=101&ccb=1-7&_nc_sid=127cfc&_nc_ohc=__N-w3_VJL4Q7kNvwHvXUKQ&_nc_oc=AdmY8XWTtywtWbDfeVGgOnU4kLdVk9_PusPL2yKYslZtXa5-6DPaKKeIMhWOjhsyoJB_AWhVDBZMiS7K7EnXKQOq&_nc_zt=23&_nc_ht=scontent-iad3-1.xx&_nc_gid=7cBJfsnfta73RKKJ533YFw&oh=00_AfdDQ47KXSOyWbSTAcwod0rbmhi5fe9ygrNf204ydaB3Lw&oe=68E8E5C2",
+            "height": 540,
+            "width": 720
+          },
+          "__isMedia": "Photo",
+          "accent_color": "FF000000",
+          "photo_product_tags": [],
+          "url": "https://www.facebook.com/photo/?fbid=1230995299066891&set=a.300650348768062",
+          "id": "1230995299066891",
+          "ocrText": "An artist’s concept shows Blue Origin’s Blue Moon Mark 1 lander and NASA’s VIPER (Volatiles Investigating Polar Exploration Rover) on the lunar surface.\nCredit: Courtesy of Blue Origin"
+        }
+      ]
+    },
+    "topLevelUrl": "https://www.facebook.com/100044561550831/posts/1338506847644688",
+    "facebookId": "100044561550831",
+    "pageAdLibrary": {
+      "is_business_page_active": false,
+      "id": "54971236771"
+    },
+    "inputUrl": "https://www.facebook.com/nasa/"
+  },
+  {
+    "facebookUrl": "https://www.facebook.com/nasa/",
+    "postId": "1337641124397927",
+    "pageName": "NASA",
+    "url": "https://www.facebook.com/NASA/posts/pfbid02M6ofwFecb1F24bPVbu8XBzxD7s6sStG9vXnVgbZg9atTiPrZUkL3kGCeEyMksEgzl",
+    "time": "2025-09-18T18:55:55.000Z",
+    "timestamp": 1758221755,
+    "user": {
+      "id": "100044561550831",
+      "name": "NASA - National Aeronautics and Space Administration",
+      "profileUrl": "https://www.facebook.com/NASA",
+      "profilePic": "https://scontent-iad3-1.xx.fbcdn.net/v/t39.30808-1/243095782_416661036495945_3843362260429099279_n.png?stp=cp0_dst-png_s40x40&_nc_cat=1&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=_m64k4-R0_UQ7kNvwF0fmnr&_nc_oc=AdncRD2CJNN9uPRY-kqrtil83RsG7gP8yl5njBR-8JFoCZxWUEK7O2GThcTLcGAK7fyHc73DL-FIBOEJrC3cVUHj&_nc_zt=24&_nc_ht=scontent-iad3-1.xx&_nc_gid=7cBJfsnfta73RKKJ533YFw&oh=00_AfeJvlk8pmzOLih0msXRfuT8_QZ-JSW8VbBe_zJEo4-_8A&oe=68E8D015"
+    },
+    "text": "Hey kid… wanna see a conjunction?\n \nBefore dawn on Sept. 19, you can! Nestled up to the crescent moon, you can find Venus and Regulus, one of the brightest nighttime stars. These three form a conjunction, meaning they appear near each other despite being far apart in space.",
+    "likes": 2190,
+    "comments": 107,
+    "shares": 381,
+    "topReactionsCount": 7,
+    "media": [
+      {
+        "thumbnail": "https://scontent-iad3-1.xx.fbcdn.net/v/t39.30808-6/548904960_1337641104397929_963400680313733688_n.jpg?stp=dst-jpg_s960x960_tt6&_nc_cat=101&ccb=1-7&_nc_sid=127cfc&_nc_ohc=g6yzzTE4LzcQ7kNvwFD2UYV&_nc_oc=AdmmjfDrQH0fVQv66oz8bQkdPPimO8cVYx1hQpTpF6nJTYHBIfBHuyfbOGAHLvAvdfS2R7fieaiyOewhY3_cUXlU&_nc_zt=23&_nc_ht=scontent-iad3-1.xx&_nc_gid=7cBJfsnfta73RKKJ533YFw&oh=00_AfdYnBPr1mr55yO5Cj-kZtD2LAMhlNKB0_hoXpGPk2rthw&oe=68E8E719",
+        "__typename": "Photo",
+        "photo_image": {
+          "uri": "https://scontent-iad3-1.xx.fbcdn.net/v/t39.30808-6/548904960_1337641104397929_963400680313733688_n.jpg?stp=dst-jpg_s960x960_tt6&_nc_cat=101&ccb=1-7&_nc_sid=127cfc&_nc_ohc=g6yzzTE4LzcQ7kNvwFD2UYV&_nc_oc=AdmmjfDrQH0fVQv66oz8bQkdPPimO8cVYx1hQpTpF6nJTYHBIfBHuyfbOGAHLvAvdfS2R7fieaiyOewhY3_cUXlU&_nc_zt=23&_nc_ht=scontent-iad3-1.xx&_nc_gid=7cBJfsnfta73RKKJ533YFw&oh=00_AfdYnBPr1mr55yO5Cj-kZtD2LAMhlNKB0_hoXpGPk2rthw&oe=68E8E719",
+          "height": 540,
+          "width": 960
+        },
+        "__isMedia": "Photo",
+        "accent_color": "FF1C1C29",
+        "photo_product_tags": [],
+        "url": "https://www.facebook.com/photo/?fbid=1337641101064596&set=a.416661013162614",
+        "id": "1337641101064596",
+        "ocrText": "A nighttime sky chart showing a conjunction between the Moon, Venus, and Regulus in the eastern sky before sunrise on September 19, 2025. The constellation, Leo is outlined in light lines as well, as Regulus is part of it. Credit: NASA/JPL-Caltech"
+      }
+    ],
+    "feedbackId": "ZmVlZGJhY2s6MTMzNzY0MTEyNDM5NzkyNw==",
+    "topLevelUrl": "https://www.facebook.com/100044561550831/posts/1337641124397927",
+    "facebookId": "100044561550831",
+    "pageAdLibrary": {
+      "is_business_page_active": false,
+      "id": "54971236771"
+    },
+    "inputUrl": "https://www.facebook.com/nasa/"
+  },
+  {
+    "facebookUrl": "https://www.facebook.com/nasa/",
+    "postId": "1337485154413524",
+    "pageName": "NASA",
+    "url": "https://www.facebook.com/NASA/videos/2408047472966921/",
+    "time": "2025-09-18T14:50:32.000Z",
+    "timestamp": 1758207032,
+    "user": {
+      "id": "100044561550831",
+      "name": "NASA - National Aeronautics and Space Administration",
+      "profileUrl": "https://www.facebook.com/NASA",
+      "profilePic": "https://scontent-iad3-1.xx.fbcdn.net/v/t39.30808-1/243095782_416661036495945_3843362260429099279_n.png?stp=cp0_dst-png_s40x40&_nc_cat=1&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=_m64k4-R0_UQ7kNvwF0fmnr&_nc_oc=AdncRD2CJNN9uPRY-kqrtil83RsG7gP8yl5njBR-8JFoCZxWUEK7O2GThcTLcGAK7fyHc73DL-FIBOEJrC3cVUHj&_nc_zt=24&_nc_ht=scontent-iad3-1.xx&_nc_gid=7cBJfsnfta73RKKJ533YFw&oh=00_AfeJvlk8pmzOLih0msXRfuT8_QZ-JSW8VbBe_zJEo4-_8A&oe=68E8D015"
+    },
+    "text": "Meet our new class of future astronauts!\n\nOn Monday, Sept. 22, we're introducing our 2025 class of astronaut candidates, selected from over 8,000 applications. Tune in at 12:30 p.m. EDT (1630 UTC) for the reveal: https://youtu.be/frX3-5xuGQs\n\nAfterwards, they'll be taking your questions in a Reddit AMA (\"Ask Me Anything\") on the r/nasa Reddit community. Send in your questions anytime Monday afternoon, and our newly-announced explorers will be on to respond at 5:30 p.m. EDT (2130 UTC): https://www.reddit.com/r/nasa/\n\nOur astronaut candidates will undergo two years of training before graduating as flight-eligible astronauts for missions to low Earth orbit, the Moon, and ultimately Mars. Ad astra!",
+    "textReferences": [
+      {
+        "url": "https://l.facebook.com/l.php?u=https%3A%2F%2Fyoutu.be%2FfrX3-5xuGQs&h=AT174xidt-33kWQWbUpnnDbkXyMI1lm-Bq19-CzfJD9TgD4QItYSZ1j2Kkyv8LOuyvN9tUcD5IdTLj2fUb2AsFzNU-Jcb4Qx8mi_cx74Yi-_ui5Ngw2k5W73PGNKtz__2QpvuFzQaYGkKzk8PZ6uPDRfmhA7o4U1Z8zC5pbLYdAzORcC&s=1",
+        "external_url": "https://youtu.be/frX3-5xuGQs",
+        "web_link": {
+          "__typename": "ExternalWebLink",
+          "url": "https://youtu.be/frX3-5xuGQs",
+          "fbclid": null,
+          "lynx_mode": "ASYNCLAZY"
+        },
+        "mobileUrl": "https://lm.facebook.com/l.php?u=https%3A%2F%2Fyoutu.be%2FfrX3-5xuGQs&h=AT3mX2hU7dxt4nLNlAF6v-Bqx1THzKkxmbz_L8ZoHAp3dpwjoS4Aj3AQlLUMev5DBzo7p8BZ_Krk5NSEwftf_3u9tpuGhMrmlJE_3iPJ9JstD1VRyeeadhvhnaOwrAvoF2tXIhFBjR1RNP0MN9rVvYEY-fTP-Ru7SUyxDZIJUwptO9AJ&s=1",
+        "id": "NjQyMTgzOTU5MjA4MTA3Omh0dHBzXGEvL3lvdXR1LmJlL2ZyWDMtNXh1R1FzOjpEZWZhdWx0Ojo6MTMzNzQ4NTE1NDQxMzUyNA=="
+      },
+      {
+        "url": "https://l.facebook.com/l.php?u=https%3A%2F%2Fwww.reddit.com%2Fr%2Fnasa%2F&h=AT36-dd40NxZaNTyehbjAeOUMRp3_zRQTmRAkJuPAGnpUUCwSVbPG44RgRfvxNRCnukwi_aQ4K6-f8Rssb_3SsZku_fh2E14jPcQQFPYyBUG_RVmyCtj7ZQYyDD_kLakL8fPb3fKODeWbwScu2qun8rBtmzLYZtjZTznEN6ZIlxAZJz4&s=1",
+        "external_url": "https://www.reddit.com/r/nasa/",
+        "web_link": {
+          "__typename": "ExternalWebLink",
+          "url": "https://www.reddit.com/r/nasa/",
+          "fbclid": null,
+          "lynx_mode": "ASYNCLAZY"
+        },
+        "mobileUrl": "https://lm.facebook.com/l.php?u=https%3A%2F%2Fwww.reddit.com%2Fr%2Fnasa%2F&h=AT0w-JpHTUZsBgxHk3Tzci4UHuWy5Sqfm7rTDqx2H8RWV6LMguKpwdN5LhUecVv72KrdAMwHpS0kB9PzNCgyxq0mtaaGojfnbMerRmhAWkqLwS5deJeP_j-2TCUCv_bBbMKLAMNablLbSfYdFir6vEe7l16IHd6JtpMbr6qSZd_kJX5-&s=1",
+        "id": "NjQyMTgzOTU5MjA4MTA3Omh0dHBzXGEvL3d3dy5yZWRkaXQuY29tL3IvbmFzYS86OkRlZmF1bHQ6OjoxMzM3NDg1MTU0NDEzNTI0"
+      }
+    ],
+    "link": "https://youtu.be/frX3-5xuGQs",
+    "likes": 5584,
+    "comments": 193,
+    "shares": 767,
+    "topReactionsCount": 7,
+    "isVideo": true,
+    "viewsCount": 102966,
+    "media": [
+      {
+        "thumbnail": "https://scontent-iad3-1.xx.fbcdn.net/v/t15.5256-10/550240250_1574932620159394_3902063095359145097_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=7965db&_nc_ohc=yKVgXLC2muwQ7kNvwFaPUio&_nc_oc=AdkKK2bFx_crhgOo3Fx_3KpU28h0m_VBDj8pTKnKS8vqI9EoPBnQWUWfTj-f9O5GXa2dCj1HU8CEVy9KojbAgBmi&_nc_zt=23&_nc_ht=scontent-iad3-1.xx&_nc_gid=7cBJfsnfta73RKKJ533YFw&oh=00_Afe9_gJywntPpI4jiWdvCCETl8kKFPWdpiXRYLvdNt28YQ&oe=68E8E09C",
+        "__typename": "Video",
+        "thumbnailImage": {
+          "uri": "https://scontent-iad3-1.xx.fbcdn.net/v/t15.5256-10/550240250_1574932620159394_3902063095359145097_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=7965db&_nc_ohc=yKVgXLC2muwQ7kNvwFaPUio&_nc_oc=AdkKK2bFx_crhgOo3Fx_3KpU28h0m_VBDj8pTKnKS8vqI9EoPBnQWUWfTj-f9O5GXa2dCj1HU8CEVy9KojbAgBmi&_nc_zt=23&_nc_ht=scontent-iad3-1.xx&_nc_gid=7cBJfsnfta73RKKJ533YFw&oh=00_Afe9_gJywntPpI4jiWdvCCETl8kKFPWdpiXRYLvdNt28YQ&oe=68E8E09C"
+        },
+        "id": "2408047472966921",
+        "is_clipping_enabled": false,
+        "live_rewind_enabled": false,
+        "owner": {
+          "__typename": "User",
+          "id": "100044561550831",
+          "__isVideoOwner": "User",
+          "has_professional_features_for_watch": true
+        },
+        "playable_duration_in_ms": 52452,
+        "is_huddle": false,
+        "url": "https://www.facebook.com/NASA/videos/2408047472966921/",
+        "if_viewer_can_use_latency_menu": null,
+        "if_viewer_can_use_latency_menu_toggle": null,
+        "captions_url": "https://scontent-iad3-1.xx.fbcdn.net/v/t39.2093-6/549435440_2408048342966834_5943348496020212373_n.srt?_nc_cat=102&ccb=1-7&_nc_sid=c211c2&_nc_ohc=LDV7kLSk7GwQ7kNvwErcGHj&_nc_oc=AdnQtZGzhPRDZXwtu3UOW03jiqMG26cSLAg8KTdXpsJkDNpj24eBjRyVO8NaDYZYXpqsXrJE4L-SswLDz6zBhuBt&_nc_zt=14&_nc_ht=scontent-iad3-1.xx&_nc_gid=7cBJfsnfta73RKKJ533YFw&oh=00_AfcnnUjQnP0xZyjMFOsiVGLmA17hi_ex2-PGEpAdnGRuxQ&oe=68E8EA1A",
+        "video_available_captions_locales": [
+          {
+            "localized_creation_method": null,
+            "captions_url": "https://scontent-iad3-1.xx.fbcdn.net/v/t39.2093-6/549435440_2408048342966834_5943348496020212373_n.srt?_nc_cat=102&ccb=1-7&_nc_sid=c211c2&_nc_ohc=LDV7kLSk7GwQ7kNvwErcGHj&_nc_oc=AdnQtZGzhPRDZXwtu3UOW03jiqMG26cSLAg8KTdXpsJkDNpj24eBjRyVO8NaDYZYXpqsXrJE4L-SswLDz6zBhuBt&_nc_zt=14&_nc_ht=scontent-iad3-1.xx&_nc_gid=7cBJfsnfta73RKKJ533YFw&oh=00_AfcnnUjQnP0xZyjMFOsiVGLmA17hi_ex2-PGEpAdnGRuxQ&oe=68E8EA1A",
+            "locale": "en_US",
+            "localized_language": "English",
+            "localized_country": null
+          }
+        ],
+        "if_viewer_can_see_community_moderation_tools": null,
+        "if_viewer_can_use_live_rewind": null,
+        "if_viewer_can_use_clipping": null,
+        "if_viewer_can_see_costreaming_tools": null,
+        "video_player_scrubber_base_content_renderer": null,
+        "video_player_scrubber_preview_renderer": {
+          "__typename": "XFBVideoPlayerScrubberDefaultPreviewRenderer",
+          "video": {
+            "scrubber_preview_thumbnail_information": {
+              "sprite_uris": [
+                "https://scontent-iad3-2.xx.fbcdn.net/v/t15.5256-10/548922488_1509249880076867_8466621439093321078_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=62976d&_nc_ohc=Jufatce4xAcQ7kNvwFmNCjU&_nc_oc=AdmUYSOZsLiMwdQv8JbXTDzgr1r4hqrwc-JQ1uptoGs00MIPBKYDRAKug7n7WdaDz6fCuy4ImASi3i6jLJTBue0I&_nc_zt=23&_nc_ht=scontent-iad3-2.xx&_nc_gid=7cBJfsnfta73RKKJ533YFw&oh=00_AfcRcE0Nu3cNfvKZKof8fN1hqFENkXGINSsY9EYsJGwMhQ&oe=68E8C8A1"
+              ],
+              "thumbnail_width": 142,
+              "thumbnail_height": 80,
+              "has_preview_thumbnails": true,
+              "num_images_per_row": 10,
+              "max_number_of_images_per_sprite": 100,
+              "time_interval_between_image": 1
+            },
+            "id": "2408047472966921"
+          },
+          "__module_operation_VideoPlayerScrubberPreview_video": {
+            "__dr": "VideoPlayerScrubberDefaultPreview_video$normalization.graphql"
+          },
+          "__module_component_VideoPlayerScrubberPreview_video": {
+            "__dr": "VideoPlayerScrubberDefaultPreview.react"
+          }
+        },
+        "recipient_group": null,
+        "music_attachment_metadata": null,
+        "video_container_type": "CONTAINED_POST_ATTACHMENT",
+        "breakingStatus": false,
+        "videoId": "2408047472966921",
+        "isPremiere": false,
+        "liveViewerCount": 0,
+        "rehearsalInfo": null,
+        "is_gaming_video": false,
+        "is_live_audio_room_v2_broadcast": false,
+        "publish_time": 1758206933,
+        "live_speaker_count_indicator": null,
+        "can_viewer_share": false,
+        "end_cards_channel_info": {
+          "video_chaining_caller": "CHANNEL_VIEW_FROM_END_CARD",
+          "video_channel_entry_point": "PROFILE",
+          "video": {
+            "id": "2408047472966921",
+            "can_viewer_share": false,
+            "creation_story": {
+              "shareable": null,
+              "id": "UzpfSTEwMDA0NDU2MTU1MDgzMTpWSzoyNDA4MDQ3NDcyOTY2OTIx"
+            }
+          },
+          "__module_operation_useVideoPlayerWatchEndScreenWithActions_video": {
+            "__dr": "VideoPlayerWatchInlineEndScreen_info$normalization.graphql"
+          },
+          "__module_component_useVideoPlayerWatchEndScreenWithActions_video": {
+            "__dr": "VideoPlayerWatchInlineEndScreen.react"
+          }
+        },
+        "is_soundbites_video": false,
+        "is_looping": false,
+        "info": {
+          "video_chaining_caller": "CHANNEL_VIEW_FROM_END_CARD",
+          "video_channel_entry_point": "PROFILE",
+          "video_id": "2408047472966921",
+          "__module_operation_useVideoPlayerWatchPauseScreenWithActions_video": {
+            "__dr": "VideoPlayerWatchInlinePauseScreen_info$normalization.graphql"
+          },
+          "__module_component_useVideoPlayerWatchPauseScreenWithActions_video": {
+            "__dr": "VideoPlayerWatchInlinePauseScreen.react"
+          }
+        },
+        "animated_image_caption": null,
+        "width": 3840,
+        "height": 2160,
+        "broadcaster_origin": null,
+        "broadcast_id": null,
+        "broadcast_status": null,
+        "is_live_streaming": false,
+        "is_live_trace_enabled": false,
+        "is_video_broadcast": false,
+        "is_podcast_video": false,
+        "loop_count": 0,
+        "is_spherical": false,
+        "is_spherical_enabled": true,
+        "unsupported_browser_message": null,
+        "can_play_undiscoverable": true,
+        "pmv_metadata": null,
+        "latency_sensitive_config": null,
+        "live_playback_instrumentation_configs": null,
+        "is_ncsr": false,
+        "permalink_url": "https://www.facebook.com/NASA/videos/2408047472966921/",
+        "dash_prefetch_experimental": [
+          "1306634831059224v",
+          "24369046246055163a"
+        ],
+        "video_status_type": "OK",
+        "can_use_oz": true,
+        "dash_manifest": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"urn:mpeg:dash:schema:mpd:2011 DASH-MPD.xsd\" profiles=\"urn:mpeg:dash:profile:isoff-on-demand:2011\" minBufferTime=\"PT2S\" type=\"static\" mediaPresentationDuration=\"PT52.458668S\" FBTagsetUsed=\"r2av1-r1gen2vp9\" FBManifestIdentifier=\"FgAYD3IyYXYxLXIxZ2VuMnZwORmWrJ7+2+C73AKM5/OM7sfnAsDzvsSr1OsDmrr3itOvgASw5KaPlJjSBPyX5PGS5IgF/LKkof7omweY4tz45K35B/bzlpCX4clWIhgQYXVkaW9fYWFjX2xuX3ZiciI2IhQAAA==\"><Period id=\"0\" duration=\"PT52.458668S\"><AdaptationSet id=\"0\" contentType=\"video\" frameRate=\"11988/400\" subsegmentAlignment=\"true\" par=\"16:9\" FBUnifiedUploadResolutionMos=\"360:77.3,480:77.3,720:77.3,1080:77.3\"><SupplementalProperty schemeIdUri=\"urn:mpeg:mpegB:cicp:MatrixCoefficients\" value=\"1\"/><SupplementalProperty schemeIdUri=\"urn:mpeg:mpegB:cicp:ColourPrimaries\" value=\"1\"/><SupplementalProperty schemeIdUri=\"urn:mpeg:mpegB:cicp:TransferCharacteristics\" value=\"1\"/><Representation id=\"1306634831059224v\" bandwidth=\"534269\" codecs=\"av01.0.05M.08.0.111.01.01.01.0\" mimeType=\"video/mp4\" sar=\"1:1\" FBEncodingTag=\"dash_r2av1-r1gen2vp9_q20\" FBPlaybackResolutionMos=\"0:100,360:76.1,480:72.3,720:68.1,1080:65,1440:64.5,2160:66\" FBPlaybackResolutionMosConfidenceLevel=\"high\" FBPlaybackResolutionCsvqm=\"0:100,360:96.4,480:94.6,720:89.8,1080:82,1440:75,2160:63.6\" width=\"1280\" height=\"720\" FBDefaultQuality=\"1\" FBQualityClass=\"hd\" FBQualityLabel=\"270p\"><BaseURL>https://video-iad3-1.xx.fbcdn.net/o1/v/t2/f2/m366/AQNWQ4NaP4Z0zTWeZvqwBVXWxPyi0HITOQWWomIzi8ZtTrBAMM1muvMuKiAy16G1IvvUzHvjUWiQZQ-T84deE568yibQadLbf19cZdI.mp4?_nc_cat=101&amp;_nc_sid=9ca052&amp;_nc_ht=video-iad3-1.xx.fbcdn.net&amp;_nc_ohc=7BvbUUb8y5sQ7kNvwEO20MK&amp;efg=eyJ2ZW5jb2RlX3RhZyI6ImRhc2hfcjJhdjEtcjFnZW4ydnA5X3EyMCIsInZpZGVvX2lkIjoyNDA4MDQ3NDcyOTY2OTIxLCJvaWxfdXJsZ2VuX2FwcF9pZCI6MCwiY2xpZW50X25hbWUiOiJ1bmtub3duIiwieHB2X2Fzc2V0X2lkIjoxMjY2NTgxNTMxOTExNTYxLCJ2aV91c2VjYXNlX2lkIjoxMDEyMiwiZHVyYXRpb25fcyI6NTIsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&amp;ccb=17-1&amp;_nc_gid=7cBJfsnfta73RKKJ533YFw&amp;_nc_zt=28&amp;oh=00_AfclDyDlsa3UUdfpAtmdtT85lQh5cXV67O_eWujQf7wU9w&amp;oe=68E8D766</BaseURL><SegmentBase indexRange=\"826-989\" timescale=\"11988\" FBFirstSegmentRange=\"990-357757\"><Initialization range=\"0-825\"/></SegmentBase></Representation><Representation id=\"2237193293371532v\" bandwidth=\"670483\" codecs=\"av01.0.05M.08.0.111.01.01.01.0\" mimeType=\"video/mp4\" sar=\"1:1\" FBEncodingTag=\"dash_r2av1-r1gen2vp9_q30\" FBPlaybackResolutionMos=\"0:100,360:79,480:75.3,720:71.1,1080:67.8,1440:67.1,2160:68\" FBPlaybackResolutionMosConfidenceLevel=\"high\" FBPlaybackResolutionCsvqm=\"0:100,360:97.1,480:96,720:92.3,1080:85.4,1440:78.8,2160:67.8\" width=\"1280\" height=\"720\" FBQualityClass=\"hd\" FBQualityLabel=\"360p\"><BaseURL>https://video-iad3-2.xx.fbcdn.net/o1/v/t2/f2/m366/AQP9XXL24sP-EKG3mKJ5Hi6xC3GPLgEQnzqKJsX1_jLunKtuU9RMAUJNekpBFSpLBcXyicASXtM_QrkvaNLXstHS0NWIc1dobtWtWYU.mp4?_nc_cat=106&amp;_nc_sid=9ca052&amp;_nc_ht=video-iad3-2.xx.fbcdn.net&amp;_nc_ohc=uRvt9thKbGkQ7kNvwEW8UMe&amp;efg=eyJ2ZW5jb2RlX3RhZyI6ImRhc2hfcjJhdjEtcjFnZW4ydnA5X3EzMCIsInZpZGVvX2lkIjoyNDA4MDQ3NDcyOTY2OTIxLCJvaWxfdXJsZ2VuX2FwcF9pZCI6MCwiY2xpZW50X25hbWUiOiJ1bmtub3duIiwieHB2X2Fzc2V0X2lkIjoxMjY2NTgxNTMxOTExNTYxLCJ2aV91c2VjYXNlX2lkIjoxMDEyMiwiZHVyYXRpb25fcyI6NTIsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&amp;ccb=17-1&amp;_nc_gid=7cBJfsnfta73RKKJ533YFw&amp;_nc_zt=28&amp;oh=00_Afe-KIm8CkVDr6srPAlkItcHeNAxlCdlBr-2rIfUfTEmdA&amp;oe=68E8E0B3</BaseURL><SegmentBase indexRange=\"826-989\" timescale=\"11988\" FBFirstSegmentRange=\"990-462407\"><Initialization range=\"0-825\"/></SegmentBase></Representation><Representation id=\"1426687591745022v\" bandwidth=\"800507\" codecs=\"av01.0.05M.08.0.111.01.01.01.0\" mimeType=\"video/mp4\" sar=\"1:1\" FBEncodingTag=\"dash_r2av1-r1gen2vp9_q40\" FBPlaybackResolutionMos=\"0:100,360:81.6,480:77.3,720:73.4,1080:69.9,1440:69,2160:69.6\" FBPlaybackResolutionMosConfidenceLevel=\"high\" FBPlaybackResolutionCsvqm=\"0:100,360:97.5,480:96.7,720:93.9,1080:87.6,1440:81.4,2160:70.7\" width=\"1280\" height=\"720\" FBQualityClass=\"hd\" FBQualityLabel=\"480p\"><BaseURL>https://video-iad3-1.xx.fbcdn.net/o1/v/t2/f2/m366/AQNCAhbhsDtpJtGlDx53BrcCAj9Ne2EEBcPorc0QlSWsGvhOUrOp7udpReGBV17edYtxHths1BBjEzge0pTNAk15-id91c_P5Obn1ws.mp4?_nc_cat=104&amp;_nc_sid=9ca052&amp;_nc_ht=video-iad3-1.xx.fbcdn.net&amp;_nc_ohc=51lBAfnYotcQ7kNvwEzv_oI&amp;efg=eyJ2ZW5jb2RlX3RhZyI6ImRhc2hfcjJhdjEtcjFnZW4ydnA5X3E0MCIsInZpZGVvX2lkIjoyNDA4MDQ3NDcyOTY2OTIxLCJvaWxfdXJsZ2VuX2FwcF9pZCI6MCwiY2xpZW50X25hbWUiOiJ1bmtub3duIiwieHB2X2Fzc2V0X2lkIjoxMjY2NTgxNTMxOTExNTYxLCJ2aV91c2VjYXNlX2lkIjoxMDEyMiwiZHVyYXRpb25fcyI6NTIsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&amp;ccb=17-1&amp;_nc_gid=7cBJfsnfta73RKKJ533YFw&amp;_nc_zt=28&amp;oh=00_AfebpPod5qQhqg_vMO8wdHtz0T8yIe5FwpT714u_Imehvg&amp;oe=68E8DF71</BaseURL><SegmentBase indexRange=\"826-989\" timescale=\"11988\" FBFirstSegmentRange=\"990-569078\"><Initialization range=\"0-825\"/></SegmentBase></Representation><Representation id=\"1126718512230029v\" bandwidth=\"1087715\" codecs=\"av01.0.05M.08.0.111.01.01.01.0\" mimeType=\"video/mp4\" sar=\"1:1\" FBEncodingTag=\"dash_r2av1-r1gen2vp9_q50\" FBPlaybackResolutionMos=\"0:100,360:85.4,480:81.6,720:76.9,1080:73.3,1440:72.2,2160:72.3\" FBPlaybackResolutionMosConfidenceLevel=\"high\" FBPlaybackResolutionCsvqm=\"0:100,360:98.05,480:97.6,720:95.9,1080:91.2,1440:85.7,2160:75.8\" width=\"1280\" height=\"720\" FBQualityClass=\"hd\" FBQualityLabel=\"540p\"><BaseURL>https://video-iad3-1.xx.fbcdn.net/o1/v/t2/f2/m366/AQNYnvynAMyILI7npgLt9CsEPeIJE9v1TrlyiyAe3_HVeNd5lckaluQ8Lq2rAGq6GkGek-WiuxwxtOM24zKyRFMdpmVpMXT3HgFbIGg.mp4?_nc_cat=108&amp;_nc_sid=9ca052&amp;_nc_ht=video-iad3-1.xx.fbcdn.net&amp;_nc_ohc=l8XKwDyn3zsQ7kNvwH-iubT&amp;efg=eyJ2ZW5jb2RlX3RhZyI6ImRhc2hfcjJhdjEtcjFnZW4ydnA5X3E1MCIsInZpZGVvX2lkIjoyNDA4MDQ3NDcyOTY2OTIxLCJvaWxfdXJsZ2VuX2FwcF9pZCI6MCwiY2xpZW50X25hbWUiOiJ1bmtub3duIiwieHB2X2Fzc2V0X2lkIjoxMjY2NTgxNTMxOTExNTYxLCJ2aV91c2VjYXNlX2lkIjoxMDEyMiwiZHVyYXRpb25fcyI6NTIsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&amp;ccb=17-1&amp;_nc_gid=7cBJfsnfta73RKKJ533YFw&amp;_nc_zt=28&amp;oh=00_Aff_qf_-pvaYgHy7WyO3Md7_JXog0JR-4dDGa5BaD9qgXA&amp;oe=68E8EBD5</BaseURL><SegmentBase indexRange=\"826-989\" timescale=\"11988\" FBFirstSegmentRange=\"990-820164\"><Initialization range=\"0-825\"/></SegmentBase></Representation><Representation id=\"766286686570390v\" bandwidth=\"1311850\" codecs=\"av01.0.05M.08.0.111.01.01.01.0\" mimeType=\"video/mp4\" sar=\"1:1\" FBEncodingTag=\"dash_r2av1-r1gen2vp9_q60\" FBPlaybackResolutionMos=\"0:100,360:87.3,480:84,720:79.2,1080:75.2,1440:74,2160:73.7\" FBPlaybackResolutionMosConfidenceLevel=\"high\" FBPlaybackResolutionCsvqm=\"0:100,360:98.28,480:97.9,720:96.6,1080:92.9,1440:88,2160:78.8\" width=\"1280\" height=\"720\" FBQualityClass=\"hd\" FBQualityLabel=\"640p\"><BaseURL>https://video-iad3-2.xx.fbcdn.net/o1/v/t2/f2/m366/AQOhfpT5yjnCIuIphQStsQEqWN9-cxICycsBUM5_CEEXOQxdBQyUN6OgFL3ZHgr-Kw2e1iv1sdP_MzC877XmYaR1GoJqG39fNzweWBM.mp4?_nc_cat=100&amp;_nc_sid=9ca052&amp;_nc_ht=video-iad3-2.xx.fbcdn.net&amp;_nc_ohc=H20D73yYOYcQ7kNvwFGWlvY&amp;efg=eyJ2ZW5jb2RlX3RhZyI6ImRhc2hfcjJhdjEtcjFnZW4ydnA5X3E2MCIsInZpZGVvX2lkIjoyNDA4MDQ3NDcyOTY2OTIxLCJvaWxfdXJsZ2VuX2FwcF9pZCI6MCwiY2xpZW50X25hbWUiOiJ1bmtub3duIiwieHB2X2Fzc2V0X2lkIjoxMjY2NTgxNTMxOTExNTYxLCJ2aV91c2VjYXNlX2lkIjoxMDEyMiwiZHVyYXRpb25fcyI6NTIsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&amp;ccb=17-1&amp;_nc_gid=7cBJfsnfta73RKKJ533YFw&amp;_nc_zt=28&amp;oh=00_Afc_LSYkhYJ7QKo6GD71k8CC3yo3_-SKBPriboKyOckI-g&amp;oe=68E8F2E9</BaseURL><SegmentBase indexRange=\"826-989\" timescale=\"11988\" FBFirstSegmentRange=\"990-1020166\"><Initialization range=\"0-825\"/></SegmentBase></Representation><Representation id=\"790683896936902v\" bandwidth=\"1799879\" codecs=\"av01.0.05M.08.0.111.01.01.01.0\" mimeType=\"video/mp4\" sar=\"1:1\" FBEncodingTag=\"dash_r2av1-r1gen2vp9_q70\" FBPlaybackResolutionMos=\"0:100,360:90,480:87,720:83,1080:77.7,1440:76.4,2160:75.9\" FBPlaybackResolutionMosConfidenceLevel=\"high\" FBPlaybackResolutionCsvqm=\"0:100,360:98.56,480:98.3,720:97.5,1080:94.8,1440:91.1,2160:82.9\" width=\"1280\" height=\"720\" FBQualityClass=\"hd\" FBQualityLabel=\"720p\"><BaseURL>https://video-iad3-2.xx.fbcdn.net/o1/v/t2/f2/m366/AQO_TIMd9_W2LJ30Jx2JdgElvnSvx9kxcA1UpwL63GV945nFQQ8uzb0bMBUg-0LbIKd58U7I9nw3NlVFpLvIDCeBAwcEfhJ8USP1NpQ.mp4?_nc_cat=105&amp;_nc_sid=9ca052&amp;_nc_ht=video-iad3-2.xx.fbcdn.net&amp;_nc_ohc=_xn7fv1IjJoQ7kNvwE646t1&amp;efg=eyJ2ZW5jb2RlX3RhZyI6ImRhc2hfcjJhdjEtcjFnZW4ydnA5X3E3MCIsInZpZGVvX2lkIjoyNDA4MDQ3NDcyOTY2OTIxLCJvaWxfdXJsZ2VuX2FwcF9pZCI6MCwiY2xpZW50X25hbWUiOiJ1bmtub3duIiwieHB2X2Fzc2V0X2lkIjoxMjY2NTgxNTMxOTExNTYxLCJ2aV91c2VjYXNlX2lkIjoxMDEyMiwiZHVyYXRpb25fcyI6NTIsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&amp;ccb=17-1&amp;_nc_gid=7cBJfsnfta73RKKJ533YFw&amp;_nc_zt=28&amp;oh=00_Afd94dikPts7dgZHU94WI7zY7LCIRP0ITWSlCST1qmGviQ&amp;oe=68E8D6CA</BaseURL><SegmentBase indexRange=\"826-989\" timescale=\"11988\" FBFirstSegmentRange=\"990-1455281\"><Initialization range=\"0-825\"/></SegmentBase></Representation><Representation id=\"2031502117604542v\" bandwidth=\"2477087\" codecs=\"av01.0.08M.08.0.111.01.01.01.0\" mimeType=\"video/mp4\" sar=\"1:1\" FBEncodingTag=\"dash_r2av1-r1gen2vp9_q80\" FBPlaybackResolutionMos=\"0:100,360:92.4,480:90,720:86.6,1080:83.6,1440:81.4,2160:80.5\" FBPlaybackResolutionMosConfidenceLevel=\"high\" FBPlaybackResolutionCsvqm=\"0:100,360:98.74,480:98.6,720:98.2,1080:97,1440:95.1,2160:89.8\" width=\"1920\" height=\"1080\" FBQualityClass=\"hd\" FBQualityLabel=\"1080p\"><BaseURL>https://video-iad3-1.xx.fbcdn.net/o1/v/t2/f2/m366/AQNQhYveqDiAA3ysae9HUQtAyjxwVn_r4uUJhpXgNC1b2kQs-NFBGOEslMoOs1x9u4JcyISAL7HtenOk86BwPtklehA0uY7K7MI9huU.mp4?_nc_cat=107&amp;_nc_sid=9ca052&amp;_nc_ht=video-iad3-1.xx.fbcdn.net&amp;_nc_ohc=wDhIbYqpb2AQ7kNvwHlpTSe&amp;efg=eyJ2ZW5jb2RlX3RhZyI6ImRhc2hfcjJhdjEtcjFnZW4ydnA5X3E4MCIsInZpZGVvX2lkIjoyNDA4MDQ3NDcyOTY2OTIxLCJvaWxfdXJsZ2VuX2FwcF9pZCI6MCwiY2xpZW50X25hbWUiOiJ1bmtub3duIiwieHB2X2Fzc2V0X2lkIjoxMjY2NTgxNTMxOTExNTYxLCJ2aV91c2VjYXNlX2lkIjoxMDEyMiwiZHVyYXRpb25fcyI6NTIsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&amp;ccb=17-1&amp;_nc_gid=7cBJfsnfta73RKKJ533YFw&amp;_nc_zt=28&amp;oh=00_AfdpD5_uwc0lywiEFuWWKxb3JLZZ5vn0OHehEoIIcR98kQ&amp;oe=68E8F498</BaseURL><SegmentBase indexRange=\"826-989\" timescale=\"11988\" FBFirstSegmentRange=\"990-1970018\"><Initialization range=\"0-825\"/></SegmentBase></Representation><Representation id=\"1081169370668256v\" bandwidth=\"4567642\" codecs=\"av01.0.12M.08.0.111.01.01.01.0\" mimeType=\"video/mp4\" sar=\"1:1\" FBEncodingTag=\"dash_r2av1-r1gen2vp9_q90\" FBPlaybackResolutionMos=\"0:100,360:94.5,480:92.7,720:89.8,1080:87,1440:85.7,2160:84.1\" FBPlaybackResolutionMosConfidenceLevel=\"high\" FBPlaybackResolutionCsvqm=\"0:100,360:98.96,480:98.9,720:98.69,1080:98.1,1440:97.3,2160:95.2\" width=\"2560\" height=\"1440\" FBQualityClass=\"hd\" FBQualityLabel=\"1440p\"><BaseURL>https://video-iad3-2.xx.fbcdn.net/o1/v/t2/f2/m366/AQPZltDqP7u710e0YxVggJ1oeNqmP63_-WqiY5PEvrNNSGBo-BbhKHQ33ZNLOCrzlmMW5rfT7k9JBrLA7wAQse8Ltv9elm0K7u5PQX4.mp4?_nc_cat=103&amp;_nc_sid=9ca052&amp;_nc_ht=video-iad3-2.xx.fbcdn.net&amp;_nc_ohc=m4ty71fNWQsQ7kNvwEpDFx7&amp;efg=eyJ2ZW5jb2RlX3RhZyI6ImRhc2hfcjJhdjEtcjFnZW4ydnA5X3E5MCIsInZpZGVvX2lkIjoyNDA4MDQ3NDcyOTY2OTIxLCJvaWxfdXJsZ2VuX2FwcF9pZCI6MCwiY2xpZW50X25hbWUiOiJ1bmtub3duIiwieHB2X2Fzc2V0X2lkIjoxMjY2NTgxNTMxOTExNTYxLCJ2aV91c2VjYXNlX2lkIjoxMDEyMiwiZHVyYXRpb25fcyI6NTIsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&amp;ccb=17-1&amp;_nc_gid=7cBJfsnfta73RKKJ533YFw&amp;_nc_zt=28&amp;oh=00_AfdNTjeKYlxyFU8IzMQ3caLpQ564YqiFWb59t7pCEWrqdA&amp;oe=68E8FA94</BaseURL><SegmentBase indexRange=\"827-990\" timescale=\"11988\" FBFirstSegmentRange=\"991-3531465\"><Initialization range=\"0-826\"/></SegmentBase></Representation></AdaptationSet><AdaptationSet id=\"1\" contentType=\"audio\" subsegmentStartsWithSAP=\"1\" subsegmentAlignment=\"true\"><Representation id=\"24369046246055163a\" bandwidth=\"70156\" codecs=\"mp4a.40.5\" mimeType=\"audio/mp4\" FBAvgBitrate=\"70156\" audioSamplingRate=\"48000\" FBEncodingTag=\"dash_ln_heaac_vbr3_audio\" FBDefaultQuality=\"1\"><AudioChannelConfiguration schemeIdUri=\"urn:mpeg:dash:23003:3:audio_channel_configuration:2011\" value=\"2\"/><BaseURL>https://video-iad3-2.xx.fbcdn.net/o1/v/t2/f2/m412/AQMwq6V_sTmUuZoKZ956dc6pc84Czje-YlVDM46NmNST4wJBqA8URtAqrwwDchKoJ91yVF4LnasT8vbL3TUCg-kbQfq4V4uhFRjUUEg.mp4?_nc_cat=105&amp;_nc_sid=9ca052&amp;_nc_ht=video-iad3-2.xx.fbcdn.net&amp;_nc_ohc=7aVsWw2ftWsQ7kNvwFURppE&amp;efg=eyJ2ZW5jb2RlX3RhZyI6ImRhc2hfbG5faGVhYWNfdmJyM19hdWRpbyIsInZpZGVvX2lkIjoyNDA4MDQ3NDcyOTY2OTIxLCJvaWxfdXJsZ2VuX2FwcF9pZCI6MCwiY2xpZW50X25hbWUiOiJ1bmtub3duIiwieHB2X2Fzc2V0X2lkIjoxMjY2NTgxNTMxOTExNTYxLCJ2aV91c2VjYXNlX2lkIjoxMDEyMiwiZHVyYXRpb25fcyI6NTIsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&amp;ccb=17-1&amp;_nc_gid=7cBJfsnfta73RKKJ533YFw&amp;_nc_zt=28&amp;oh=00_Afd_R5Dg4KshPwb4b52qJdvEhu2Spd964epbIRWq-C5VCQ&amp;oe=68E8F272</BaseURL><SegmentBase indexRange=\"824-1179\" timescale=\"48000\" FBFirstSegmentRange=\"1180-21112\"><Initialization range=\"0-823\"/></SegmentBase></Representation></AdaptationSet></Period></MPD>\n",
+        "dash_manifest_url": "https://www.facebook.com/dash_mpd_debug.mpd?v=2408047472966921&dummy=.mpd",
+        "min_quality_preference": null,
+        "audio_user_preferred_language": "en",
+        "is_rss_podcast_video": false,
+        "browser_native_sd_url": "https://video-iad3-1.xx.fbcdn.net/o1/v/t2/f2/m366/AQPmsGTaoSSwZvevDDqsmW50z9JlotYaHq6xsjByG41tEMROWTAB2_uswpoBnDAWZIQuKz2HwDO4GwckCo0XP64oYTFv19RZZyYNiy5xGg.mp4?_nc_cat=102&_nc_sid=8bf8fe&_nc_ht=video-iad3-1.xx.fbcdn.net&_nc_ohc=dhT9Cf9WooQQ7kNvwGeQU2E&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5GQUNFQk9PSy4uQzMuNjQwLnN2ZV9zZCIsInhwdl9hc3NldF9pZCI6MTI2NjU4MTUzMTkxMTU2MSwidmlfdXNlY2FzZV9pZCI6MTAxMjIsImR1cmF0aW9uX3MiOjUyLCJ1cmxnZW5fc291cmNlIjoid3d3In0%3D&ccb=17-1&_nc_gid=7cBJfsnfta73RKKJ533YFw&_nc_zt=28&oh=00_Afetl0SSKU1lzTR2asx_hLXijbVM_FUt_B0tbe_S5io3tw&oe=68E8E334&bitrate=342312&tag=sve_sd",
+        "browser_native_hd_url": "https://video-iad3-1.xx.fbcdn.net/o1/v/t2/f2/m366/AQPY11vcS2mijsweM3mIl1Ec7VktfopLp6RqcJIMPwbw0RohFql2fMoccAH_Eo9CG39z9j9-u3dss9x2Eh-rqKRbT1wNiDUvUPGvm7fSFiG9qw.mp4?_nc_cat=102&_nc_sid=5e9851&_nc_ht=video-iad3-1.xx.fbcdn.net&_nc_ohc=YbDj7RXAhTkQ7kNvwHaWHND&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5GQUNFQk9PSy4uQzMuMTI4MC5kYXNoX2gyNjQtYmFzaWMtZ2VuMl83MjBwIiwieHB2X2Fzc2V0X2lkIjoxMjY2NTgxNTMxOTExNTYxLCJ2aV91c2VjYXNlX2lkIjoxMDEyMiwiZHVyYXRpb25fcyI6NTIsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=bf900f28da929bf9&_nc_vs=HBksFQIYRWZiX2VwaGVtZXJhbC84QjRGOUE3MDk4RUZGQkY3MTFFM0YxQ0NERkE2MDlCRl9tdF8xX3ZpZGVvX2Rhc2hpbml0Lm1wNBUAAsgBEgAVAhhFZmJfZXBoZW1lcmFsLzI5NDM0MUExOURFRTYwODY3RjNFMUY0MEE4MkQ3QkIxX210XzBfYXVkaW9fZGFzaGluaXQubXA0FQICyAESACgAGAAbAogHdXNlX29pbAExEnByb2dyZXNzaXZlX3JlY2lwZQExFQAAJpKWz-Tf_L8EFQIoAkMzLBdASjnbItDlYBgZZGFzaF9oMjY0LWJhc2ljLWdlbjJfNzIwcBEAdQJllJ4BAA&_nc_gid=7cBJfsnfta73RKKJ533YFw&_nc_zt=28&oh=00_AfdkZV_r6iabCm9YKg15M-xswBjBKy5bDPGrZOQEE4b60g&oe=68E8ECBE&bitrate=1380996&tag=dash_h264-basic-gen2_720p",
+        "spherical_video_fallback_urls": null,
+        "is_latency_menu_enabled": false,
+        "fbls_tier": null,
+        "is_latency_sensitive_broadcast": false,
+        "comet_video_player_static_config": "{}",
+        "comet_video_player_context_sensitive_config": "{}",
+        "video_player_shaka_performance_logger_init": {
+          "__typename": "VideoPlayerShakaPerformanceLoggerInit",
+          "__module_operation_useVideoPlayerShakaPerformanceLoggerRelayImpl_video": {
+            "__dr": "useVideoPlayerShakaPerformanceLoggerRelayImpl_init$normalization.graphql"
+          },
+          "__module_component_useVideoPlayerShakaPerformanceLoggerRelayImpl_video": {
+            "__dr": "VideoPlayerShakaPerformanceLogger"
+          }
+        },
+        "video_player_shaka_performance_logger_should_sample": false,
+        "video_player_shaka_performance_logger_init2": {
+          "__typename": "VideoPlayerShakaPerformanceLoggerInit",
+          "__module_operation_useVideoPlayerShakaPerformanceLoggerBuilder_video": {
+            "__dr": "useVideoPlayerShakaPerformanceLoggerBuilder_init$normalization.graphql"
+          },
+          "__module_component_useVideoPlayerShakaPerformanceLoggerBuilder_video": {
+            "__dr": "VideoPlayerShakaPerformanceLoggerBuilder"
+          },
+          "per_session_sampling_rate": null
+        },
+        "autoplay_gating_result": "all_page_organic_allowed",
+        "viewer_autoplay_setting": "default_autoplay",
+        "can_autoplay": true,
+        "drm_info": "{\"video_license_uri_map\":{},\"graph_api_video_license_uri\":null,\"fairplay_cert\":null,\"widevine_cert\":\"CsECCAMSEBcFuRfMEgSGiwYzOi93KowYgrSCkgUijgIwggEKAoIBAQCZ7Vs7Mn2rXiTvw7YqlbWYUgrVvMs3UD4GRbgU2Ha430BRBEGtjOOtsRu4jE5yWl5KngeVKR1YWEAjp+GvDjipEnk5MAhhC28VjIeMfiG\\/+\\/7qd+EBnh5XgeikX0YmPRTmDoBYqGB63OBPrIRXsTeo1nzN6zNwXZg6IftO7L1KEMpHSQykfqpdQ4IY3brxyt4zkvE9b\\/tkQv0x4b9AsMYE0cS6TJUgpL+X7r1gkpr87vVbuvVk4tDnbNfFXHOggrmWEguDWe3OJHBwgmgNb2fG2CxKxfMTRJCnTuw3r0svAQxZ6ChD4lgvC2ufXbD8Xm7fZPvTCLRxG88SUAGcn1oJAgMBAAE6FGxpY2Vuc2Uud2lkZXZpbmUuY29tEoADrjRzFLWoNSl\\/JxOI+3u4y1J30kmCPN3R2jC5MzlRHrPMveoEuUS5J8EhNG79verJ1BORfm7BdqEEOEYKUDvBlSubpOTOD8S\\/wgqYCKqvS\\/zRnB3PzfV0zKwo0bQQQWz53ogEMBy9szTK\\/NDUCXhCOmQuVGE98K\\/PlspKkknYVeQrOnA+8XZ\\/apvTbWv4K+drvwy6T95Z0qvMdv62Qke4XEMfvKUiZrYZ\\/DaXlUP8qcu9u\\/r6DhpV51Wjx7zmVflkb1gquc9wqgi5efhn9joLK3\\/bNixbxOzVVdhbyqnFk8ODyFfUnaq3fkC3hR3f0kmYgI41sljnXXjqwMoW9wRzBMINk+3k6P8cbxfmJD4\\/Paj8FwmHDsRfuoI6Jj8M76H3CTsZCZKDJjM3BQQ6Kb2m+bQ0LMjfVDyxoRgvfF\\/\\/M\\/EEkPrKWyU2C3YBXpxaBquO4C8A0ujVmGEEqsxN1HX9lu6c5OMm8huDxwWFd7OHMs3avGpr7RP7DUnTikXrh6X0\"}",
+        "p2p_settings": null,
+        "audio_settings": null,
+        "captions_settings": null,
+        "broadcast_low_latency_config": null,
+        "audio_availability": "AVAILABLE",
+        "muted_segments": [],
+        "spherical_video_renderer": null,
+        "preferred_thumbnail": {
+          "image": {
+            "uri": "https://scontent-iad3-1.xx.fbcdn.net/v/t15.5256-10/550240250_1574932620159394_3902063095359145097_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=be8305&_nc_ohc=yKVgXLC2muwQ7kNvwFaPUio&_nc_oc=AdkKK2bFx_crhgOo3Fx_3KpU28h0m_VBDj8pTKnKS8vqI9EoPBnQWUWfTj-f9O5GXa2dCj1HU8CEVy9KojbAgBmi&_nc_zt=23&_nc_ht=scontent-iad3-1.xx&_nc_gid=7cBJfsnfta73RKKJ533YFw&oh=00_Afe9_gJywntPpI4jiWdvCCETl8kKFPWdpiXRYLvdNt28YQ&oe=68E8E09C"
+          },
+          "image_preview_payload": "ACoY5+GYRHJVX9mGa1me2uYiVVY5RjGCQD6jHSsmBVZwHyR7EA/rxVpI4w3RuNueV989+/GPSqQELx4quwxWoVXblgc89xj27/WoHiTHAOeccj147+nX3qpW6EorRMi53jd6VEammVQBtBHJ6kHjt36+tQVF+hRo2Vh9pUtvVNvY96vnTpCp3qGYYCshGCPX+nrRRTTsVYz5Rs4IxjtVJjRRVzZmhlFFFZFH/9k=",
+          "id": "1574932616826061"
+        },
+        "video_imf_data": null,
+        "original_width": 3840,
+        "original_height": 2160,
+        "original_rotation": "NO_ROTATE",
+        "if_viewer_can_see_pay_to_access_paywall": null,
+        "comet_video_player_audio_overlay_renderer": null,
+        "comet_video_player_audio_background_renderer": null,
+        "comet_video_player_music_sprout_background_renderer": null,
+        "clip_fallback_cover": null,
+        "is_clip": false,
+        "matcha_related_keywords_links": [
+          ""
+        ],
+        "is_music_clip": false,
+        "video_collaborator_page_or_delegate_page": null,
+        "video_anchor_tag_info": null,
+        "image": {
+          "uri": "https://scontent-iad3-1.xx.fbcdn.net/v/t15.5256-10/550240250_1574932620159394_3902063095359145097_n.jpg?stp=dst-jpg_s526x296_tt6&_nc_cat=110&ccb=1-7&_nc_sid=7965db&_nc_ohc=yKVgXLC2muwQ7kNvwFaPUio&_nc_oc=AdkKK2bFx_crhgOo3Fx_3KpU28h0m_VBDj8pTKnKS8vqI9EoPBnQWUWfTj-f9O5GXa2dCj1HU8CEVy9KojbAgBmi&_nc_zt=23&_nc_ht=scontent-iad3-1.xx&_nc_gid=7cBJfsnfta73RKKJ533YFw&oh=00_AffIvHRCAjIevGnPYbhRc0xxkwux4X-aXpyJXncw3b_PEA&oe=68E8E09C"
+        },
+        "canonical_uri_with_fallback": "https://www.facebook.com/NASA/videos/meet-nasas-new-astronaut-candidates-event-trailer/2408047472966921/"
+      }
+    ],
+    "feedbackId": "ZmVlZGJhY2s6MTMzNzQ4NTE1NDQxMzUyNA==",
+    "topLevelUrl": "https://www.facebook.com/100044561550831/posts/1337485154413524",
+    "facebookId": "100044561550831",
+    "pageAdLibrary": {
+      "is_business_page_active": false,
+      "id": "54971236771"
+    },
+    "inputUrl": "https://www.facebook.com/nasa/"
+  },
+  {
+    "facebookUrl": "https://www.facebook.com/nasa/",
+    "postId": "1336760684485971",
+    "pageName": "NASA",
+    "url": "https://www.facebook.com/NASA/posts/pfbid0fBmZos8yAkeXPJRRk4ZfN6VxdqNksyeoxxtFUjUkeXimXhmzN2tnQPx228BT742dl",
+    "time": "2025-09-17T17:37:36.000Z",
+    "timestamp": 1758130656,
+    "user": {
+      "id": "100044561550831",
+      "name": "NASA - National Aeronautics and Space Administration",
+      "profileUrl": "https://www.facebook.com/NASA",
+      "profilePic": "https://scontent-phx1-1.xx.fbcdn.net/v/t39.30808-1/243095782_416661036495945_3843362260429099279_n.png?stp=cp0_dst-png_s40x40&_nc_cat=108&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=_m64k4-R0_UQ7kNvwEt1IlD&_nc_oc=AdlouxMRIsXGlf7joOgHrhiXkNmTOIk7iBiJhf82kQuKTBbJwtKu2KZ-B-UogxWt6IA7j_xTtKFHTRHFgReNU3Sw&_nc_zt=24&_nc_ht=scontent-phx1-1.xx&_nc_gid=S9_aU39P--m4FOBbX_rlbQ&oh=00_Afe2ubZLvlNq1ED1FQ3z3VFdTMObP_SS5iCKgqm3oBaXvA&oe=68E8D015"
+    },
+    "text": "It's a bird! It's a plane! ...It's a super-jet! 🦸\n\nNASA's James Webb Space Telescope captured this blowtorch of seething gases erupting from a volcanically growing monster star. Stretching across eight light-years, the length of the stellar eruption is approximately twice the distance between our Sun and our next-nearest stars in the Alpha Centauri system. The size and strength of this stellar jet are rare, according to researchers.\n\nThe jets from protostars we observe are mainly from low-mass stars, but the discovery of this particular jet offers evidence that protostellar jets must scale up with the mass of the star powering them: The more massive the stellar engine propelling the plasma, the larger the gusher's size.\n \nLearn more: https://go.nasa.gov/41YvgFt",
+    "textReferences": [
+      {
+        "id": "100064446444287",
+        "url": "https://www.facebook.com/NASAWebb",
+        "profile_url": "https://www.facebook.com/NASAWebb",
+        "short_name": "NASA's James Webb Space Telescope",
+        "work_info": null,
+        "work_foreign_entity_info": null,
+        "mobileUrl": "https://m.facebook.com/NASAWebb/"
+      },
+      {
+        "url": "https://l.facebook.com/l.php?u=https%3A%2F%2Fgo.nasa.gov%2F41YvgFt&h=AT2W9Duqu2XNSuKdL--oHYOgGdXBT9MzztHDClJ-ViD6xJ9rTyFBjg6F216Wnhh3qfbJdYffiVaOJ0nRZvkesWBahnYb0DoZFV2Vk9zr7HJel68sU6hhGukf5DjtZG7Dz-OhyPe-t-WGSK7KHJkk37gCX3VK6TmR9vjCq7-4lgOy4Lsd&s=1",
+        "external_url": "https://go.nasa.gov/41YvgFt",
+        "web_link": {
+          "__typename": "ExternalWebLink",
+          "url": "https://go.nasa.gov/41YvgFt",
+          "fbclid": null,
+          "lynx_mode": "ASYNCLAZY"
+        },
+        "mobileUrl": "https://lm.facebook.com/l.php?u=https%3A%2F%2Fgo.nasa.gov%2F41YvgFt&h=AT2hh1fC9SiR6sVZ6sRJYK49-Rd3JKCg75mBh4ljpTFY8wRlYsJ7lyLmfE-oVf2jCxIbpofWjIDTbrIKRfIYPS5CvKlHZhUzlgpVv_Jq5z_RBBo4o88WH1_6hcm1Hsun7PFznr6ynjMw0TfiivX1K3WOOt2eQsLct5u2IyTMsyof7Huv&s=1",
+        "id": "NjQyMTgzOTU5MjA4MTA3Omh0dHBzXGEvL2dvLm5hc2EuZ292LzQxWXZnRnQ6OkRlZmF1bHQ6OjoxMzM2NzYwNjg0NDg1OTcx"
+      }
+    ],
+    "link": "https://go.nasa.gov/41YvgFt",
+    "likes": 4758,
+    "comments": 178,
+    "shares": 686,
+    "topReactionsCount": 7,
+    "media": [
+      {
+        "thumbnail": "https://scontent-phx1-1.xx.fbcdn.net/v/t39.30808-6/548299546_1336760671152639_982992669971044209_n.jpg?stp=dst-jpg_p526x296_tt6&_nc_cat=100&ccb=1-7&_nc_sid=127cfc&_nc_ohc=mGaD5446le0Q7kNvwGEfHuo&_nc_oc=Adk2zVWLxaS137uOtM1qCDiyi6Q6MZQ87XUnW_R7aN8Fn9o1P-Re_JuxmZIbmXFmrYuL9Vc0cDe3_PDRgSLWFpdn&_nc_zt=23&_nc_ht=scontent-phx1-1.xx&_nc_gid=S9_aU39P--m4FOBbX_rlbQ&oh=00_AfeQiAJZf-41XZZ6VB31zF0-eUgyE7Irxs2aZm5J0ixBuA&oe=68E8E886",
+        "__typename": "Photo",
+        "photo_image": {
+          "uri": "https://scontent-phx1-1.xx.fbcdn.net/v/t39.30808-6/548299546_1336760671152639_982992669971044209_n.jpg?stp=dst-jpg_p526x296_tt6&_nc_cat=100&ccb=1-7&_nc_sid=127cfc&_nc_ohc=mGaD5446le0Q7kNvwGEfHuo&_nc_oc=Adk2zVWLxaS137uOtM1qCDiyi6Q6MZQ87XUnW_R7aN8Fn9o1P-Re_JuxmZIbmXFmrYuL9Vc0cDe3_PDRgSLWFpdn&_nc_zt=23&_nc_ht=scontent-phx1-1.xx&_nc_gid=S9_aU39P--m4FOBbX_rlbQ&oh=00_AfeQiAJZf-41XZZ6VB31zF0-eUgyE7Irxs2aZm5J0ixBuA&oe=68E8E886",
+          "height": 503,
+          "width": 526
+        },
+        "__isMedia": "Photo",
+        "accent_color": "FF0F1014",
+        "photo_product_tags": [],
+        "url": "https://www.facebook.com/photo/?fbid=1336760667819306&set=a.416661013162614",
+        "id": "1336760667819306",
+        "ocrText": "Gaseous yellow-orange filaments look like a flower seen from the side and tilted slightly from upper left to lower right, slightly higher than the center of the frame. Extending from the flower to the upper left and lower right are red gas outflows that have an overall shape of tall, narrow triangles with rounded tips. Each red triangle is made up of wavy, irregular lines. Dozens of stars are scattered across the field. One particularly bright white star with eight diffraction spikes is located at the top of the yellow rose. Another bright blue star with even more prominent diffraction spikes is to its lower left. The background of space is black. Credit: NASA, ESA, CSA, STScI, Yu Cheng (NAOJ); Image Processing: Joseph DePasquale (STScI)"
+      }
+    ],
+    "feedbackId": "ZmVlZGJhY2s6MTMzNjc2MDY4NDQ4NTk3MQ==",
+    "topLevelUrl": "https://www.facebook.com/100044561550831/posts/1336760684485971",
+    "facebookId": "100044561550831",
+    "pageAdLibrary": {
+      "is_business_page_active": false,
+      "id": "54971236771"
+    },
+    "inputUrl": "https://www.facebook.com/nasa/"
+  }
+]

@@ -20,6 +20,7 @@ import os
 import re
 import json
 import glob
+import time
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
 import streamlit as st
@@ -46,6 +47,15 @@ ACTOR_IDS = {
     "Instagram": "shu8hvrXbJbY3Eb9W",  # Instagram scraper actor ID
     "YouTube": "p7UMdpQnjKmmpR21D"  # Placeholder
 }
+
+# Facebook Comments Scraper Actor
+# Try different actors if one fails
+FACEBOOK_COMMENTS_ACTOR_IDS = [
+    "facebook-comments-scraper",
+    "apify/facebook-comments-scraper", 
+    "alien_force/facebook-posts-comments-scraper"
+]
+FACEBOOK_COMMENTS_ACTOR_ID = FACEBOOK_COMMENTS_ACTOR_IDS[0]  # Start with first one
 
 # Arabic stopwords (basic set - expand as needed)
 ARABIC_STOPWORDS = {
@@ -165,14 +175,14 @@ def normalize_post_data(raw_data: List[Dict], platform: str) -> List[Dict]:
                 }
             elif platform == "Facebook":
                 post = {
-                    'post_id': item.get('id') or item.get('postId', ''),
+                    'post_id': item.get('postId') or item.get('id', ''),
                     'published_at': item.get('time') or item.get('timestamp') or item.get('createdTime', ''),
                     'text': item.get('text') or item.get('message') or item.get('caption', ''),
-                    'likes': item.get('likesCount') or item.get('likes', 0),
-                    'comments_count': item.get('commentsCount') or item.get('comments', 0),
-                    'shares_count': item.get('sharesCount') or item.get('shares', 0),
+                    'likes': item.get('likes', 0),
+                    'comments_count': item.get('comments', 0),
+                    'shares_count': item.get('shares', 0),
                     'reactions': item.get('reactions', {}),
-                    'comments_list': item.get('comments') or item.get('commentsList', [])
+                    'comments_list': item.get('commentsList', []) or item.get('comments', [])
                 }
             elif platform == "YouTube":
                 post = {
@@ -198,12 +208,24 @@ def normalize_post_data(raw_data: List[Dict], platform: str) -> List[Dict]:
                     'comments_list': item.get('commentsList', []) or item.get('comments_data', [])
                 }
             
-            # Parse timestamp if string
+            # Parse timestamp if string or int
             if isinstance(post['published_at'], str):
                 try:
                     post['published_at'] = pd.to_datetime(post['published_at'])
                 except:
                     post['published_at'] = datetime.now()
+            elif isinstance(post['published_at'], (int, float)):
+                try:
+                    # Handle Unix timestamp
+                    post['published_at'] = pd.to_datetime(post['published_at'], unit='s')
+                except:
+                    post['published_at'] = datetime.now()
+            elif post['published_at'] is None or post['published_at'] == '':
+                post['published_at'] = datetime.now()
+            
+            # Store original post URL for later comment fetching
+            post_url = item.get('url') or item.get('postUrl') or item.get('link') or item.get('facebookUrl')
+            post['_post_url'] = post_url  # Store URL for later use
             
             normalized.append(post)
         except Exception as e:
@@ -329,10 +351,10 @@ def analyze_all_sentiments(comments: List[str]) -> Dict[str, int]:
 # FILE OPERATIONS
 # ============================================================================
 
-def save_data_to_files(raw_data: List[Dict], normalized_data: List[Dict], platform: str) -> tuple[str, str]:
+def save_data_to_files(raw_data: List[Dict], normalized_data: List[Dict], platform: str) -> tuple[str, str, str]:
     """
     Save raw and processed data to files.
-    Returns tuple of (json_file_path, csv_file_path)
+    Returns tuple of (json_file_path, csv_file_path, comments_csv_file_path)
     """
     try:
         # Create timestamp for file naming
@@ -349,6 +371,8 @@ def save_data_to_files(raw_data: List[Dict], normalized_data: List[Dict], platfo
         
         # Prepare CSV data with required columns
         csv_data = []
+        comments_data = []
+        
         for post in normalized_data:
             csv_row = {
                 'post_id': post.get('post_id', ''),
@@ -361,17 +385,39 @@ def save_data_to_files(raw_data: List[Dict], normalized_data: List[Dict], platfo
                 'comments_list': json.dumps(post.get('comments_list', []), ensure_ascii=False)
             }
             csv_data.append(csv_row)
+            
+            # Extract comments for separate CSV file
+            comments_list = post.get('comments_list', [])
+            if isinstance(comments_list, list):
+                for comment in comments_list:
+                    if isinstance(comment, dict):
+                        comment_row = {
+                            'post_id': post.get('post_id', ''),
+                            'comment_id': comment.get('comment_id', ''),
+                            'text': comment.get('text', ''),
+                            'author_name': comment.get('author_name', ''),
+                            'created_time': comment.get('created_time', ''),
+                            'likes_count': comment.get('likes_count', 0)
+                        }
+                        comments_data.append(comment_row)
         
         # Save processed CSV data
         csv_filename = f"data/processed/{platform.lower()}_{timestamp}.csv"
         df = pd.DataFrame(csv_data)
         df.to_csv(csv_filename, index=False, encoding='utf-8')
         
-        return json_filename, csv_filename
+        # Save comments CSV data (if any comments exist)
+        comments_csv_filename = None
+        if comments_data:
+            comments_csv_filename = f"data/processed/{platform.lower()}_comments_{timestamp}.csv"
+            comments_df = pd.DataFrame(comments_data)
+            comments_df.to_csv(comments_csv_filename, index=False, encoding='utf-8')
+        
+        return json_filename, csv_filename, comments_csv_filename
         
     except Exception as e:
         st.error(f"Error saving files: {str(e)}")
-        return None, None
+        return None, None, None
 
 def load_data_from_file(file_path: str) -> Optional[List[Dict]]:
     """
@@ -522,6 +568,203 @@ def fetch_apify_data(platform: str, url: str, _apify_token: str) -> Optional[Lis
     except Exception as e:
         st.error(f"Apify API Error: {str(e)}")
         return None
+
+@st.cache_data(ttl=3600)
+def fetch_post_comments(post_url: str, _apify_token: str) -> Optional[List[Dict]]:
+    """
+    Fetch detailed comments for a specific Facebook post using the Comments Scraper actor.
+    Tries different actors and input formats if one fails.
+    Cached for 1 hour per post URL.
+    """
+    # Validate URL format
+    if not post_url or not post_url.startswith('http'):
+        st.error(f"❌ Invalid URL format: {post_url}")
+        return None
+    
+    client = ApifyClient(_apify_token)
+    
+    # Try different actors and input formats
+    actor_configs = [
+        {
+            "actor_id": "facebook-comments-scraper",
+            "input": {
+                "startUrls": [post_url],
+                "maxComments": 50,
+                "includeNestedComments": False
+            }
+        },
+        {
+            "actor_id": "apify/facebook-comments-scraper",
+            "input": {
+                "startUrls": [{"url": post_url}],
+                "maxComments": 50,
+                "includeNestedComments": False
+            }
+        },
+        {
+            "actor_id": "alien_force/facebook-posts-comments-scraper",
+            "input": {
+                "startUrls": [post_url],
+                "maxComments": 50
+            }
+        }
+    ]
+    
+    for i, config in enumerate(actor_configs):
+        try:
+            st.info(f"🔍 Attempt {i+1}: Using actor '{config['actor_id']}' for: {post_url}")
+            
+            # Run the actor
+            run = client.actor(config["actor_id"]).call(run_input=config["input"])
+            
+            # Fetch results
+            comments = []
+            for item in client.dataset(run["defaultDatasetId"]).iterate_items():
+                comments.append(item)
+            
+            if comments:
+                st.success(f"✅ Successfully fetched {len(comments)} comments using {config['actor_id']}")
+                return comments
+            else:
+                st.warning(f"⚠️ No comments found with {config['actor_id']}, trying next actor...")
+                
+        except Exception as e:
+            st.warning(f"⚠️ Actor {config['actor_id']} failed: {str(e)}")
+            if i < len(actor_configs) - 1:
+                st.info("🔄 Trying next actor...")
+            continue
+    
+    st.error(f"❌ All comment scrapers failed for post: {post_url}")
+    return None
+
+def fetch_comments_for_posts(posts: List[Dict], apify_token: str) -> List[Dict]:
+    """
+    Fetch detailed comments for all Facebook posts using the Comments Scraper actor.
+    This is a separate phase after initial post normalization.
+    """
+    if not posts:
+        return posts
+    
+    st.info(f"🔄 Fetching detailed comments for {len(posts)} posts...")
+    
+    # Create progress bar
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+    
+    for i, post in enumerate(posts):
+        # Update progress
+        progress = (i + 1) / len(posts)
+        progress_bar.progress(progress)
+        status_text.text(f"Fetching comments for post {i+1}/{len(posts)}: {post.get('post_id', 'Unknown')}")
+        
+        # Check if we need to fetch comments
+        comments_list = post.get('comments_list', [])
+        should_fetch = (
+            not comments_list or 
+            (isinstance(comments_list, list) and len(comments_list) == 0) or
+            isinstance(comments_list, int)  # If it's an int, it's a count, not actual comments
+        )
+        
+        if should_fetch and post.get('_post_url'):
+            try:
+                # Add rate limiting delay (2 seconds between calls)
+                if i > 0:  # Skip delay for first post
+                    time.sleep(2)
+                
+                # Fetch comments for this post
+                raw_comments = fetch_post_comments(post['_post_url'], apify_token)
+                if raw_comments:
+                    # Normalize comment data
+                    normalized_comments = []
+                    for raw_comment in raw_comments:
+                        normalized_comment = normalize_comment_data(raw_comment)
+                        normalized_comments.append(normalized_comment)
+                    post['comments_list'] = normalized_comments
+                    st.success(f"✅ Fetched {len(normalized_comments)} comments for post {post.get('post_id', 'Unknown')}")
+                else:
+                    post['comments_list'] = []
+                    st.warning(f"⚠️ No comments found for post {post.get('post_id', 'Unknown')}")
+            except Exception as e:
+                st.warning(f"❌ Failed to fetch comments for post {post.get('post_id', 'Unknown')}: {str(e)}")
+                post['comments_list'] = []
+        else:
+            if not post.get('_post_url'):
+                st.warning(f"⚠️ No URL found for post {post.get('post_id', 'Unknown')}, skipping comment fetch")
+    
+    # Clear progress indicators
+    progress_bar.empty()
+    status_text.empty()
+    
+    # Clean up temporary fields
+    for post in posts:
+        if '_post_url' in post:
+            del post['_post_url']
+    
+    return posts
+
+def normalize_comment_data(raw_comment: Dict) -> Dict:
+    """
+    Normalize comment data to consistent schema.
+    Maps various field names to standard format.
+    """
+    try:
+        # Extract author name from various possible fields
+        author_name = ""
+        if 'from' in raw_comment and isinstance(raw_comment['from'], dict):
+            author_name = raw_comment['from'].get('name', '')
+        elif 'author' in raw_comment:
+            if isinstance(raw_comment['author'], dict):
+                author_name = raw_comment['author'].get('name', '')
+            else:
+                author_name = str(raw_comment['author'])
+        
+        # Extract comment text
+        text = raw_comment.get('text', '') or raw_comment.get('message', '') or raw_comment.get('content', '')
+        
+        # Extract created time
+        created_time = raw_comment.get('created_time', '') or raw_comment.get('timestamp', '') or raw_comment.get('date', '')
+        
+        # Extract likes count
+        likes_count = 0
+        if 'like_count' in raw_comment:
+            likes_count = raw_comment['like_count']
+        elif 'likes' in raw_comment:
+            if isinstance(raw_comment['likes'], int):
+                likes_count = raw_comment['likes']
+            elif isinstance(raw_comment['likes'], list):
+                likes_count = len(raw_comment['likes'])
+        
+        # Extract replies count
+        replies_count = 0
+        if 'comment_count' in raw_comment:
+            replies_count = raw_comment['comment_count']
+        elif 'replies' in raw_comment:
+            if isinstance(raw_comment['replies'], int):
+                replies_count = raw_comment['replies']
+            elif isinstance(raw_comment['replies'], list):
+                replies_count = len(raw_comment['replies'])
+        
+        normalized_comment = {
+            'comment_id': raw_comment.get('id', ''),
+            'text': text,
+            'author_name': author_name,
+            'created_time': created_time,
+            'likes_count': likes_count,
+            'replies_count': replies_count
+        }
+        
+        return normalized_comment
+        
+    except Exception as e:
+        st.warning(f"Failed to normalize comment: {str(e)}")
+        return {
+            'comment_id': '',
+            'text': '',
+            'author_name': '',
+            'created_time': '',
+            'likes_count': 0,
+            'replies_count': 0
+        }
 
 # ============================================================================
 # VISUALIZATION FUNCTIONS
@@ -721,6 +964,19 @@ def main():
         help="Select whether to fetch new data from API or load previously saved data"
     )
     
+    # Facebook Comments Option
+    if data_source == "Fetch from API":
+        st.sidebar.markdown("---")
+        st.sidebar.markdown("### 💬 Facebook Comments")
+        st.sidebar.info("⚠️ **Note:** Facebook Comments Scraper actors are currently experiencing issues. The app will try multiple actors but may fail.")
+        fetch_detailed_comments = st.sidebar.checkbox(
+            "Fetch Detailed Comments",
+            value=False,  # Default to False due to actor issues
+            help="Fetch detailed comments for Facebook posts using the Comments Scraper actor (currently having issues - may fail)"
+        )
+    else:
+        fetch_detailed_comments = False
+    
     # File selector for loading saved data
     if data_source == "Load from File":
         saved_files = get_saved_files()
@@ -820,18 +1076,41 @@ def main():
             st.error("No data returned from Apify. Check your actor configuration and URL.")
             st.stop()
         
-        # Normalize and filter
-        normalized_data = normalize_post_data(raw_data, platform)
+        # Phase 1: Normalize posts (without comment fetching)
+        with st.spinner("🔄 Processing posts..."):
+            normalized_data = normalize_post_data(raw_data, platform)
+        
         st.info(f"✅ Successfully processed {len(normalized_data)} posts")
+        
+        # Phase 2: Fetch detailed comments if requested (only for Facebook)
+        if platform == "Facebook" and fetch_detailed_comments:
+            st.info("💡 Note: Facebook Comments Scraper may have limitations. If it fails, the app will continue with post data only.")
+            try:
+                normalized_data = fetch_comments_for_posts(normalized_data, apify_token)
+            except Exception as e:
+                st.error(f"❌ Failed to fetch comments: {str(e)}")
+                st.warning("⚠️ Continuing without detailed comments. You can uncheck 'Fetch Detailed Comments' to skip this step.")
+                # Continue with the posts without comments
+        
+        # Count total comments fetched
+        total_comments = 0
+        for post in normalized_data:
+            comments_list = post.get('comments_list', [])
+            if isinstance(comments_list, list):
+                total_comments += len(comments_list)
+        
+        st.info(f"✅ Final result: {len(normalized_data)} posts with {total_comments} total comments")
         
         # Save data to files
         with st.spinner("💾 Saving data to files..."):
-            json_path, csv_path = save_data_to_files(raw_data, normalized_data, platform)
+            json_path, csv_path, comments_csv_path = save_data_to_files(raw_data, normalized_data, platform)
         
         if json_path and csv_path:
             st.success("✅ Data saved successfully!")
             st.info(f"📄 Raw JSON: `{json_path}`")
             st.info(f"📊 Processed CSV: `{csv_path}`")
+            if comments_csv_path:
+                st.info(f"💬 Comments CSV: `{comments_csv_path}`")
         else:
             st.warning("⚠️ Failed to save data to files")
         
