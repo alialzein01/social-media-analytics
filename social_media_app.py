@@ -924,7 +924,11 @@ def main():
     st.markdown("Analyze Facebook, Instagram, and YouTube content with AI-powered insights")
     
     # Check for API token
-    apify_token = st.secrets.get("APIFY_TOKEN") or os.environ.get("APIFY_TOKEN")
+    try:
+        apify_token = st.secrets.get("APIFY_TOKEN") or os.environ.get("APIFY_TOKEN")
+    except Exception:
+        apify_token = os.environ.get("APIFY_TOKEN")
+    
     if not apify_token:
         st.error("⚠️ APIFY_TOKEN not set (st.secrets or environment).")
         st.stop()
