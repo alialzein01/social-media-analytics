@@ -135,10 +135,15 @@ def extract_keywords_nlp(comments: List[str], top_n: int = 50) -> Dict[str, int]
     - CAMeL Tools for Arabic morphological analysis
     - AraBERT for sentiment analysis
     """
-    # Optimized: use list comprehension and Counter directly
-    all_tokens = [token for comment in comments for token in tokenize_arabic(comment)]
-    word_freq = Counter(all_tokens)
-    return dict(word_freq.most_common(top_n))
+    # Try to use phrase extraction if available
+    try:
+        from app.nlp.phrase_extractor import extract_phrases_simple
+        return extract_phrases_simple(comments, top_n)
+    except ImportError:
+        # Fallback to original word-based extraction
+        all_tokens = [token for comment in comments for token in tokenize_arabic(comment)]
+        word_freq = Counter(all_tokens)
+        return dict(word_freq.most_common(top_n))
 
 # Pre-compile sentiment word sets for performance
 POSITIVE_WORDS = frozenset(['جيد', 'ممتاز', 'رائع', 'حلو', 'good', 'great', 'love', '❤️', '😊', '👍'])
@@ -146,23 +151,28 @@ NEGATIVE_WORDS = frozenset(['سيء', 'سئ', 'bad', 'hate', 'terrible', '😢',
 
 def analyze_sentiment_placeholder(text: str) -> str:
     """
-    Placeholder sentiment analysis. Replace with Arabic-capable model.
+    Enhanced sentiment analysis with phrase support.
     
     For production, use:
     - AraBERT for Arabic sentiment
     - Multilingual BERT fine-tuned on Arabic
     - CAMeL Tools + rule-based sentiment
     """
-    # Optimized: use frozenset for O(1) lookup and single pass
-    text_lower = text.lower()
-    pos_count = sum(1 for word in POSITIVE_WORDS if word in text_lower)
-    neg_count = sum(1 for word in NEGATIVE_WORDS if word in text_lower)
-    
-    if pos_count > neg_count:
-        return "positive"
-    elif neg_count > pos_count:
-        return "negative"
-    return "neutral"
+    # Try to use phrase-based sentiment analysis if available
+    try:
+        from app.nlp.sentiment_analyzer import analyze_sentiment_phrases
+        return analyze_sentiment_phrases(text)
+    except ImportError:
+        # Fallback to original word-based analysis
+        text_lower = text.lower()
+        pos_count = sum(1 for word in POSITIVE_WORDS if word in text_lower)
+        neg_count = sum(1 for word in NEGATIVE_WORDS if word in text_lower)
+        
+        if pos_count > neg_count:
+            return "positive"
+        elif neg_count > pos_count:
+            return "negative"
+        return "neutral"
 
 # ============================================================================
 # DATA NORMALIZATION
@@ -790,12 +800,33 @@ def create_reaction_pie_chart(reactions: Dict[str, int]):
     st.bar_chart(reactions_df)
 
 def create_wordcloud(comments: List[str], width: int = 800, height: int = 400, figsize: tuple = (10, 5)):
-    """Generate and display word cloud from comments."""
+    """Generate and display word cloud from comments with phrase support."""
     if not comments:
         st.info("No comments available for word cloud")
         return
     
-    # Extract keywords
+    # Try to use enhanced word cloud generator if available
+    try:
+        from app.viz.wordcloud_generator import create_phrase_wordcloud
+        
+        # Get user preferences from session state
+        use_phrase_analysis = st.session_state.get('use_phrase_analysis', True)
+        use_sentiment_coloring = st.session_state.get('use_sentiment_coloring', True)
+        
+        if use_phrase_analysis:
+            fig, ax = create_phrase_wordcloud(
+                comments, 
+                title="Comment Analysis - Phrases & Sentiment" if use_sentiment_coloring else "Comment Analysis - Phrases",
+                use_sentiment_coloring=use_sentiment_coloring,
+                language='auto'
+            )
+            st.pyplot(fig)
+            return
+    except ImportError:
+        # Fallback to original word cloud generation
+        pass
+    
+    # Original word cloud generation (fallback)
     keywords = extract_keywords_nlp(comments)
     
     if not keywords:
@@ -946,6 +977,20 @@ def main():
     else:
         fetch_detailed_comments = False
     
+    # Analysis Options
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("### 🔧 Analysis Options")
+    use_phrase_analysis = st.sidebar.checkbox(
+        "Use Phrase-Based Analysis",
+        value=True,
+        help="Extract meaningful phrases (like 'thank you', 'very good') instead of individual words for more accurate sentiment analysis"
+    )
+    use_sentiment_coloring = st.sidebar.checkbox(
+        "Use Sentiment Coloring in Word Clouds",
+        value=True,
+        help="Color words/phrases in word clouds based on their sentiment (green=positive, red=negative, gray=neutral)"
+    )
+    
     # File selector for loading saved data
     if data_source == "Load from File":
         saved_files = get_saved_files()
@@ -997,6 +1042,10 @@ def main():
         st.session_state.posts_data = None
     if 'selected_post_idx' not in st.session_state:
         st.session_state.selected_post_idx = None
+    
+    # Store analysis preferences in session state
+    st.session_state.use_phrase_analysis = use_phrase_analysis
+    st.session_state.use_sentiment_coloring = use_sentiment_coloring
     
     # Main area - URL Input (only for API fetch)
     if data_source == "Fetch from API":
