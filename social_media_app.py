@@ -965,7 +965,7 @@ def main():
     )
     
     # Facebook Comments Option
-    if data_source == "Fetch from API":
+    if data_source == "Fetch from API" and platform == "Facebook":
         st.sidebar.markdown("---")
         st.sidebar.markdown("### 💬 Facebook Comments")
         st.sidebar.info("⚠️ **Note:** Facebook Comments Scraper actors are currently experiencing issues. The app will try multiple actors but may fail.")
