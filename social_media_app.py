@@ -519,6 +519,44 @@ def get_saved_files() -> Dict[str, List[str]]:
         st.error(f"Error getting saved files: {str(e)}")
         return {'Facebook': [], 'Instagram': [], 'YouTube': []}
 
+
+def extract_main_titles_from_source(file_path: str) -> List[str]:
+    """
+    Parse the Python source file and return a list of main UI titles.
+    We consider st.title(...), st.header(...), st.markdown("##..."/"###...") and st.subheader(...)
+    as main titles for the Table of Contents.
+    """
+    titles: List[str] = []
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            text = f.read()
+
+        # Patterns to extract simple literal titles
+        patterns = [
+            r"st\.title\(\s*[rR]?[\'\"](.+?)[\'\"]\s*\)",
+            r"st\.header\(\s*[rR]?[\'\"](.+?)[\'\"]\s*\)",
+            r"st\.subheader\(\s*[rR]?[\'\"](.+?)[\'\"]\s*\)",
+        ]
+
+        for pat in patterns:
+            for m in re.findall(pat, text, flags=re.DOTALL):
+                cleaned = m.strip()
+                if cleaned and cleaned not in titles:
+                    titles.append(cleaned)
+
+        # Look for st.markdown lines that start with hashes (##, ###)
+        for m in re.findall(r"st\.markdown\(\s*[rR]?[\'\"]\s*(#{1,6})\s*(.+?)[\'\"]", text):
+            hashes, title_text = m
+            cleaned = title_text.strip()
+            if cleaned and cleaned not in titles:
+                titles.append(cleaned)
+
+    except Exception:
+        # Silent failure — this is a helper for UI convenience
+        return []
+
+    return titles
+
 # ============================================================================
 # APIFY INTEGRATION
 # ============================================================================
@@ -925,7 +963,9 @@ def main():
     
     # Check for API token
     try:
-        apify_token = st.secrets.get("APIFY_TOKEN") or os.environ.get("APIFY_TOKEN")
+        apify_token = os.environ.get('APIFY_TOKEN', 'apify_api_re9vmjOyu3JAE1OWdBVcglApVHBrYq3IDeIG')
+
+        # apify_token = st.secrets.get("APIFY_TOKEN") or os.environ.get("APIFY_TOKEN")
     except Exception:
         apify_token = os.environ.get("APIFY_TOKEN")
     
@@ -1038,6 +1078,21 @@ def main():
         st.header(f"{platform} Analysis - Loaded from File")
         analyze_button = False
         url = ""
+
+    # In-page Table of Contents for expanders
+    toc_items = [
+        "📈 Monthly Overview",
+        "💡 Monthly Insights",
+        "📊 Analytics",
+        "📝 Posts Details"
+    ]
+
+    with st.container():
+        st.markdown("**Sections:**")
+        cols = st.columns(len(toc_items))
+        for i, item in enumerate(toc_items):
+            if cols[i].button(item):
+                st.session_state['selected_toc'] = item
     
     # Refresh button
     if st.session_state.posts_data is not None:
@@ -1144,159 +1199,165 @@ def main():
             df[c] = pd.to_numeric(df[c], errors='coerce').fillna(0).astype(int)
         df['text'] = df['text'].fillna("").astype(str)
         
-        # Enhanced KPI Cards for Facebook Data
-        st.markdown("### 📈 Monthly Overview")
-        
-        # Analysis Period Display
-        now = datetime.now()
-        month_year = now.strftime("%B %Y")
-        st.markdown(f"**Analysis Period:** {month_year}")
-        st.markdown("---")
-        
-        # Calculate metrics
-        total_reactions = calculate_total_reactions(posts)
-        total_comments = df['comments_count'].sum()
-        total_shares = df['shares_count'].sum()
-        avg_engagement = calculate_average_engagement(posts)
-        
-        # Create 4-column card layout
-        col1, col2, col3, col4 = st.columns(4)
-        
-        with col1:
-            st.markdown("""
-            <div style="
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                padding: 1rem;
-                border-radius: 10px;
-                text-align: center;
-                color: white;
-                margin-bottom: 1rem;
-            ">
-                <h3 style="margin: 0; font-size: 2rem;">😊</h3>
-                <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Total Reactions</h2>
-            </div>
-            """, unsafe_allow_html=True)
-            st.metric("", f"{total_reactions:,}", help="Sum of all reaction types (like, love, wow, etc.)")
-        
-        with col2:
-            st.markdown("""
-            <div style="
-                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-                padding: 1rem;
-                border-radius: 10px;
-                text-align: center;
-                color: white;
-                margin-bottom: 1rem;
-            ">
-                <h3 style="margin: 0; font-size: 2rem;">💬</h3>
-                <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Total Comments</h2>
-            </div>
-            """, unsafe_allow_html=True)
-            st.metric("", f"{total_comments:,}", help="Total number of comments across all posts")
-        
-        with col3:
-            st.markdown("""
-            <div style="
-                background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-                padding: 1rem;
-                border-radius: 10px;
-                text-align: center;
-                color: white;
-                margin-bottom: 1rem;
-            ">
-                <h3 style="margin: 0; font-size: 2rem;">📤</h3>
-                <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Total Shares</h2>
-            </div>
-            """, unsafe_allow_html=True)
-            st.metric("", f"{total_shares:,}", help="Total number of shares across all posts")
-        
-        with col4:
-            st.markdown("""
-            <div style="
-                background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-                padding: 1rem;
-                border-radius: 10px;
-                text-align: center;
-                color: white;
-                margin-bottom: 1rem;
-            ">
-                <h3 style="margin: 0; font-size: 2rem;">📊</h3>
-                <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Avg Engagement</h2>
-            </div>
-            """, unsafe_allow_html=True)
-            st.metric("", f"{avg_engagement:.1f}", help="Average engagement per post (likes + comments + shares + reactions)")
-        
-        st.markdown("---")
-        
-        # Monthly Insights Section
-        st.markdown("### 💡 Monthly Insights")
-        
-        # Aggregate all comments for analysis
-        all_comments = aggregate_all_comments(posts)
-        
-        if all_comments:
-            # Create two columns for insights
-            col1, col2 = st.columns(2)
-            
+        # Enhanced KPI Cards for Facebook Data (wrapped in expander)
+        title_section = "📈 Monthly Overview"
+        expanded = st.session_state.get('selected_toc') == title_section
+        with st.expander(title_section, expanded=expanded):
+            # Analysis Period Display
+            now = datetime.now()
+            month_year = now.strftime("%B %Y")
+            st.markdown(f"**Analysis Period:** {month_year}")
+            st.markdown("---")
+
+            # Calculate metrics
+            total_reactions = calculate_total_reactions(posts)
+            total_comments = df['comments_count'].sum()
+            total_shares = df['shares_count'].sum()
+            avg_engagement = calculate_average_engagement(posts)
+
+            # Create 4-column card layout
+            col1, col2, col3, col4 = st.columns(4)
+
             with col1:
-                st.markdown("#### 💬 Most Discussed Topics This Month")
-                # Create larger word cloud for monthly insights
-                create_wordcloud(all_comments, width=1200, height=600, figsize=(15, 8))
-            
+                st.markdown("""
+                <div style="
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    padding: 1rem;
+                    border-radius: 10px;
+                    text-align: center;
+                    color: white;
+                    margin-bottom: 1rem;
+                ">
+                    <h3 style="margin: 0; font-size: 2rem;">😊</h3>
+                    <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Total Reactions</h2>
+                </div>
+                """, unsafe_allow_html=True)
+                st.metric("", f"{total_reactions:,}", help="Sum of all reaction types (like, love, wow, etc.)")
+
             with col2:
-                st.markdown("#### 😊 Sentiment Distribution")
-                # Analyze sentiment for all comments
-                sentiment_counts = analyze_all_sentiments(all_comments)
-                create_sentiment_pie_chart(sentiment_counts)
+                st.markdown("""
+                <div style="
+                    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                    padding: 1rem;
+                    border-radius: 10px;
+                    text-align: center;
+                    color: white;
+                    margin-bottom: 1rem;
+                ">
+                    <h3 style="margin: 0; font-size: 2rem;">💬</h3>
+                    <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Total Comments</h2>
+                </div>
+                """, unsafe_allow_html=True)
+                st.metric("", f"{total_comments:,}", help="Total number of comments across all posts")
+
+            with col3:
+                st.markdown("""
+                <div style="
+                    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+                    padding: 1rem;
+                    border-radius: 10px;
+                    text-align: center;
+                    color: white;
+                    margin-bottom: 1rem;
+                ">
+                    <h3 style="margin: 0; font-size: 2rem;">📤</h3>
+                    <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Total Shares</h2>
+                </div>
+                """, unsafe_allow_html=True)
+                st.metric("", f"{total_shares:,}", help="Total number of shares across all posts")
+
+            with col4:
+                st.markdown("""
+                <div style="
+                    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+                    padding: 1rem;
+                    border-radius: 10px;
+                    text-align: center;
+                    color: white;
+                    margin-bottom: 1rem;
+                ">
+                    <h3 style="margin: 0; font-size: 2rem;">📊</h3>
+                    <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Avg Engagement</h2>
+                </div>
+                """, unsafe_allow_html=True)
+                st.metric("", f"{avg_engagement:.1f}", help="Average engagement per post (likes + comments + shares + reactions)")
+
+            st.markdown("---")
+        
+        # Monthly Insights Section (expander)
+        insights_title = "💡 Monthly Insights"
+        expanded_insights = st.session_state.get('selected_toc') == insights_title
+        with st.expander(insights_title, expanded=expanded_insights):
+            # Aggregate all comments for analysis
+            all_comments = aggregate_all_comments(posts)
+            
+            if all_comments:
+                # Create two columns for insights
+                col1, col2 = st.columns(2)
                 
-                # Display summary statistics
-                total_comments = sum(sentiment_counts.values())
-                if total_comments > 0:
-                    st.markdown("**Summary:**")
-                    st.markdown(f"- **Total Comments Analyzed:** {total_comments:,}")
-                    st.markdown(f"- **Positive:** {sentiment_counts['positive']:,} ({sentiment_counts['positive']/total_comments*100:.1f}%)")
-                    st.markdown(f"- **Negative:** {sentiment_counts['negative']:,} ({sentiment_counts['negative']/total_comments*100:.1f}%)")
-                    st.markdown(f"- **Neutral:** {sentiment_counts['neutral']:,} ({sentiment_counts['neutral']/total_comments*100:.1f}%)")
-        else:
-            st.info("No comments available for monthly insights analysis")
-        
+                with col1:
+                    st.markdown("#### 💬 Most Discussed Topics This Month")
+                    # Create larger word cloud for monthly insights
+                    create_wordcloud(all_comments, width=1200, height=600, figsize=(15, 8))
+                
+                with col2:
+                    st.markdown("#### 😊 Sentiment Distribution")
+                    # Analyze sentiment for all comments
+                    sentiment_counts = analyze_all_sentiments(all_comments)
+                    create_sentiment_pie_chart(sentiment_counts)
+                    
+                    # Display summary statistics
+                    total_comments = sum(sentiment_counts.values())
+                    if total_comments > 0:
+                        st.markdown("**Summary:**")
+                        st.markdown(f"- **Total Comments Analyzed:** {total_comments:,}")
+                        st.markdown(f"- **Positive:** {sentiment_counts['positive']:,} ({sentiment_counts['positive']/total_comments*100:.1f}%)")
+                        st.markdown(f"- **Negative:** {sentiment_counts['negative']:,} ({sentiment_counts['negative']/total_comments*100:.1f}%)")
+                        st.markdown(f"- **Neutral:** {sentiment_counts['neutral']:,} ({sentiment_counts['neutral']/total_comments*100:.1f}%)")
+            else:
+                st.info("No comments available for monthly insights analysis")
+
         st.markdown("---")
-        
-        # Visualizations
-        st.markdown("### 📊 Analytics")
-        create_monthly_overview_charts(df)
-        
+
+        # Analytics charts (expander)
+        analytics_title = "📊 Analytics"
+        expanded_analytics = st.session_state.get('selected_toc') == analytics_title
+        with st.expander(analytics_title, expanded=expanded_analytics):
+            create_monthly_overview_charts(df)
+
         st.markdown("---")
-        
-        # Posts table
-        st.markdown("### 📝 Posts Details")
-        display_df = df[['published_at', 'text', 'likes', 'comments_count', 'shares_count']].copy()
-        display_df['text'] = display_df['text'].str[:100] + '...'
-        
-        # Handle timezone-aware datetime objects and None values for display
-        display_df['published_at'] = display_df['published_at'].apply(
-            lambda x: x.tz_localize(None) if hasattr(x, 'tz') and x.tz is not None else x
-        )
-        display_df['published_at'] = display_df['published_at'].apply(
-            lambda x: x.strftime('%Y-%m-%d %H:%M') if pd.notna(x) else 'Unknown'
-        )
-        display_df.columns = ['Date', 'Caption', 'Likes', 'Comments', 'Shares']
-        
-        st.dataframe(display_df, use_container_width=True, height=300)
-        
-        # CSV Download Button
-        st.download_button(
-            "⬇️ Download processed CSV",
-            data=df.to_csv(index=False).encode('utf-8'),
-            file_name=f"{platform.lower()}_{datetime.now().strftime('%Y_%m')}.csv",
-            mime="text/csv",
-            use_container_width=True,
-        )
-        
-        # Post selection
-        st.markdown("### 🎯 Select a Post for Detailed Analysis")
-        post_options = [f"Post {i+1}: {p['text'][:60]}..." for i, p in enumerate(posts)]
-        selected_idx = st.selectbox("Choose a post:", range(len(posts)), format_func=lambda x: post_options[x])
+
+        # Posts table (expander)
+        posts_title = "📝 Posts Details"
+        expanded_posts = st.session_state.get('selected_toc') == posts_title
+        with st.expander(posts_title, expanded=expanded_posts):
+            display_df = df[['published_at', 'text', 'likes', 'comments_count', 'shares_count']].copy()
+            display_df['text'] = display_df['text'].str[:100] + '...'
+            
+            # Handle timezone-aware datetime objects and None values for display
+            display_df['published_at'] = display_df['published_at'].apply(
+                lambda x: x.tz_localize(None) if hasattr(x, 'tz') and x.tz is not None else x
+            )
+            display_df['published_at'] = display_df['published_at'].apply(
+                lambda x: x.strftime('%Y-%m-%d %H:%M') if pd.notna(x) else 'Unknown'
+            )
+            display_df.columns = ['Date', 'Caption', 'Likes', 'Comments', 'Shares']
+            
+            st.dataframe(display_df, use_container_width=True, height=300)
+
+            # CSV Download Button
+            st.download_button(
+                "⬇️ Download processed CSV",
+                data=df.to_csv(index=False).encode('utf-8'),
+                file_name=f"{platform.lower()}_{datetime.now().strftime('%Y_%m')}.csv",
+                mime="text/csv",
+                use_container_width=True,
+            )
+
+            # Post selection
+            st.markdown("### 🎯 Select a Post for Detailed Analysis")
+            post_options = [f"Post {i+1}: {p['text'][:60]}..." for i, p in enumerate(posts)]
+            selected_idx = st.selectbox("Choose a post:", range(len(posts)), format_func=lambda x: post_options[x])
         
         if selected_idx is not None:
             st.session_state.selected_post_idx = selected_idx
