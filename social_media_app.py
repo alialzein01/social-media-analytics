@@ -44,7 +44,7 @@ except ImportError:
 
 # Apify Actor Names - Replace with actual actor IDs/names
 ACTOR_CONFIG = {
-    "Facebook": "apify/facebook-posts-scraper",  # Updated with correct actor name
+    "Facebook": "zanTWNqB3Poz44qdY",  # Actor ID: scraper_one/facebook-posts-scraper (better reactions data)
     "Instagram": "apify/instagram-scraper",  # Updated with correct actor name
     "YouTube": "streamers/youtube-comments-scraper"  # Updated with correct actor name
 }
@@ -59,8 +59,9 @@ ACTOR_IDS = {
 # Facebook Comments Scraper Actor
 # Try different actors if one fails
 FACEBOOK_COMMENTS_ACTOR_IDS = [
-    "facebook-comments-scraper",
+    "us5srxAYnsrkgUv2v",  # Primary actor from the API client example
     "apify/facebook-comments-scraper", 
+    "facebook-comments-scraper",
     "alien_force/facebook-posts-comments-scraper"
 ]
 FACEBOOK_COMMENTS_ACTOR_ID = FACEBOOK_COMMENTS_ACTOR_IDS[0]  # Start with first one
@@ -207,13 +208,14 @@ def normalize_post_data(raw_data: List[Dict], platform: str) -> List[Dict]:
                     'comments_list': item.get('comments') or item.get('commentsList', [])
                 }
             elif platform == "Facebook":
+                # Handle both old and new Facebook scraper formats
                 post = {
                     'post_id': item.get('postId') or item.get('id', ''),
                     'published_at': item.get('time') or item.get('timestamp') or item.get('createdTime', ''),
-                    'text': item.get('text') or item.get('message') or item.get('caption', ''),
-                    'likes': item.get('likes', 0),
-                    'comments_count': item.get('comments', 0),
-                    'shares_count': item.get('shares', 0),
+                    'text': item.get('postText') or item.get('text') or item.get('message') or item.get('caption', ''),
+                    'likes': item.get('reactionsCount', 0) or item.get('likes', 0),
+                    'comments_count': item.get('commentsCount', 0) or item.get('comments', 0),
+                    'shares_count': item.get('shares', 0),  # New actor may not provide shares
                     'reactions': item.get('reactions', {}),
                     'comments_list': item.get('commentsList', []) or item.get('comments', [])
                 }
@@ -245,7 +247,7 @@ def normalize_post_data(raw_data: List[Dict], platform: str) -> List[Dict]:
             post['published_at'] = _to_naive_dt(post['published_at'])
             
             # Store original post URL for traceability and comment fetching
-            post_url = item.get('url') or item.get('postUrl') or item.get('link') or item.get('facebookUrl')
+            post_url = item.get('url') or item.get('postUrl') or item.get('link') or item.get('facebookUrl') or item.get('pageUrl')
             post['post_url'] = post_url
             
             normalized.append(post)
@@ -513,7 +515,7 @@ def get_saved_files() -> Dict[str, List[str]]:
 
 @st.cache_data(ttl=3600, max_entries=64, show_spinner=False)
 @functools.lru_cache(maxsize=32)
-def fetch_apify_data(platform: str, url: str, _apify_token: str) -> Optional[List[Dict]]:
+def fetch_apify_data(platform: str, url: str, _apify_token: str, max_posts: int = 10, from_date: str = None, to_date: str = None) -> Optional[List[Dict]]:
     """
     Fetch data from Apify actor for the given platform and URL.
     Cached for 1 hour per platform+URL combination.
@@ -530,16 +532,34 @@ def fetch_apify_data(platform: str, url: str, _apify_token: str) -> Optional[Lis
         
         # Configure input based on platform with documented formats
         if platform == "Instagram":
-            run_input = {"directUrls": [url], "resultsType": "posts", "resultsLimit": 10}
+            run_input = {"directUrls": [url], "resultsType": "posts", "resultsLimit": max_posts}
         elif platform == "Facebook":
-            run_input = {"startUrls": [{"url": url}], "maxPosts": 10}
+            # New scraper_one/facebook-posts-scraper format (better reactions data)
+            run_input = {"pageUrls": [url], "resultsLimit": max_posts}
+            # Add date range parameters if specified
+            if from_date:
+                run_input["fromDate"] = from_date
+            if to_date:
+                run_input["toDate"] = to_date
         elif platform == "YouTube":
-            run_input = {"startUrls": [{"url": url}], "maxComments": 10, "commentsSortBy": "top"}
+            run_input = {"startUrls": [{"url": url}], "maxComments": max_posts, "commentsSortBy": "top"}
         else:
-            run_input = {"startUrls": [{"url": url}], "maxPosts": 100}
+            run_input = {"startUrls": [{"url": url}], "maxPosts": max_posts}
         
         # Run the actor
         st.info(f"Calling Apify actor: {actor_name}")
+        st.info(f"📊 Requesting {max_posts} posts from: {url}")
+        st.info(f"🔧 Actor ID: {actor_name}")  # Debug info
+        
+        # Show date range information
+        if from_date or to_date:
+            date_info = "Date range: "
+            if from_date:
+                date_info += f"from {from_date} "
+            if to_date:
+                date_info += f"to {to_date}"
+            st.info(f"📅 {date_info}")
+        
         run = client.actor(actor_name).call(run_input=run_input)
         
         # Fetch results
@@ -547,6 +567,7 @@ def fetch_apify_data(platform: str, url: str, _apify_token: str) -> Optional[Lis
         for item in client.dataset(run["defaultDatasetId"]).iterate_items():
             items.append(item)
         
+        st.info(f"✅ Received {len(items)} posts from actor (requested {max_posts})")
         return items
     
     except Exception as e:
@@ -604,6 +625,101 @@ def fetch_post_comments(post_url: str, _apify_token: str) -> Optional[List[Dict]
     
     st.error(f"❌ All comment scrapers failed for post: {post_url}")
     return None
+
+def fetch_comments_for_posts_batch(posts: List[Dict], apify_token: str, max_comments_per_post: int = 50) -> List[Dict]:
+    """
+    Fetch detailed comments for all Facebook posts using batch processing with the Comments Scraper actor.
+    This uses the workflow where we extract all post URLs first, then batch process them for comments.
+    """
+    if not posts:
+        return posts
+    
+    st.info(f"🔄 Starting batch comment extraction for {len(posts)} posts...")
+    
+    # Extract all post URLs
+    post_urls = []
+    for post in posts:
+        post_url = post.get('post_url')
+        if post_url and post_url.startswith('http'):
+            post_urls.append({"url": post_url})
+    
+    if not post_urls:
+        st.warning("⚠️ No valid post URLs found for comment extraction")
+        return posts
+    
+    st.info(f"📋 Found {len(post_urls)} valid post URLs for comment extraction")
+    
+    # Prepare input for the comments scraper actor
+    comments_input = {
+        "startUrls": post_urls,
+        "resultsLimit": max_comments_per_post,
+        "includeNestedComments": False,
+        "viewOption": "RANKED_UNFILTERED"
+    }
+    
+    client = ApifyClient(apify_token)
+    
+    # Try different actors for comment extraction
+    for i, actor_id in enumerate(FACEBOOK_COMMENTS_ACTOR_IDS):
+        try:
+            st.info(f"🔍 Attempt {i+1}: Using actor '{actor_id}' for batch comment extraction...")
+            
+            # Run the actor
+            run = client.actor(actor_id).call(run_input=comments_input)
+            
+            # Fetch results
+            comments_data = []
+            for item in client.dataset(run["defaultDatasetId"]).iterate_items():
+                comments_data.append(item)
+            
+            if comments_data:
+                st.success(f"✅ Successfully fetched {len(comments_data)} comments using {actor_id}")
+                
+                # Process and assign comments to posts
+                posts_with_comments = assign_comments_to_posts(posts, comments_data)
+                return posts_with_comments
+            else:
+                st.warning(f"⚠️ No comments found with {actor_id}, trying next actor...")
+                
+        except Exception as e:
+            st.warning(f"⚠️ Actor {actor_id} failed: {str(e)}")
+            if i < len(FACEBOOK_COMMENTS_ACTOR_IDS) - 1:
+                st.info("🔄 Trying next actor...")
+            continue
+    
+    st.error("❌ All comment scrapers failed for batch processing")
+    return posts
+
+def assign_comments_to_posts(posts: List[Dict], comments_data: List[Dict]) -> List[Dict]:
+    """
+    Assign comments to their respective posts based on post URL matching.
+    """
+    # Create a mapping of post URLs to posts
+    post_url_map = {}
+    for post in posts:
+        post_url = post.get('post_url')
+        if post_url:
+            post_url_map[post_url] = post
+            post['comments_list'] = []  # Initialize empty comments list
+    
+    # Assign comments to posts
+    assigned_comments = 0
+    for comment in comments_data:
+        # Try to find the post this comment belongs to
+        comment_url = comment.get('url') or comment.get('postUrl') or comment.get('facebookUrl')
+        
+        if comment_url:
+            # Find matching post
+            for post_url, post in post_url_map.items():
+                if comment_url in post_url or post_url in comment_url:
+                    # Normalize comment data
+                    normalized_comment = normalize_comment_data(comment)
+                    post['comments_list'].append(normalized_comment)
+                    assigned_comments += 1
+                    break
+    
+    st.info(f"📊 Assigned {assigned_comments} comments to {len(posts)} posts")
+    return posts
 
 def fetch_comments_for_posts(posts: List[Dict], apify_token: str) -> List[Dict]:
     """
@@ -751,7 +867,7 @@ def create_monthly_overview_charts(df: pd.DataFrame):
     st.subheader("📈 Posts Per Day")
     if PLOTLY_AVAILABLE:
         fig = px.line(posts_per_day, x="date", y="count", markers=True, title="Posts Per Day")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     else:
         st.line_chart(posts_per_day.set_index('date'))
     
@@ -767,7 +883,7 @@ def create_monthly_overview_charts(df: pd.DataFrame):
     })
     if PLOTLY_AVAILABLE:
         fig = px.bar(engagement_data, x="Metric", y="Count", title="Total Engagement Breakdown")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     else:
         st.bar_chart(engagement_data.set_index('Metric'))
     
@@ -779,7 +895,7 @@ def create_monthly_overview_charts(df: pd.DataFrame):
     if PLOTLY_AVAILABLE:
         fig = px.bar(top_posts.reset_index().rename(columns={'text':'Caption'}),
                      x="Caption", y="total_engagement", title="Top 5 Posts by Engagement")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     else:
         top_posts = top_posts.set_index('text')
     st.bar_chart(top_posts)
@@ -793,8 +909,26 @@ def create_reaction_pie_chart(reactions: Dict[str, int]):
         st.info("No reaction data available for this post")
         return
     
-    # Create a simple bar chart for reactions
+    # Create a more detailed display
     st.subheader("😊 Reaction Breakdown")
+    
+    # Show individual reaction counts with emojis
+    cols = st.columns(len(reactions_filtered))
+    for i, (reaction, count) in enumerate(reactions_filtered.items()):
+        with cols[i]:
+            # Add emoji for each reaction type
+            emoji_map = {
+                'like': '👍',
+                'love': '❤️',
+                'haha': '😂',
+                'wow': '😮',
+                'sad': '😢',
+                'angry': '😠'
+            }
+            emoji = emoji_map.get(reaction, '👍')
+            st.metric(f"{emoji} {reaction.title()}", count)
+    
+    # Create a bar chart for reactions
     reactions_df = pd.DataFrame(list(reactions_filtered.items()), columns=['Reaction', 'Count'])
     reactions_df = reactions_df.set_index('Reaction')
     st.bar_chart(reactions_df)
@@ -805,32 +939,50 @@ def create_wordcloud(comments: List[str], width: int = 800, height: int = 400, f
         st.info("No comments available for word cloud")
         return
     
-    # Try to use enhanced word cloud generator if available
-    try:
-        from app.viz.wordcloud_generator import create_phrase_wordcloud
-        
-        # Get user preferences from session state
-        use_phrase_analysis = st.session_state.get('use_phrase_analysis', True)
-        use_sentiment_coloring = st.session_state.get('use_sentiment_coloring', True)
-        
-        if use_phrase_analysis:
-            fig, ax = create_phrase_wordcloud(
-                comments, 
-                title="Comment Analysis - Phrases & Sentiment" if use_sentiment_coloring else "Comment Analysis - Phrases",
-                use_sentiment_coloring=use_sentiment_coloring,
-                language='auto'
-            )
-            st.pyplot(fig)
-            return
-    except ImportError:
-        # Fallback to original word cloud generation
-        pass
+    # Get user preferences from session state
+    use_phrase_analysis = st.session_state.get('use_phrase_analysis', True)
+    use_sentiment_coloring = st.session_state.get('use_sentiment_coloring', True)
+    use_simple_wordcloud = st.session_state.get('use_simple_wordcloud', False)
+    
+    # Try to use enhanced word cloud generator if available and not using simple mode
+    if not use_simple_wordcloud:
+        try:
+            from app.viz.wordcloud_generator import create_phrase_wordcloud
+            
+            if use_phrase_analysis:
+                fig, ax = create_phrase_wordcloud(
+                    comments, 
+                    title="Comment Analysis - Phrases & Sentiment" if use_sentiment_coloring else "Comment Analysis - Phrases",
+                    use_sentiment_coloring=use_sentiment_coloring,
+                    language='auto'
+                )
+                
+                # Check if the word cloud actually has content
+                # If it shows "No meaningful content found", fall back to simple word cloud
+                if hasattr(ax, 'texts') and any('No meaningful content found' in str(text.get_text()) for text in ax.texts):
+                    st.warning("⚠️ Phrase analysis found no meaningful content. Falling back to simple word cloud.")
+                    # Continue to fallback below
+                else:
+                    st.pyplot(fig)
+                    return
+        except ImportError:
+            # Fallback to original word cloud generation
+            pass
+        except Exception as e:
+            st.warning(f"⚠️ Enhanced word cloud failed: {str(e)}. Using fallback.")
+            # Continue to fallback below
     
     # Original word cloud generation (fallback)
+    st.info("🔄 Using simple word cloud generation...")
     keywords = extract_keywords_nlp(comments)
     
     if not keywords:
-        st.info("No keywords extracted from comments")
+        st.warning("⚠️ No keywords extracted from comments")
+        st.info("💡 **Possible reasons:**")
+        st.info("• Comments are too short or contain only common words")
+        st.info("• Comments are in a language not well supported")
+        st.info("• Comments contain mostly emojis or special characters")
+        st.info("• Comments may be empty or filtered out")
         return
     
     # Generate word cloud with optional Arabic shaping
@@ -964,18 +1116,87 @@ def main():
         help="Select whether to fetch new data from API or load previously saved data"
     )
     
-    # Facebook Comments Option
+    # Facebook Configuration Options
     if data_source == "Fetch from API" and platform == "Facebook":
         st.sidebar.markdown("---")
+        st.sidebar.markdown("### 📊 Facebook Configuration")
+        
+        # Number of posts to extract
+        max_posts = st.sidebar.slider(
+            "Number of Posts to Extract",
+            min_value=1,
+            max_value=50,
+            value=10,
+            help="Maximum number of posts to extract from the Facebook page"
+        )
+        
+        # Date range selection
+        date_range_option = st.sidebar.radio(
+            "Date Range:",
+            ["All Posts", "Last 30 Days", "Last 7 Days", "Custom Range"],
+            help="Choose the time range for posts to extract"
+        )
+        
+        # Calculate date range
+        from datetime import datetime, timedelta
+        today = datetime.now()
+        
+        if date_range_option == "Last 30 Days":
+            from_date = (today - timedelta(days=30)).strftime("%Y-%m-%d")
+            to_date = None
+        elif date_range_option == "Last 7 Days":
+            from_date = (today - timedelta(days=7)).strftime("%Y-%m-%d")
+            to_date = None
+        elif date_range_option == "Custom Range":
+            from_date = st.sidebar.date_input(
+                "From Date",
+                value=today - timedelta(days=30),
+                help="Start date for posts extraction"
+            ).strftime("%Y-%m-%d")
+            to_date = st.sidebar.date_input(
+                "To Date",
+                value=today,
+                help="End date for posts extraction"
+            ).strftime("%Y-%m-%d")
+        else:  # All Posts
+            from_date = None
+            to_date = None
+        
         st.sidebar.markdown("### 💬 Facebook Comments")
         st.sidebar.info("⚠️ **Note:** Facebook Comments Scraper actors are currently experiencing issues. The app will try multiple actors but may fail.")
+        st.sidebar.info("💡 **Tip:** The Facebook Posts Scraper only provides comment counts. Enable 'Fetch Detailed Comments' to get actual comment text for word clouds and sentiment analysis.")
+        
+        # Comment extraction method selection
+        comment_method = st.sidebar.radio(
+            "Comment Extraction Method:",
+            ["Individual Posts", "Batch Processing"],
+            help="Choose how to extract comments: individual posts (slower but more reliable) or batch processing (faster but may have limitations)"
+        )
+        
         fetch_detailed_comments = st.sidebar.checkbox(
             "Fetch Detailed Comments",
             value=False,  # Default to False due to actor issues
             help="Fetch detailed comments for Facebook posts using the Comments Scraper actor (currently having issues - may fail)"
         )
+        
+        # Additional options for batch processing
+        if comment_method == "Batch Processing" and fetch_detailed_comments:
+            max_comments_per_post = st.sidebar.slider(
+                "Max Comments per Post",
+                min_value=10,
+                max_value=100,
+                value=50,
+                help="Maximum number of comments to extract per post"
+            )
+        else:
+            max_comments_per_post = 50
     else:
         fetch_detailed_comments = False
+        comment_method = "Individual Posts"
+        max_comments_per_post = 50
+        max_posts = 10
+        from_date = None
+        to_date = None
     
     # Analysis Options
     st.sidebar.markdown("---")
@@ -989,6 +1210,12 @@ def main():
         "Use Sentiment Coloring in Word Clouds",
         value=True,
         help="Color words/phrases in word clouds based on their sentiment (green=positive, red=negative, gray=neutral)"
+    )
+    
+    use_simple_wordcloud = st.sidebar.checkbox(
+        "Use Simple Word Cloud (Fallback)",
+        value=False,
+        help="Use simple word cloud instead of phrase-based analysis. Try this if you see 'No meaningful content found'."
     )
     
     # File selector for loading saved data
@@ -1046,6 +1273,7 @@ def main():
     # Store analysis preferences in session state
     st.session_state.use_phrase_analysis = use_phrase_analysis
     st.session_state.use_sentiment_coloring = use_sentiment_coloring
+    st.session_state.use_simple_wordcloud = use_simple_wordcloud
     
     # Main area - URL Input (only for API fetch)
     if data_source == "Fetch from API":
@@ -1061,7 +1289,7 @@ def main():
         
         with col2:
             st.markdown("<br>", unsafe_allow_html=True)
-            analyze_button = st.button("🔍 Analyze", type="primary", use_container_width=True)
+            analyze_button = st.button("🔍 Analyze", type="primary", width='stretch')
     else:
         # For file loading, we don't need URL input
         st.header(f"{platform} Analysis - Loaded from File")
@@ -1088,7 +1316,7 @@ def main():
         
         # Fetch data
         with st.spinner(f"Fetching data from {platform}..."):
-            raw_data = fetch_apify_data(platform, url, apify_token)
+            raw_data = fetch_apify_data(platform, url, apify_token, max_posts, from_date, to_date)
         
         if not raw_data:
             st.error("No data returned from Apify. Check your actor configuration and URL.")
@@ -1104,7 +1332,12 @@ def main():
         if platform == "Facebook" and fetch_detailed_comments:
             st.info("💡 Note: Facebook Comments Scraper may have limitations. If it fails, the app will continue with post data only.")
             try:
-                normalized_data = fetch_comments_for_posts(normalized_data, apify_token)
+                if comment_method == "Batch Processing":
+                    st.info("🚀 Using batch processing for comment extraction...")
+                    normalized_data = fetch_comments_for_posts_batch(normalized_data, apify_token, max_comments_per_post)
+                else:
+                    st.info("🔄 Using individual post processing for comment extraction...")
+                    normalized_data = fetch_comments_for_posts(normalized_data, apify_token)
             except Exception as e:
                 st.error(f"❌ Failed to fetch comments: {str(e)}")
                 st.warning("⚠️ Continuing without detailed comments. You can uncheck 'Fetch Detailed Comments' to skip this step.")
@@ -1188,6 +1421,14 @@ def main():
         total_shares = df['shares_count'].sum()
         avg_engagement = calculate_average_engagement(posts)
         
+        # Calculate detailed reactions breakdown
+        reactions_breakdown = {}
+        for post in posts:
+            reactions = post.get('reactions', {})
+            if isinstance(reactions, dict):
+                for reaction_type, count in reactions.items():
+                    reactions_breakdown[reaction_type] = reactions_breakdown.get(reaction_type, 0) + count
+        
         # Create 4-column card layout
         col1, col2, col3, col4 = st.columns(4)
         
@@ -1205,7 +1446,7 @@ def main():
                 <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Total Reactions</h2>
             </div>
             """, unsafe_allow_html=True)
-            st.metric("", f"{total_reactions:,}", help="Sum of all reaction types (like, love, wow, etc.)")
+            st.metric("Total Reactions", f"{total_reactions:,}", help="Sum of all reaction types (like, love, wow, etc.)", label_visibility="collapsed")
         
         with col2:
             st.markdown("""
@@ -1221,7 +1462,7 @@ def main():
                 <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Total Comments</h2>
             </div>
             """, unsafe_allow_html=True)
-            st.metric("", f"{total_comments:,}", help="Total number of comments across all posts")
+            st.metric("Total Comments", f"{total_comments:,}", help="Total number of comments across all posts", label_visibility="collapsed")
         
         with col3:
             st.markdown("""
@@ -1237,7 +1478,7 @@ def main():
                 <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Total Shares</h2>
             </div>
             """, unsafe_allow_html=True)
-            st.metric("", f"{total_shares:,}", help="Total number of shares across all posts")
+            st.metric("Total Shares", f"{total_shares:,}", help="Total number of shares across all posts", label_visibility="collapsed")
         
         with col4:
             st.markdown("""
@@ -1253,7 +1494,13 @@ def main():
                 <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Avg Engagement</h2>
             </div>
             """, unsafe_allow_html=True)
-            st.metric("", f"{avg_engagement:.1f}", help="Average engagement per post (likes + comments + shares + reactions)")
+            st.metric("Avg Engagement", f"{avg_engagement:.1f}", help="Average engagement per post (likes + comments + shares + reactions)", label_visibility="collapsed")
+        
+        # Show reactions breakdown if available
+        if reactions_breakdown:
+            st.markdown("---")
+            st.markdown("### 😊 Reactions Breakdown")
+            create_reaction_pie_chart(reactions_breakdown)
         
         st.markdown("---")
         
@@ -1287,7 +1534,9 @@ def main():
                     st.markdown(f"- **Negative:** {sentiment_counts['negative']:,} ({sentiment_counts['negative']/total_comments*100:.1f}%)")
                     st.markdown(f"- **Neutral:** {sentiment_counts['neutral']:,} ({sentiment_counts['neutral']/total_comments*100:.1f}%)")
         else:
-            st.info("No comments available for monthly insights analysis")
+            st.info("📊 No comment text available for monthly insights analysis")
+            st.warning("💡 **To analyze comments:** Enable 'Fetch Detailed Comments' in the sidebar and re-analyze the page.")
+            st.info("This will extract actual comment text for word clouds and sentiment analysis.")
         
         st.markdown("---")
         
@@ -1307,7 +1556,7 @@ def main():
         display_df['published_at'] = display_df['published_at'].dt.strftime('%Y-%m-%d %H:%M').fillna('Unknown')
         display_df.columns = ['Date', 'Caption', 'Likes', 'Comments', 'Shares']
         
-        st.dataframe(display_df, use_container_width=True, height=300)
+        st.dataframe(display_df, width='stretch', height=300)
         
         # CSV Download Button
         st.download_button(
@@ -1315,12 +1564,26 @@ def main():
             data=df.to_csv(index=False).encode('utf-8'),
             file_name=f"{platform.lower()}_{datetime.now().strftime('%Y_%m')}.csv",
             mime="text/csv",
-            use_container_width=True,
+            width='stretch',
         )
         
         # Post selection
         st.markdown("### 🎯 Select a Post for Detailed Analysis")
-        post_options = [f"Post {i+1}: {p['text'][:60]}..." for i, p in enumerate(posts)]
+        post_options = []
+        for i, p in enumerate(posts):
+            text = p.get('text', '')
+            # Handle case where text might be a float or None
+            if isinstance(text, (int, float)):
+                text = str(text)
+            elif text is None:
+                text = "No text content"
+            else:
+                text = str(text)
+            
+            # Truncate text for display
+            display_text = text[:60] + "..." if len(text) > 60 else text
+            post_options.append(f"Post {i+1}: {display_text}")
+        
         selected_idx = st.selectbox("Choose a post:", range(len(posts)), format_func=lambda x: post_options[x])
         
         if selected_idx is not None:
@@ -1341,7 +1604,7 @@ def main():
                 else:
                     if hasattr(pub_date, 'tz') and pub_date.tz is not None:
                         pub_date = pub_date.tz_localize(None)
-                        pub_date_display = pub_date.strftime('%Y-%m-%d %H:%M') if pd.notna(pub_date) else "Unknown"
+                    pub_date_display = pub_date.strftime('%Y-%m-%d %H:%M') if pd.notna(pub_date) else "Unknown"
                 st.markdown(f"**Published:** {pub_date_display}")
             
             with col2:
@@ -1374,7 +1637,9 @@ def main():
                         if text:
                             comment_texts.append(text)
             elif isinstance(comments_list, int):
-                st.info(f"Comments count: {comments_list}. Individual comment data not available for word cloud.")
+                st.info(f"📊 Comments count: {comments_list}")
+                st.warning("💡 **To see comment word clouds:** Enable 'Fetch Detailed Comments' in the sidebar and re-analyze the page.")
+                st.info("This will use the Facebook Comments Scraper to extract actual comment text for analysis.")
             else:
                 st.info("No comment data available for word cloud.")
             

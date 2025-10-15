@@ -6,6 +6,9 @@ A powerful Streamlit application that analyzes social media content from Faceboo
 
 - **Multi-Platform Support**: Analyze content from Facebook, Instagram, and YouTube
 - **Real-time Data**: Fetch live data using Apify web scraping actors
+- **Two-Phase Facebook Workflow**: 
+  - Phase 1: Extract posts from Facebook pages
+  - Phase 2: Extract comments from all posts using batch processing
 - **Interactive Analytics**: 
   - Posts per day trends
   - Engagement breakdown (likes, comments, shares)
@@ -15,8 +18,10 @@ A powerful Streamlit application that analyzes social media content from Faceboo
   - Word cloud generation from comments
   - Sentiment analysis (Arabic and English support)
   - Keyword extraction
+  - Phrase-based analysis for better accuracy
 - **Modern UI**: Clean, responsive interface built with Streamlit
 - **Flexible Date Filtering**: View all posts or filter by current month
+- **Batch Comment Processing**: Efficient extraction of comments from multiple posts
 
 ## 🚀 Quick Start
 
@@ -54,6 +59,30 @@ A powerful Streamlit application that analyzes social media content from Faceboo
    streamlit run social_media_app.py
    ```
 
+## 🔄 Facebook Comments Workflow
+
+The app now features a sophisticated two-phase workflow for Facebook analysis:
+
+### Phase 1: Posts Extraction
+- Extracts posts from any Facebook page
+- Captures post URLs, text, engagement metrics
+- Uses `zanTWNqB3Poz44qdY` (scraper_one/facebook-posts-scraper) actor
+
+### Phase 2: Comments Extraction
+- Takes all post URLs from Phase 1
+- Extracts comments using batch processing
+- Uses `us5srxAYnsrkgUv2v` (apify-facebook-comments-scraper) actor
+- Supports both batch and individual processing methods
+
+### How to Use
+1. Select "Facebook" as platform
+2. Choose "Fetch from API" as data source
+3. Select "Batch Processing" for comment extraction method
+4. Enable "Fetch Detailed Comments"
+5. Enter Facebook page URL and click "Analyze"
+
+For detailed documentation, see [FACEBOOK_COMMENTS_WORKFLOW.md](FACEBOOK_COMMENTS_WORKFLOW.md)
+
 ## 📱 Usage
 
 1. **Select Platform**: Choose between Facebook, Instagram, or YouTube
@@ -74,7 +103,7 @@ A powerful Streamlit application that analyzes social media content from Faceboo
 
 The app uses the following Apify actors:
 
-- **Facebook**: `apify/facebook-posts-scraper`
+- **Facebook**: `zanTWNqB3Poz44qdY` (scraper_one/facebook-posts-scraper)
 - **Instagram**: `apify/instagram-scraper`
 - **YouTube**: `streamers/youtube-comments-scraper`
 

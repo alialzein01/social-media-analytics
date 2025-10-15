@@ -284,10 +284,20 @@ class PhraseWordCloudGenerator:
         content = content_data['content']
         
         if not content:
-            # Create empty plot
+            # Create empty plot with more helpful message
             fig, ax = plt.subplots(figsize=(12, 6))
-            ax.text(0.5, 0.5, 'No meaningful content found', 
-                   ha='center', va='center', fontsize=16, color='gray')
+            ax.text(0.5, 0.7, 'No meaningful content found', 
+                   ha='center', va='center', fontsize=16, color='gray', weight='bold')
+            ax.text(0.5, 0.5, 'This could be because:', 
+                   ha='center', va='center', fontsize=12, color='gray')
+            ax.text(0.5, 0.4, '• Comments are too short or contain only common words', 
+                   ha='center', va='center', fontsize=10, color='gray')
+            ax.text(0.5, 0.35, '• Comments are in a language not well supported', 
+                   ha='center', va='center', fontsize=10, color='gray')
+            ax.text(0.5, 0.3, '• Comments contain mostly emojis or special characters', 
+                   ha='center', va='center', fontsize=10, color='gray')
+            ax.text(0.5, 0.2, 'Try using the simple word cloud option in settings', 
+                   ha='center', va='center', fontsize=10, color='blue', style='italic')
             ax.set_xlim(0, 1)
             ax.set_ylim(0, 1)
             ax.axis('off')
