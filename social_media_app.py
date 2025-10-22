@@ -64,7 +64,16 @@ FACEBOOK_COMMENTS_ACTOR_IDS = [
     "facebook-comments-scraper",
     "alien_force/facebook-posts-comments-scraper"
 ]
-FACEBOOK_COMMENTS_ACTOR_ID = FACEBOOK_COMMENTS_ACTOR_IDS[0]  # Start with first one
+FACEBOOK_COMMENTS_ACTOR_ID = FACEBOOK_COMMENTS_ACTOR_IDS[0]
+
+# Instagram Comments Scraper Actor
+INSTAGRAM_COMMENTS_ACTOR_IDS = [
+    "apify/instagram-comment-scraper",  # Primary Instagram comments scraper
+    "SbK00X0JYCPblD2wp",  # Alternative Instagram comments scraper
+    "instagram-comment-scraper",
+    "apify/instagram-scraper"  # Fallback to main Instagram scraper
+]
+INSTAGRAM_COMMENTS_ACTOR_ID = INSTAGRAM_COMMENTS_ACTOR_IDS[0]  # Start with first one
 
 # Arabic stopwords (basic set - expand as needed)
 ARABIC_STOPWORDS = {
@@ -128,23 +137,61 @@ def tokenize_arabic(text: str) -> List[str]:
 
 def extract_keywords_nlp(comments: List[str], top_n: int = 50) -> Dict[str, int]:
     """
-    Extract keywords from comments using frequency analysis.
-    This is a pluggable function - replace with GLiNER or other Arabic NLP as needed.
-    
-    For production: Replace this with:
-    - GLiNER for named entity recognition
-    - CAMeL Tools for Arabic morphological analysis
-    - AraBERT for sentiment analysis
+    Extract keywords from comments using improved frequency analysis.
+    Handles multiple languages and improves keyword extraction.
     """
+    if not comments:
+        return {}
+    
     # Try to use phrase extraction if available
     try:
         from app.nlp.phrase_extractor import extract_phrases_simple
         return extract_phrases_simple(comments, top_n)
     except ImportError:
-        # Fallback to original word-based extraction
-        all_tokens = [token for comment in comments for token in tokenize_arabic(comment)]
-        word_freq = Counter(all_tokens)
-        return dict(word_freq.most_common(top_n))
+        # Fallback to improved word-based extraction
+        pass
+    
+    # Improved fallback: Better text processing
+    all_text = ' '.join(comments)
+    
+    # Clean the text more thoroughly
+    import re
+    # Remove URLs, mentions, hashtags for better keyword extraction
+    cleaned_text = re.sub(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', '', all_text)
+    cleaned_text = re.sub(r'@\w+', '', cleaned_text)  # Remove mentions
+    cleaned_text = re.sub(r'#\w+', '', cleaned_text)  # Remove hashtags
+    cleaned_text = re.sub(r'[^\w\s]', ' ', cleaned_text)  # Remove special characters except spaces
+    
+    # Tokenize with improved regex
+    tokens = re.findall(r'\b\w+\b', cleaned_text.lower())
+    
+    # Enhanced filtering
+    # Common English stopwords
+    english_stopwords = {
+        'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
+        'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did',
+        'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can', 'this', 'that', 'these', 'those',
+        'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them', 'my', 'your', 'his', 'her', 'its', 'our', 'their'
+    }
+    
+    # Combine Arabic and English stopwords
+    all_stopwords = ARABIC_STOPWORDS.union(english_stopwords)
+    
+    # Filter tokens
+    filtered_tokens = [
+        t for t in tokens 
+        if len(t) > 2 and 
+        t not in all_stopwords and 
+        not t.isdigit() and
+        not t.startswith('www') and
+        not t.startswith('http')
+    ]
+    
+    # Count frequencies
+    word_freq = Counter(filtered_tokens)
+    
+    # Return top N most frequent words
+    return dict(word_freq.most_common(top_n))
 
 # Pre-compile sentiment word sets for performance
 POSITIVE_WORDS = frozenset(['جيد', 'ممتاز', 'رائع', 'حلو', 'good', 'great', 'love', '❤️', '😊', '👍'])
@@ -152,28 +199,59 @@ NEGATIVE_WORDS = frozenset(['سيء', 'سئ', 'bad', 'hate', 'terrible', '😢',
 
 def analyze_sentiment_placeholder(text: str) -> str:
     """
-    Enhanced sentiment analysis with phrase support.
+    Enhanced sentiment analysis with improved emoji and multi-language support.
     
     For production, use:
     - AraBERT for Arabic sentiment
     - Multilingual BERT fine-tuned on Arabic
     - CAMeL Tools + rule-based sentiment
     """
+    if not text or not text.strip():
+        return 'neutral'
+    
     # Try to use phrase-based sentiment analysis if available
     try:
         from app.nlp.sentiment_analyzer import analyze_sentiment_phrases
         return analyze_sentiment_phrases(text)
     except ImportError:
-        # Fallback to original word-based analysis
-        text_lower = text.lower()
-        pos_count = sum(1 for word in POSITIVE_WORDS if word in text_lower)
-        neg_count = sum(1 for word in NEGATIVE_WORDS if word in text_lower)
+        # Enhanced fallback analysis
+        text_lower = text.lower().strip()
         
-        if pos_count > neg_count:
+        # Enhanced positive indicators
+        positive_indicators = {
+            # English words
+            'good', 'great', 'excellent', 'amazing', 'wonderful', 'fantastic', 'awesome', 'love', 'like', 'best',
+            'perfect', 'beautiful', 'nice', 'cool', 'brilliant', 'outstanding', 'superb', 'magnificent',
+            'thank', 'thanks', 'appreciate', 'wow', 'incredible', 'fabulous', 'marvelous', 'splendid',
+            # Arabic positive words
+            'جيد', 'ممتاز', 'رائع', 'حلو', 'جميل', 'عظيم', 'مذهل', 'مثالي', 'أفضل', 'شكرا', 'شكر',
+            # Emojis
+            '😊', '😄', '😃', '😁', '😍', '🥰', '😘', '❤️', '💕', '💖', '💗', '💝', '👍', '👏', '🎉', '✨', '🌟', '💫'
+        }
+        
+        # Enhanced negative indicators
+        negative_indicators = {
+            # English words
+            'bad', 'terrible', 'awful', 'horrible', 'hate', 'dislike', 'worst', 'disgusting', 'ugly', 'stupid',
+            'annoying', 'boring', 'disappointing', 'frustrating', 'angry', 'sad', 'depressed', 'upset',
+            'no', 'not', 'never', 'hate', 'disgusting', 'awful', 'terrible', 'horrible',
+            # Arabic negative words
+            'سيء', 'سئ', 'فظيع', 'مقرف', 'كراهية', 'أسوأ', 'قبيح', 'غبي', 'ممل', 'محبط', 'لا', 'ليس',
+            # Emojis
+            '😢', '😭', '😡', '😠', '😞', '😔', '😕', '👎', '💔', '😤', '🤬', '😒', '😑'
+        }
+        
+        # Count indicators
+        pos_count = sum(1 for indicator in positive_indicators if indicator in text_lower)
+        neg_count = sum(1 for indicator in negative_indicators if indicator in text_lower)
+        
+        # Determine sentiment
+        if pos_count > neg_count and pos_count > 0:
             return "positive"
-        elif neg_count > pos_count:
+        elif neg_count > pos_count and neg_count > 0:
             return "negative"
-        return "neutral"
+        else:
+            return "neutral"
 
 # ============================================================================
 # DATA NORMALIZATION
@@ -197,15 +275,26 @@ def normalize_post_data(raw_data: List[Dict], platform: str) -> List[Dict]:
         try:
             # Platform-specific field mapping
             if platform == "Instagram":
+                # Instagram scraper output format based on documentation
                 post = {
-                    'post_id': item.get('id') or item.get('shortcode', ''),
-                    'published_at': item.get('timestamp') or item.get('takenAt') or item.get('date', ''),
-                    'text': item.get('caption') or item.get('text') or item.get('description', ''),
-                    'likes': item.get('likesCount') or item.get('likes', 0),
-                    'comments_count': item.get('commentsCount') or item.get('comments', 0),
-                    'shares_count': item.get('sharesCount') or item.get('shares', 0),
-                    'reactions': item.get('reactions', {}),
-                    'comments_list': item.get('comments') or item.get('commentsList', [])
+                    'post_id': item.get('shortCode') or item.get('id', ''),
+                    'published_at': item.get('timestamp', ''),
+                    'text': item.get('caption', ''),
+                    'likes': item.get('likesCount', 0),
+                    'comments_count': item.get('commentsCount', 0),
+                    'shares_count': 0,  # Instagram doesn't have shares
+                    'reactions': {},  # Instagram doesn't have detailed reactions like Facebook
+                    'comments_list': item.get('latestComments', []),
+                    'type': item.get('type', ''),
+                    'displayUrl': item.get('displayUrl', ''),
+                    'ownerUsername': item.get('ownerUsername', ''),
+                    'ownerFullName': item.get('ownerFullName', ''),
+                    'hashtags': item.get('hashtags', []),
+                    'mentions': item.get('mentions', []),
+                    'dimensionsHeight': item.get('dimensionsHeight', 0),
+                    'dimensionsWidth': item.get('dimensionsWidth', 0),
+                    'isSponsored': item.get('isSponsored', False),
+                    'post_url': f"https://www.instagram.com/p/{item.get('shortCode', '')}/" if item.get('shortCode') else ''
                 }
             elif platform == "Facebook":
                 # Handle both old and new Facebook scraper formats
@@ -330,7 +419,6 @@ def aggregate_all_comments(posts: List[Dict]) -> List[str]:
     Aggregate all comments from all posts into a single list.
     Returns list of comment text strings.
     """
-    # Optimized: use nested list comprehension
     all_comments = []
     for post in posts:
         comments_list = post.get('comments_list', [])
@@ -338,15 +426,25 @@ def aggregate_all_comments(posts: List[Dict]) -> List[str]:
         if isinstance(comments_list, list):
             for comment in comments_list:
                 if isinstance(comment, str):
-                    all_comments.append(comment)
+                    # Clean and validate string comments
+                    cleaned = comment.strip()
+                    if cleaned and len(cleaned) > 2:  # Filter out very short comments
+                        all_comments.append(cleaned)
                 elif isinstance(comment, dict):
-                    # Extract text from comment object (optimized field access)
-                    text = comment.get('text') or comment.get('comment') or comment.get('message', '')
-                    if text and text.strip():
-                        all_comments.append(text)
-        # Skip int types (counts) - no need to continue
+                    # Extract text from comment object with multiple field options
+                    text = (comment.get('text') or 
+                           comment.get('comment') or 
+                           comment.get('message') or 
+                           comment.get('content', ''))
+                    if text and text.strip() and len(text.strip()) > 2:
+                        all_comments.append(text.strip())
+        elif isinstance(comments_list, int):
+            # This is just a count, skip
+            continue
     
-    return all_comments
+    # Filter out empty or very short comments
+    filtered_comments = [c for c in all_comments if c and len(c.strip()) > 2]
+    return filtered_comments
 
 def analyze_all_sentiments(comments: List[str]) -> Dict[str, int]:
     """
@@ -585,7 +683,13 @@ def fetch_apify_data(platform: str, url: str, _apify_token: str, max_posts: int 
         
         # Configure input based on platform with documented formats
         if platform == "Instagram":
-            run_input = {"directUrls": [url], "resultsType": "posts", "resultsLimit": max_posts}
+            # Instagram scraper input format based on documentation
+            run_input = {
+                "directUrls": [url], 
+                "resultsType": "posts", 
+                "resultsLimit": max_posts,
+                "searchLimit": 10  # Default search limit
+            }
         elif platform == "Facebook":
             # New scraper_one/facebook-posts-scraper format (better reactions data)
             run_input = {"pageUrls": [url], "resultsLimit": max_posts}
@@ -679,7 +783,7 @@ def fetch_post_comments(post_url: str, _apify_token: str) -> Optional[List[Dict]
     st.error(f"❌ All comment scrapers failed for post: {post_url}")
     return None
 
-def fetch_comments_for_posts_batch(posts: List[Dict], apify_token: str, max_comments_per_post: int = 50) -> List[Dict]:
+def fetch_comments_for_posts_batch(posts: List[Dict], apify_token: str, max_comments_per_post: int = 25) -> List[Dict]:
     """
     Fetch detailed comments for all Facebook posts using batch processing with the Comments Scraper actor.
     This uses the workflow where we extract all post URLs first, then batch process them for comments.
@@ -902,6 +1006,118 @@ def normalize_comment_data(raw_comment: Dict) -> Dict:
 # VISUALIZATION FUNCTIONS
 # ============================================================================
 
+def scrape_instagram_comments_batch(post_urls: List[str], apify_token: str, max_comments_per_post: int = 25) -> List[Dict]:
+    """Scrape Instagram comments from multiple post URLs using batch processing."""
+    if not post_urls:
+        return []
+    
+    client = ApifyClient(apify_token)
+    all_comments = []
+    
+    st.info(f"🔄 Starting Instagram comments extraction for {len(post_urls)} posts...")
+    
+    # Process posts in batches to avoid overwhelming the API
+    batch_size = 5  # Process 5 posts at a time
+    for i in range(0, len(post_urls), batch_size):
+        batch_urls = post_urls[i:i + batch_size]
+        st.info(f"📊 Processing batch {i//batch_size + 1}/{(len(post_urls) + batch_size - 1)//batch_size} ({len(batch_urls)} posts)")
+        
+        for post_url in batch_urls:
+            try:
+                # Try different Instagram comments actors
+                for actor_id in INSTAGRAM_COMMENTS_ACTOR_IDS:
+                    try:
+                        st.info(f"🔍 Trying Instagram comments actor: {actor_id}")
+                        
+                        # Configure input for Instagram comments scraper
+                        # Try with higher limits to get more comments
+                        run_input = {
+                            "directUrls": [post_url],
+                            "resultsLimit": 50,  # Try to get more comments initially
+                            "maxComments": 50,   # Additional parameter for maximum comments
+                            "includeReplies": True,  # Include comment replies
+                            "sortBy": "newest",  # Get newest comments first
+                            "maxResults": 50,   # Another parameter for max results
+                            "limit": 50        # Alternative limit parameter
+                        }
+                        
+                        # Run the actor
+                        run = client.actor(actor_id).call(run_input=run_input)
+                        
+                        if run and run.get("status") == "SUCCEEDED":
+                            # Get the results
+                            dataset = client.dataset(run["defaultDatasetId"])
+                            comments_data = list(dataset.iterate_items())
+                            
+                            if comments_data:
+                                st.success(f"✅ Extracted {len(comments_data)} comments from {post_url}")
+                                st.info(f"📊 Comment extraction details:")
+                                st.info(f"   - Requested: 50 comments (max)")
+                                st.info(f"   - Retrieved: {len(comments_data)} comments")
+                                st.info(f"   - Post URL: {post_url}")
+                                if len(comments_data) < 25:
+                                    st.warning(f"⚠️ Only {len(comments_data)} comments retrieved. Instagram may have limited comment access for this post.")
+                                all_comments.extend(comments_data)
+                                break  # Success, move to next post
+                            else:
+                                st.warning(f"⚠️ No comments found for {post_url}")
+                                st.info(f"🔍 Debug info: Actor {actor_id} returned empty results")
+                                break
+                        else:
+                            st.warning(f"⚠️ Actor {actor_id} failed for {post_url}")
+                            continue
+                            
+                    except Exception as e:
+                        st.warning(f"⚠️ Actor {actor_id} error for {post_url}: {str(e)}")
+                        continue
+                
+                # Small delay between posts to be respectful
+                time.sleep(2)
+                
+            except Exception as e:
+                st.error(f"❌ Error processing {post_url}: {str(e)}")
+                continue
+    
+    st.success(f"🎉 Instagram comments extraction complete! Total comments: {len(all_comments)}")
+    return all_comments
+
+def assign_instagram_comments_to_posts(posts: List[Dict], comments_data: List[Dict]) -> List[Dict]:
+    """Assign Instagram comments to their corresponding posts based on postId."""
+    if not comments_data:
+        return posts
+    
+    # Create a mapping of postId to comments
+    comments_by_post = {}
+    for comment in comments_data:
+        post_id = comment.get('postId', '')
+        if post_id:
+            if post_id not in comments_by_post:
+                comments_by_post[post_id] = []
+            # Format comment for consistency
+            formatted_comment = {
+                'text': comment.get('text', ''),
+                'ownerUsername': comment.get('ownerUsername', ''),
+                'ownerId': comment.get('ownerId', ''),
+                'timestamp': comment.get('timestamp', ''),
+                'position': comment.get('position', 0),
+                'ownerIsVerified': comment.get('ownerIsVerified', False),
+                'ownerProfilePicUrl': comment.get('ownerProfilePicUrl', '')
+            }
+            comments_by_post[post_id].append(formatted_comment)
+    
+    # Assign comments to posts
+    for post in posts:
+        post_id = post.get('post_id', '')
+        if post_id in comments_by_post:
+            post['comments_list'] = comments_by_post[post_id]
+            post['comments_count'] = len(comments_by_post[post_id])
+        else:
+            # Keep existing comments_count if no new comments found
+            if 'comments_list' not in post:
+                post['comments_list'] = []
+    
+    return posts
+
 def create_monthly_overview_charts(df: pd.DataFrame):
     """Create overview charts for monthly data using Streamlit native charts."""
     
@@ -1055,6 +1271,16 @@ def create_wordcloud(comments: List[str], width: int = 800, height: int = 400, f
         st.info("• Comments are in a language not well supported")
         st.info("• Comments contain mostly emojis or special characters")
         st.info("• Comments may be empty or filtered out")
+        st.info("• Try enabling 'Fetch Detailed Comments' to get actual comment text")
+        
+        # Show some sample comments for debugging
+        if comments:
+            st.info("📝 **Sample comments found:**")
+            sample_comments = comments[:3]  # Show first 3 comments
+            for i, comment in enumerate(sample_comments, 1):
+                st.text(f"{i}. {comment[:100]}{'...' if len(comment) > 100 else ''}")
+        else:
+            st.info("📝 **No comments found in the data**")
         return
     
     # Generate word cloud with optional Arabic shaping
@@ -1075,6 +1301,368 @@ def create_wordcloud(comments: List[str], width: int = 800, height: int = 400, f
     ax.axis('off')
     fig.patch.set_facecolor('#F5F7F8')
     st.pyplot(fig)
+
+def create_instagram_monthly_analysis(posts: List[Dict], platform: str):
+    """Create comprehensive monthly Instagram analysis with real data."""
+    if platform != "Instagram":
+        return
+    
+    st.markdown("### 📸 Monthly Instagram Analysis")
+    
+    # Basic metrics
+    total_posts = len(posts)
+    total_likes = sum(post.get('likes', 0) for post in posts)
+    total_comments = sum(post.get('comments_count', 0) for post in posts)
+    avg_engagement = (total_likes + total_comments) / total_posts if total_posts > 0 else 0
+    
+    # Create metrics cards
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.markdown("""
+        <div style="
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+            color: white;
+            margin-bottom: 1rem;
+        ">
+            <h3 style="margin: 0; font-size: 2rem;">📸</h3>
+            <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Total Posts</h2>
+        </div>
+        """, unsafe_allow_html=True)
+        st.metric("Total Posts", f"{total_posts:,}", help="Total number of Instagram posts", label_visibility="collapsed")
+    
+    with col2:
+        st.markdown("""
+        <div style="
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+            color: white;
+            margin-bottom: 1rem;
+        ">
+            <h3 style="margin: 0; font-size: 2rem;">❤️</h3>
+            <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Total Likes</h2>
+        </div>
+        """, unsafe_allow_html=True)
+        st.metric("Total Likes", f"{total_likes:,}", help="Total likes across all posts", label_visibility="collapsed")
+    
+    with col3:
+        st.markdown("""
+        <div style="
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+            color: white;
+            margin-bottom: 1rem;
+        ">
+            <h3 style="margin: 0; font-size: 2rem;">💬</h3>
+            <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Total Comments</h2>
+        </div>
+        """, unsafe_allow_html=True)
+        st.metric("Total Comments", f"{total_comments:,}", help="Total comments across all posts", label_visibility="collapsed")
+    
+    with col4:
+        st.markdown("""
+        <div style="
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+            color: white;
+            margin-bottom: 1rem;
+        ">
+            <h3 style="margin: 0; font-size: 2rem;">📊</h3>
+            <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Avg Engagement</h2>
+        </div>
+        """, unsafe_allow_html=True)
+        st.metric("Avg Engagement", f"{avg_engagement:.1f}", help="Average engagement per post (likes + comments)", label_visibility="collapsed")
+    
+    # Top 5 Posts by Engagement
+    st.markdown("---")
+    st.markdown("### 🏆 Top 5 Posts by Engagement")
+    
+    # Calculate engagement for each post
+    posts_with_engagement = []
+    for post in posts:
+        likes = post.get('likes', 0)
+        comments = post.get('comments_count', 0)
+        engagement = likes + comments
+        posts_with_engagement.append({
+            'post_id': post.get('post_id', ''),
+            'text': post.get('text', '')[:100] + '...' if len(post.get('text', '')) > 100 else post.get('text', ''),
+            'likes': likes,
+            'comments': comments,
+            'engagement': engagement,
+            'type': post.get('type', 'Unknown')
+        })
+    
+    # Sort by engagement and get top 5
+    top_posts = sorted(posts_with_engagement, key=lambda x: x['engagement'], reverse=True)[:5]
+    
+    if top_posts:
+        top_posts_df = pd.DataFrame(top_posts)
+        if PLOTLY_AVAILABLE:
+            fig = px.bar(top_posts_df, x='engagement', y='text', orientation='h', 
+                        title="Top 5 Posts by Engagement",
+                        color_discrete_sequence=['#495E57'])
+            fig.update_layout(
+                plot_bgcolor='#F5F7F8',
+                paper_bgcolor='#F5F7F8',
+                font_color='#45474B',
+                height=400
+            )
+            st.plotly_chart(fig, width='stretch')
+        else:
+            st.bar_chart(top_posts_df.set_index('text')['engagement'])
+    
+    # Total Engagement Breakdown
+    st.markdown("---")
+    st.markdown("### 📊 Total Engagement Breakdown")
+    
+    engagement_data = pd.DataFrame({
+        'Metric': ['Likes', 'Comments'],
+        'Count': [total_likes, total_comments]
+    })
+    
+    if PLOTLY_AVAILABLE:
+        fig = px.bar(engagement_data, x='Metric', y='Count', title="Total Engagement Breakdown",
+                    color_discrete_sequence=['#495E57', '#F4CE14'])
+        fig.update_layout(
+            plot_bgcolor='#F5F7F8',
+            paper_bgcolor='#F5F7F8',
+            font_color='#45474B'
+        )
+        st.plotly_chart(fig, width='stretch')
+    else:
+        st.bar_chart(engagement_data.set_index('Metric'))
+    
+    # Content Type Analysis
+    content_types = Counter(post.get('type', 'Unknown') for post in posts)
+    if content_types:
+        st.markdown("---")
+        st.markdown("### 📱 Content Type Distribution")
+        content_df = pd.DataFrame(list(content_types.items()), columns=['Type', 'Count'])
+        if PLOTLY_AVAILABLE:
+            fig = px.pie(content_df, values='Count', names='Type', title="Content Type Distribution",
+                        color_discrete_sequence=['#495E57', '#F4CE14', '#45474B'])
+            fig.update_layout(
+                plot_bgcolor='#F5F7F8',
+                paper_bgcolor='#F5F7F8',
+                font_color='#45474B'
+            )
+            st.plotly_chart(fig, width='stretch')
+        else:
+            st.bar_chart(content_df.set_index('Type'))
+    
+    # Hashtag Analysis
+    all_hashtags = []
+    for post in posts:
+        hashtags = post.get('hashtags', [])
+        if isinstance(hashtags, list):
+            all_hashtags.extend(hashtags)
+    
+    if all_hashtags:
+        st.markdown("---")
+        st.markdown("### #️⃣ Top Hashtags")
+        top_hashtags = Counter(all_hashtags).most_common(10)
+        hashtag_df = pd.DataFrame(top_hashtags, columns=['Hashtag', 'Count'])
+        if PLOTLY_AVAILABLE:
+            fig = px.bar(hashtag_df, x='Count', y='Hashtag', orientation='h', title="Top Hashtags",
+                        color_discrete_sequence=['#495E57'])
+            fig.update_layout(
+                plot_bgcolor='#F5F7F8',
+                paper_bgcolor='#F5F7F8',
+                font_color='#45474B'
+            )
+            st.plotly_chart(fig, width='stretch')
+        else:
+            st.bar_chart(hashtag_df.set_index('Hashtag'))
+
+def create_instagram_monthly_insights(posts: List[Dict], platform: str):
+    """Create monthly Instagram insights with word cloud, sentiment, and emoji analysis."""
+    if platform != "Instagram":
+        return
+    
+    st.markdown("---")
+    st.markdown("### 💡 Monthly Instagram Insights")
+    
+    # Aggregate all comments for analysis
+    all_comments = aggregate_all_comments(posts)
+    
+    if all_comments:
+        # Create two columns for insights
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("#### 💬 Monthly Comments Word Cloud")
+            # Create larger word cloud for monthly insights
+            create_wordcloud(all_comments, width=1200, height=600, figsize=(15, 8))
+        
+        with col2:
+            st.markdown("#### 😊 Monthly Sentiment Distribution")
+            # Analyze sentiment for all comments
+            sentiment_counts = analyze_all_sentiments(all_comments)
+            create_sentiment_pie_chart(sentiment_counts)
+            
+            # Display summary statistics
+            total_comments = sum(sentiment_counts.values())
+            if total_comments > 0:
+                st.markdown("**Summary:**")
+                st.markdown(f"- **Total Comments Analyzed:** {total_comments:,}")
+                st.markdown(f"- **Positive:** {sentiment_counts['positive']:,} ({sentiment_counts['positive']/total_comments*100:.1f}%)")
+                st.markdown(f"- **Negative:** {sentiment_counts['negative']:,} ({sentiment_counts['negative']/total_comments*100:.1f}%)")
+                st.markdown(f"- **Neutral:** {sentiment_counts['neutral']:,} ({sentiment_counts['neutral']/total_comments*100:.1f}%)")
+        
+        # Emoji Analysis
+        st.markdown("---")
+        st.markdown("#### 😀 Emoji Analysis")
+        emoji_analysis = analyze_emojis_in_comments(all_comments)
+        if emoji_analysis:
+            emoji_df = pd.DataFrame(list(emoji_analysis.items()), columns=['Emoji', 'Count'])
+            if PLOTLY_AVAILABLE:
+                fig = px.bar(emoji_df.head(15), x='Count', y='Emoji', orientation='h', 
+                            title="Most Used Emojis in Comments",
+                            color_discrete_sequence=['#495E57'])
+                fig.update_layout(
+                    plot_bgcolor='#F5F7F8',
+                    paper_bgcolor='#F5F7F8',
+                    font_color='#45474B'
+                )
+                st.plotly_chart(fig, width='stretch')
+            else:
+                st.bar_chart(emoji_df.set_index('Emoji'))
+        else:
+            st.info("No emojis found in comments")
+    else:
+        st.info("📊 No comment text available for monthly insights analysis")
+        st.warning("💡 **To analyze comments:** Enable 'Fetch Detailed Comments' in the sidebar and re-analyze the page.")
+        st.info("This will extract actual comment text for word clouds and sentiment analysis.")
+        
+        # Show some debugging info
+        total_posts = len(posts)
+        posts_with_comments = sum(1 for post in posts if post.get('comments_count', 0) > 0)
+        st.info(f"📈 **Data Summary:** {total_posts} posts found, {posts_with_comments} posts have comments")
+        
+        if posts_with_comments > 0:
+            st.info("💡 Comments are available but not being processed. Check the comment extraction logic.")
+
+def analyze_emojis_in_comments(comments: List[str]) -> Dict[str, int]:
+    """Analyze emojis in comments and return frequency count."""
+    import re
+    
+    # Emoji regex pattern
+    emoji_pattern = re.compile(
+        "["
+        "\U0001F600-\U0001F64F"  # emoticons
+        "\U0001F300-\U0001F5FF"  # symbols & pictographs
+        "\U0001F680-\U0001F6FF"  # transport & map symbols
+        "\U0001F1E0-\U0001F1FF"  # flags (iOS)
+        "\U00002702-\U000027B0"
+        "\U000024C2-\U0001F251"
+        "]+", flags=re.UNICODE)
+    
+    emoji_counts = Counter()
+    
+    for comment in comments:
+        if comment:
+            emojis = emoji_pattern.findall(comment)
+            emoji_counts.update(emojis)
+    
+    return dict(emoji_counts.most_common(20))  # Top 20 emojis
+
+def create_instagram_post_analysis(selected_post: Dict, platform: str):
+    """Create individual Instagram post analysis with word cloud and sentiment."""
+    if platform != "Instagram":
+        return
+    
+    st.markdown("---")
+    st.markdown("### 🔍 Individual Post Analysis")
+    
+    # Post metrics
+    likes = selected_post.get('likes', 0)
+    comments_count = selected_post.get('comments_count', 0)
+    engagement = likes + comments_count
+    
+    # Display post metrics
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric("Likes", f"{likes:,}")
+    with col2:
+        st.metric("Comments", f"{comments_count:,}")
+    with col3:
+        st.metric("Total Engagement", f"{engagement:,}")
+    with col4:
+        if selected_post.get('type'):
+            st.metric("Type", selected_post['type'])
+    
+    # Comments analysis for this specific post
+    comments_list = selected_post.get('comments_list', [])
+    
+    if isinstance(comments_list, list) and comments_list:
+        st.markdown("#### 💬 Post Comments Analysis")
+        
+        # Extract comment texts
+        comment_texts = []
+        for comment in comments_list:
+            if isinstance(comment, dict):
+                text = comment.get('text', '')
+                if text and text.strip():
+                    comment_texts.append(text.strip())
+            elif isinstance(comment, str) and comment.strip():
+                comment_texts.append(comment.strip())
+        
+        if comment_texts:
+            # Create two columns for analysis
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("##### 📊 Comments Word Cloud")
+                create_wordcloud(comment_texts, width=600, height=400, figsize=(10, 6))
+            
+            with col2:
+                st.markdown("##### 😊 Comments Sentiment")
+                sentiment_counts = analyze_all_sentiments(comment_texts)
+                create_sentiment_pie_chart(sentiment_counts)
+                
+                # Show sentiment summary
+                total_sentiment = sum(sentiment_counts.values())
+                if total_sentiment > 0:
+                    st.markdown("**Sentiment Summary:**")
+                    st.markdown(f"- **Positive:** {sentiment_counts['positive']} ({sentiment_counts['positive']/total_sentiment*100:.1f}%)")
+                    st.markdown(f"- **Negative:** {sentiment_counts['negative']} ({sentiment_counts['negative']/total_sentiment*100:.1f}%)")
+                    st.markdown(f"- **Neutral:** {sentiment_counts['neutral']} ({sentiment_counts['neutral']/total_sentiment*100:.1f}%)")
+            
+            # Emoji analysis for this post
+            st.markdown("---")
+            st.markdown("##### 😀 Emojis in Post Comments")
+            emoji_analysis = analyze_emojis_in_comments(comment_texts)
+            if emoji_analysis:
+                emoji_df = pd.DataFrame(list(emoji_analysis.items()), columns=['Emoji', 'Count'])
+                if PLOTLY_AVAILABLE:
+                    fig = px.bar(emoji_df.head(10), x='Count', y='Emoji', orientation='h', 
+                                title="Most Used Emojis in This Post's Comments",
+                                color_discrete_sequence=['#495E57'])
+                    fig.update_layout(
+                        plot_bgcolor='#F5F7F8',
+                        paper_bgcolor='#F5F7F8',
+                        font_color='#45474B'
+                    )
+                    st.plotly_chart(fig, width='stretch')
+                else:
+                    st.bar_chart(emoji_df.set_index('Emoji'))
+            else:
+                st.info("No emojis found in this post's comments")
+        else:
+            st.info("No comment text available for this post's analysis")
+    else:
+        st.info("No comments available for this post")
+        st.warning("💡 **To see post analysis:** Enable 'Fetch Detailed Comments' in the sidebar and re-analyze the page.")
 
 def create_sentiment_pie_chart(sentiment_counts: Dict[str, int]):
     """Create sentiment distribution pie chart with custom colors."""
@@ -1237,22 +1825,51 @@ def main():
             from_date = None
             to_date = None
         
-        st.sidebar.markdown("### 💬 Facebook Comments")
-        st.sidebar.info("⚠️ **Note:** Facebook Comments Scraper actors are currently experiencing issues. The app will try multiple actors but may fail.")
-        st.sidebar.info("💡 **Tip:** The Facebook Posts Scraper only provides comment counts. Enable 'Fetch Detailed Comments' to get actual comment text for word clouds and sentiment analysis.")
-        
-        # Comment extraction method selection
-        comment_method = st.sidebar.radio(
-            "Comment Extraction Method:",
-            ["Individual Posts", "Batch Processing"],
-            help="Choose how to extract comments: individual posts (slower but more reliable) or batch processing (faster but may have limitations)"
-        )
-        
-        fetch_detailed_comments = st.sidebar.checkbox(
-            "Fetch Detailed Comments",
-            value=False,  # Default to False due to actor issues
-            help="Fetch detailed comments for Facebook posts using the Comments Scraper actor (currently having issues - may fail)"
-        )
+        # Platform-specific comments section
+        if platform == "Facebook":
+            st.sidebar.markdown("### 💬 Facebook Comments")
+            st.sidebar.info("⚠️ **Note:** Facebook Comments Scraper actors are currently experiencing issues. The app will try multiple actors but may fail.")
+            st.sidebar.info("💡 **Tip:** The Facebook Posts Scraper only provides comment counts. Enable 'Fetch Detailed Comments' to get actual comment text for word clouds and sentiment analysis.")
+            
+            # Comment extraction method selection
+            comment_method = st.sidebar.radio(
+                "Comment Extraction Method:",
+                ["Individual Posts", "Batch Processing"],
+                help="Choose how to extract comments: individual posts (slower but more reliable) or batch processing (faster but may have limitations)"
+            )
+            
+            fetch_detailed_comments = st.sidebar.checkbox(
+                "Fetch Detailed Comments",
+                value=False,  # Default to False due to actor issues
+                help="Fetch detailed comments for Facebook posts using the Comments Scraper actor (currently having issues - may fail)"
+            )
+            
+        elif platform == "Instagram":
+            st.sidebar.markdown("### 💬 Instagram Comments")
+            st.sidebar.info("💡 **Tip:** Instagram Posts Scraper only provides comment counts. Enable 'Fetch Detailed Comments' to get actual comment text for word clouds and sentiment analysis.")
+            st.sidebar.info("💰 **Cost:** Instagram comments cost $2.30 per 1,000 comments. Free plan includes $5 monthly credits (2,100+ comments).")
+            
+            fetch_detailed_comments = st.sidebar.checkbox(
+                "Fetch Detailed Comments",
+                value=False,  # Default to False to avoid costs
+                help="Fetch detailed comments for Instagram posts using the Instagram Comments Scraper (pay-per-result pricing)"
+            )
+            
+            # Instagram uses batch processing by default
+            comment_method = "Batch Processing"
+            
+        else:
+            # YouTube or other platforms
+            st.sidebar.markdown("### 💬 Comments")
+            st.sidebar.info("💡 **Tip:** Enable 'Fetch Detailed Comments' to get actual comment text for word clouds and sentiment analysis.")
+            
+            fetch_detailed_comments = st.sidebar.checkbox(
+                "Fetch Detailed Comments",
+                value=False,
+                help="Fetch detailed comments for posts"
+            )
+            
+            comment_method = "Batch Processing"
         
         # Additional options for batch processing
         if comment_method == "Batch Processing" and fetch_detailed_comments:
@@ -1260,15 +1877,15 @@ def main():
                 "Max Comments per Post",
                 min_value=10,
                 max_value=100,
-                value=50,
+                value=25,
                 help="Maximum number of comments to extract per post"
             )
         else:
-            max_comments_per_post = 50
+            max_comments_per_post = 25
     else:
         fetch_detailed_comments = False
         comment_method = "Individual Posts"
-        max_comments_per_post = 50
+        max_comments_per_post = 25
         max_posts = 10
         from_date = None
         to_date = None
@@ -1418,20 +2035,50 @@ def main():
         
         st.info(f"✅ Successfully processed {len(normalized_data)} posts")
         
-        # Phase 2: Fetch detailed comments if requested (only for Facebook)
-        if platform == "Facebook" and fetch_detailed_comments:
-            st.info("💡 Note: Facebook Comments Scraper may have limitations. If it fails, the app will continue with post data only.")
-            try:
-                if comment_method == "Batch Processing":
-                    st.info("🚀 Using batch processing for comment extraction...")
-                    normalized_data = fetch_comments_for_posts_batch(normalized_data, apify_token, max_comments_per_post)
-                else:
-                    st.info("🔄 Using individual post processing for comment extraction...")
-                    normalized_data = fetch_comments_for_posts(normalized_data, apify_token)
-            except Exception as e:
-                st.error(f"❌ Failed to fetch comments: {str(e)}")
-                st.warning("⚠️ Continuing without detailed comments. You can uncheck 'Fetch Detailed Comments' to skip this step.")
-                # Continue with the posts without comments
+        # Phase 2: Fetch detailed comments if requested (Facebook and Instagram)
+        if fetch_detailed_comments:
+            if platform == "Facebook":
+                st.info("💡 Note: Facebook Comments Scraper may have limitations. If it fails, the app will continue with post data only.")
+                try:
+                    if comment_method == "Batch Processing":
+                        st.info("🚀 Using batch processing for comment extraction...")
+                        normalized_data = fetch_comments_for_posts_batch(normalized_data, apify_token, max_comments_per_post)
+                    else:
+                        st.info("🔄 Using individual post processing for comment extraction...")
+                        normalized_data = fetch_comments_for_posts(normalized_data, apify_token)
+                except Exception as e:
+                    st.error(f"❌ Failed to fetch Facebook comments: {str(e)}")
+            
+            elif platform == "Instagram":
+                st.info("💡 Note: Instagram Comments Scraper will extract comments from all posts. This may take some time.")
+                try:
+                    # Extract post URLs from Instagram posts
+                    post_urls = []
+                    for post in normalized_data:
+                        if post.get('post_id'):
+                            # Construct Instagram post URL from shortCode
+                            short_code = post.get('post_id')
+                            post_url = f"https://www.instagram.com/p/{short_code}/"
+                            post_urls.append(post_url)
+                    
+                    if post_urls:
+                        st.info(f"🔄 Found {len(post_urls)} Instagram posts to extract comments from...")
+                        # Scrape Instagram comments
+                        comments_data = scrape_instagram_comments_batch(post_urls, apify_token, 25)  # Use 25 comments per post
+                        
+                        if comments_data:
+                            # Assign comments to posts
+                            normalized_data = assign_instagram_comments_to_posts(normalized_data, comments_data)
+                            st.success(f"✅ Successfully assigned {len(comments_data)} comments to posts")
+                        else:
+                            st.warning("⚠️ No Instagram comments were extracted")
+                    else:
+                        st.warning("⚠️ No Instagram post URLs found for comment extraction")
+                        
+                except Exception as e:
+                    st.error(f"❌ Failed to fetch Instagram comments: {str(e)}")
+                    st.warning("⚠️ Continuing without detailed comments. You can uncheck 'Fetch Detailed Comments' to skip this step.")
+                    # Continue with the posts without comments
         
         # Count total comments fetched
         total_comments = 0
@@ -1506,92 +2153,100 @@ def main():
             st.markdown(f"**Analysis Period:** {month_year}")
             st.markdown("---")
 
-            # Calculate metrics
-            total_reactions = calculate_total_reactions(posts)
-            total_comments = df['comments_count'].sum()
-            total_shares = df['shares_count'].sum()
-            avg_engagement = calculate_average_engagement(posts)
+            # Platform-specific analysis
+            if platform == "Instagram":
+                # Show monthly Instagram analysis first
+                create_instagram_monthly_analysis(posts, platform)
+                # Show monthly insights with word cloud and sentiment
+                create_instagram_monthly_insights(posts, platform)
+            else:
+                # Facebook/YouTube analysis (existing code)
+                # Calculate metrics
+                total_reactions = calculate_total_reactions(posts)
+                total_comments = df['comments_count'].sum()
+                total_shares = df['shares_count'].sum()
+                avg_engagement = calculate_average_engagement(posts)
+                
+                # Calculate detailed reactions breakdown
+                reactions_breakdown = {}
+                for post in posts:
+                    reactions = post.get('reactions', {})
+                    if isinstance(reactions, dict):
+                        for reaction_type, count in reactions.items():
+                            reactions_breakdown[reaction_type] = reactions_breakdown.get(reaction_type, 0) + count
+                
+                # Create 4-column card layout
+                col1, col2, col3, col4 = st.columns(4)
+
+                with col1:
+                    st.markdown("""
+                    <div style="
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        padding: 1rem;
+                        border-radius: 10px;
+                        text-align: center;
+                        color: white;
+                        margin-bottom: 1rem;
+                    ">
+                        <h3 style="margin: 0; font-size: 2rem;">😊</h3>
+                        <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Total Reactions</h2>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    st.metric("Total Reactions", f"{total_reactions:,}", help="Sum of all reaction types (like, love, wow, etc.)", label_visibility="collapsed")
+
+                with col2:
+                    st.markdown("""
+                    <div style="
+                        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                        padding: 1rem;
+                        border-radius: 10px;
+                        text-align: center;
+                        color: white;
+                        margin-bottom: 1rem;
+                    ">
+                        <h3 style="margin: 0; font-size: 2rem;">💬</h3>
+                        <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Total Comments</h2>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    st.metric("Total Comments", f"{total_comments:,}", help="Total number of comments across all posts", label_visibility="collapsed")
+
+                with col3:
+                    st.markdown("""
+                    <div style="
+                        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+                        padding: 1rem;
+                        border-radius: 10px;
+                        text-align: center;
+                        color: white;
+                        margin-bottom: 1rem;
+                    ">
+                        <h3 style="margin: 0; font-size: 2rem;">📤</h3>
+                        <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Total Shares</h2>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    st.metric("Total Shares", f"{total_shares:,}", help="Total number of shares across all posts", label_visibility="collapsed")
+
+                with col4:
+                    st.markdown("""
+                    <div style="
+                        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+                        padding: 1rem;
+                        border-radius: 10px;
+                        text-align: center;
+                        color: white;
+                        margin-bottom: 1rem;
+                    ">
+                        <h3 style="margin: 0; font-size: 2rem;">📊</h3>
+                        <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Avg Engagement</h2>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    st.metric("Avg Engagement", f"{avg_engagement:.1f}", help="Average engagement per post (likes + comments + shares + reactions)", label_visibility="collapsed")
             
-            # Calculate detailed reactions breakdown
-            reactions_breakdown = {}
-            for post in posts:
-                reactions = post.get('reactions', {})
-                if isinstance(reactions, dict):
-                    for reaction_type, count in reactions.items():
-                        reactions_breakdown[reaction_type] = reactions_breakdown.get(reaction_type, 0) + count
-            
-            # Create 4-column card layout
-            col1, col2, col3, col4 = st.columns(4)
-
-            with col1:
-                st.markdown("""
-                <div style="
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    padding: 1rem;
-                    border-radius: 10px;
-                    text-align: center;
-                    color: white;
-                    margin-bottom: 1rem;
-                ">
-                    <h3 style="margin: 0; font-size: 2rem;">😊</h3>
-                    <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Total Reactions</h2>
-                </div>
-                """, unsafe_allow_html=True)
-                st.metric("Total Reactions", f"{total_reactions:,}", help="Sum of all reaction types (like, love, wow, etc.)", label_visibility="collapsed")
-
-            with col2:
-                st.markdown("""
-                <div style="
-                    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-                    padding: 1rem;
-                    border-radius: 10px;
-                    text-align: center;
-                    color: white;
-                    margin-bottom: 1rem;
-                ">
-                    <h3 style="margin: 0; font-size: 2rem;">💬</h3>
-                    <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Total Comments</h2>
-                </div>
-                """, unsafe_allow_html=True)
-                st.metric("Total Comments", f"{total_comments:,}", help="Total number of comments across all posts", label_visibility="collapsed")
-
-            with col3:
-                st.markdown("""
-                <div style="
-                    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-                    padding: 1rem;
-                    border-radius: 10px;
-                    text-align: center;
-                    color: white;
-                    margin-bottom: 1rem;
-                ">
-                    <h3 style="margin: 0; font-size: 2rem;">📤</h3>
-                    <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Total Shares</h2>
-                </div>
-                """, unsafe_allow_html=True)
-                st.metric("Total Shares", f"{total_shares:,}", help="Total number of shares across all posts", label_visibility="collapsed")
-
-            with col4:
-                st.markdown("""
-                <div style="
-                    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-                    padding: 1rem;
-                    border-radius: 10px;
-                    text-align: center;
-                    color: white;
-                    margin-bottom: 1rem;
-                ">
-                    <h3 style="margin: 0; font-size: 2rem;">📊</h3>
-                    <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Avg Engagement</h2>
-                </div>
-                """, unsafe_allow_html=True)
-                st.metric("Avg Engagement", f"{avg_engagement:.1f}", help="Average engagement per post (likes + comments + shares + reactions)", label_visibility="collapsed")
-        
-            # Show reactions breakdown if available
-            if reactions_breakdown:
-                st.markdown("---")
-                st.markdown("### 😊 Reactions Breakdown")
-                create_reaction_pie_chart(reactions_breakdown)
+                # Show reactions breakdown if available (not for Instagram)
+                if reactions_breakdown and platform != "Instagram":
+                    st.markdown("---")
+                    st.markdown("### 😊 Reactions Breakdown")
+                    create_reaction_pie_chart(reactions_breakdown)
         
         st.markdown("---")
         
@@ -1628,6 +2283,14 @@ def main():
             st.info("📊 No comment text available for monthly insights analysis")
             st.warning("💡 **To analyze comments:** Enable 'Fetch Detailed Comments' in the sidebar and re-analyze the page.")
             st.info("This will extract actual comment text for word clouds and sentiment analysis.")
+            
+            # Show some debugging info
+            total_posts = len(posts)
+            posts_with_comments = sum(1 for post in posts if post.get('comments_count', 0) > 0)
+            st.info(f"📈 **Data Summary:** {total_posts} posts found, {posts_with_comments} posts have comments")
+            
+            if posts_with_comments > 0:
+                st.info("💡 Comments are available but not being processed. Check the comment extraction logic.")
 
         st.markdown("---")
 
@@ -1701,42 +2364,114 @@ def main():
                 st.markdown(f"**Published:** {pub_date_display}")
             
             with col2:
-                st.metric("Shares", selected_post['shares_count'])
-                st.metric("Comments", selected_post['comments_count'])
+                if platform == "Instagram":
+                    # Instagram-specific metrics
+                    st.metric("Likes", selected_post['likes'])
+                    st.metric("Comments", selected_post['comments_count'])
+                    if selected_post.get('type'):
+                        st.metric("Type", selected_post['type'])
+                else:
+                    # Facebook/YouTube metrics
+                    st.metric("Shares", selected_post['shares_count'])
+                    st.metric("Comments", selected_post['comments_count'])
             
-            # Reactions pie chart
-            reactions = selected_post.get('reactions', {})
-            if isinstance(reactions, dict) and reactions:
-                st.markdown("#### Reaction Breakdown")
-                create_reaction_pie_chart(reactions)
+            # Platform-specific analysis
+            if platform == "Instagram":
+                # Instagram-specific post details
+                if selected_post.get('hashtags'):
+                    st.markdown("#### #️⃣ Hashtags")
+                    hashtags = selected_post['hashtags']
+                    if isinstance(hashtags, list) and hashtags:
+                        st.write(", ".join([f"#{tag}" for tag in hashtags]))
+                    else:
+                        st.info("No hashtags found")
+                
+                if selected_post.get('mentions'):
+                    st.markdown("#### 👥 Mentions")
+                    mentions = selected_post['mentions']
+                    if isinstance(mentions, list) and mentions:
+                        st.write(", ".join([f"@{mention}" for mention in mentions]))
+                    else:
+                        st.info("No mentions found")
+                
+                if selected_post.get('ownerUsername'):
+                    st.markdown("#### 👤 Post Owner")
+                    st.write(f"**Username:** @{selected_post['ownerUsername']}")
+                    if selected_post.get('ownerFullName'):
+                        st.write(f"**Full Name:** {selected_post['ownerFullName']}")
+                
+                if selected_post.get('displayUrl'):
+                    st.markdown("#### 🖼️ Media")
+                    st.image(selected_post['displayUrl'], width=300)
+                
+                # Individual post analysis
+                create_instagram_post_analysis(selected_post, platform)
             else:
-                # If no reaction breakdown, show simple metrics
-                st.info("Detailed reaction data not available for this post")
+                # Facebook/YouTube reactions pie chart
+                reactions = selected_post.get('reactions', {})
+                if isinstance(reactions, dict) and reactions:
+                    st.markdown("#### Reaction Breakdown")
+                    create_reaction_pie_chart(reactions)
+                else:
+                    # If no reaction breakdown, show simple metrics
+                    st.info("Detailed reaction data not available for this post")
             
-            # Word cloud from comments
-            st.markdown("#### 💬 Comments Word Cloud")
-            comments_list = selected_post.get('comments_list', [])
-            
-            # Extract text from comments (handle various formats)
-            comment_texts = []
-            
-            # Check if comments_list is actually a list, not just a count
-            if isinstance(comments_list, list):
-                for comment in comments_list:
-                    if isinstance(comment, str):
-                        comment_texts.append(comment)
-                    elif isinstance(comment, dict):
-                        text = comment.get('text') or comment.get('comment') or comment.get('message', '')
-                        if text:
-                            comment_texts.append(text)
-            elif isinstance(comments_list, int):
-                st.info(f"📊 Comments count: {comments_list}")
-                st.warning("💡 **To see comment word clouds:** Enable 'Fetch Detailed Comments' in the sidebar and re-analyze the page.")
-                st.info("This will use the Facebook Comments Scraper to extract actual comment text for analysis.")
+            # Comments section - platform-specific display
+            if platform == "Instagram":
+                st.markdown("#### 💬 Instagram Comments")
+                comments_list = selected_post.get('comments_list', [])
+                
+                if isinstance(comments_list, list) and comments_list:
+                    # Show individual Instagram comments
+                    st.info(f"📊 Found {len(comments_list)} comments for this post")
+                    
+                    # Display comments in a nice format
+                    for i, comment in enumerate(comments_list, 1):
+                        if isinstance(comment, dict):
+                            # Instagram comment format
+                            comment_text = comment.get('text', '')
+                            owner_username = comment.get('ownerUsername', 'Unknown')
+                            timestamp = comment.get('timestamp', '')
+                            
+                            if comment_text:
+                                with st.expander(f"💬 Comment {i} by @{owner_username}", expanded=False):
+                                    st.write(f"**@{owner_username}:** {comment_text}")
+                                    if timestamp:
+                                        st.caption(f"Posted: {timestamp}")
+                        elif isinstance(comment, str) and comment.strip():
+                            st.write(f"**Comment {i}:** {comment}")
+                elif isinstance(comments_list, int):
+                    st.info(f"📊 Comments count: {comments_list}")
+                    st.warning("💡 **To see actual comments:** Enable 'Fetch Detailed Comments' in the sidebar and re-analyze the page.")
+                    st.info("This will use the Instagram Comments Scraper to extract actual comment text.")
+                else:
+                    st.info("No comments found for this Instagram post.")
             else:
-                st.info("No comment data available for word cloud.")
+                # Facebook/YouTube comments word cloud
+                st.markdown("#### 💬 Comments Word Cloud")
+                comments_list = selected_post.get('comments_list', [])
+                
+                # Extract text from comments (handle various formats)
+                comment_texts = []
+                
+                # Check if comments_list is actually a list, not just a count
+                if isinstance(comments_list, list):
+                    for comment in comments_list:
+                        if isinstance(comment, str):
+                            comment_texts.append(comment)
+                        elif isinstance(comment, dict):
+                            text = comment.get('text') or comment.get('comment') or comment.get('message', '')
+                            if text:
+                                comment_texts.append(text)
+                elif isinstance(comments_list, int):
+                    st.info(f"📊 Comments count: {comments_list}")
+                    st.warning("💡 **To see comment word clouds:** Enable 'Fetch Detailed Comments' in the sidebar and re-analyze the page.")
+                    st.info("This will use the Facebook Comments Scraper to extract actual comment text for analysis.")
+                else:
+                    st.info("No comment data available for word cloud.")
             
-            if comment_texts:
+            # Only show word cloud for Facebook/YouTube (not Instagram)
+            if platform != "Instagram" and comment_texts:
                 create_wordcloud(comment_texts)
                 
                 # Optional: Show sentiment distribution
@@ -1750,7 +2485,7 @@ def main():
                         'Count': sentiment_counts.values
                     }).set_index('Sentiment')
                     st.bar_chart(sentiment_df)
-            else:
+            elif platform != "Instagram":
                 st.info("No comments available for this post")
 
 if __name__ == "__main__":
