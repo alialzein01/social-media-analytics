@@ -46,8 +46,11 @@ except ImportError:
 ACTOR_CONFIG = {
     "Facebook": "zanTWNqB3Poz44qdY",  # Actor ID: scraper_one/facebook-posts-scraper (better reactions data)
     "Instagram": "apify/instagram-scraper",  # Updated with correct actor name
-    "YouTube": "streamers/youtube-comments-scraper"  # Updated with correct actor name
+    "YouTube": "h7sDV53CddomktSi5"  # Updated with streamers~youtube-scraper actor ID
 }
+
+# YouTube Comments Scraper Actor ID (for second step)
+YOUTUBE_COMMENTS_ACTOR_ID = "p7UMdpQnjKmmpR21D"
 
 # Actor IDs for direct calls (when needed)
 ACTOR_IDS = {
@@ -304,15 +307,27 @@ def normalize_post_data(raw_data: List[Dict], platform: str) -> List[Dict]:
                     'comments_list': item.get('commentsList', []) or item.get('comments', [])
                 }
             elif platform == "YouTube":
+                # Handle YouTube Channel Scraper output format (Step 1)
+                # This actor returns video data, not comment data
                 post = {
                     'post_id': item.get('id') or item.get('videoId', ''),
-                    'published_at': item.get('publishedAt') or item.get('timestamp') or item.get('date', ''),
-                    'text': item.get('text') or item.get('title') or item.get('description', ''),
-                    'likes': item.get('likesCount') or item.get('likes', 0),
-                    'comments_count': item.get('commentsCount') or item.get('comments', 0),
-                    'shares_count': item.get('sharesCount') or item.get('shares', 0),
+                    'published_at': item.get('publishedAt') or item.get('uploadDate') or item.get('timestamp') or item.get('date', ''),
+                    'text': item.get('title') or item.get('description') or item.get('text', ''),
+                    'likes': item.get('likeCount') or item.get('likes') or item.get('likesCount', 0),
+                    'comments_count': item.get('commentCount') or item.get('comments') or item.get('commentsCount', 0),
+                    'shares_count': item.get('shareCount') or item.get('shares') or item.get('sharesCount', 0),
                     'reactions': item.get('reactions', {}),
-                    'comments_list': item.get('comments') or item.get('commentsList', [])
+                    'comments_list': [],  # Will be populated in Step 2
+                    'views': item.get('viewCount') or item.get('views', 0),
+                    'duration': item.get('duration') or item.get('lengthSeconds', ''),
+                    'channel': item.get('channelName') or item.get('channel', ''),
+                    'url': item.get('url') or item.get('videoUrl', ''),
+                    'video_id': item.get('id') or item.get('videoId', ''),
+                    'video_title': item.get('title') or item.get('videoTitle', ''),
+                    'thumbnail_url': item.get('thumbnailUrl') or item.get('thumbnail', ''),
+                    'channel_id': item.get('channelId') or item.get('channelId', ''),
+                    'channel_username': item.get('channelUsername') or item.get('channelUsername', ''),
+                    'subscriber_count': item.get('numberOfSubscribers') or item.get('subscriberCount', 0)
                 }
             else:
                 # Generic fallback
@@ -408,6 +423,71 @@ def calculate_average_engagement(posts: List[Dict]) -> float:
         )
     
     return total_engagement / len(posts)
+
+def calculate_youtube_metrics(posts: List[Dict]) -> Dict[str, Any]:
+    """Calculate YouTube-specific metrics."""
+    if not posts:
+        return {}
+    
+    total_views = sum(post.get('views', 0) for post in posts)
+    total_likes = sum(post.get('likes', 0) for post in posts)
+    total_comments = sum(post.get('comments_count', 0) for post in posts)
+    total_shares = sum(post.get('shares_count', 0) for post in posts)
+    
+    # Calculate average metrics
+    avg_views = total_views / len(posts) if posts else 0
+    avg_likes = total_likes / len(posts) if posts else 0
+    avg_comments = total_comments / len(posts) if posts else 0
+    avg_shares = total_shares / len(posts) if posts else 0
+    
+    # Calculate engagement rate (likes + comments + shares) / views
+    total_engagement = total_likes + total_comments + total_shares
+    engagement_rate = (total_engagement / total_views * 100) if total_views > 0 else 0
+    
+    return {
+        'total_views': total_views,
+        'total_likes': total_likes,
+        'total_comments': total_comments,
+        'total_shares': total_shares,
+        'avg_views': avg_views,
+        'avg_likes': avg_likes,
+        'avg_comments': avg_comments,
+        'avg_shares': avg_shares,
+        'engagement_rate': engagement_rate
+    }
+
+@st.cache_data(ttl=3600, max_entries=32, show_spinner=False)
+def fetch_youtube_comments(video_urls: List[str], _apify_token: str, max_comments_per_video: int = 10) -> List[Dict]:
+    """
+    Fetch comments from YouTube videos using the YouTube Comments Scraper.
+    Cached for 1 hour per video URL combination.
+    """
+    try:
+        client = ApifyClient(_apify_token)
+        all_comments = []
+        
+        for video_url in video_urls:
+            st.info(f"Fetching comments from: {video_url}")
+            
+            # YouTube Comments Scraper input format
+            run_input = {
+                "startUrls": [{"url": video_url}],
+                "maxComments": max_comments_per_video,
+                "commentsSortBy": "1"  # 1 = most relevant comments
+            }
+            
+            # Run the comments scraper
+            run = client.actor(YOUTUBE_COMMENTS_ACTOR_ID).call(run_input=run_input)
+            
+            # Fetch results
+            for item in client.dataset(run["defaultDatasetId"]).iterate_items():
+                all_comments.append(item)
+        
+        return all_comments
+        
+    except Exception as e:
+        st.error(f"Error fetching YouTube comments: {str(e)}")
+        return []
 
 def aggregate_all_comments(posts: List[Dict]) -> List[str]:
     """
@@ -694,7 +774,16 @@ def fetch_apify_data(platform: str, url: str, _apify_token: str, max_posts: int 
             if to_date:
                 run_input["toDate"] = to_date
         elif platform == "YouTube":
-            run_input = {"startUrls": [{"url": url}], "maxComments": max_posts, "commentsSortBy": "top"}
+            # YouTube Channel Scraper input format (Step 1)
+            run_input = {
+                "searchQueries": [url],  # Use URL as search query
+                "maxResults": max_posts,
+                "maxResultsShorts": 0,
+                "maxResultStreams": 0,
+                "startUrls": [],
+                "subtitlesLanguage": "en",
+                "subtitlesFormat": "srt"
+            }
         else:
             run_input = {"startUrls": [{"url": url}], "maxPosts": max_posts}
         
@@ -1719,7 +1808,7 @@ def create_sentiment_pie_chart(sentiment_counts: Dict[str, int]):
 URL_PATTERNS = {
     "Facebook": re.compile(r"^https?://(www\.)?(facebook|fb)\.com/[^/?#]+", re.IGNORECASE),
     "Instagram": re.compile(r"^https?://(www\.)?instagram\.com/[^/?#]+", re.IGNORECASE),
-    "YouTube": re.compile(r"^https?://(www\.)?(youtube\.com/(watch\?v=|channel/|@)|youtu\.be/)[^/?#]+", re.IGNORECASE),
+    "YouTube": re.compile(r"^https?://(www\.)?(youtube\.com/(watch\?v=|channel/|@|c/|user/)|youtu\.be/)[^/?#]+", re.IGNORECASE),
 }
 
 def validate_url(url: str, platform: str) -> bool:
@@ -1854,7 +1943,10 @@ def main():
         else:
             # YouTube or other platforms
             st.sidebar.markdown("### 💬 Comments")
-            st.sidebar.info("💡 **Tip:** Enable 'Fetch Detailed Comments' to get actual comment text for word clouds and sentiment analysis.")
+            if platform == "YouTube":
+                st.sidebar.info("💡 **YouTube Two-Step Tip:** Step 1: Channel scraper gets videos. Step 2: Comments scraper analyzes comments from those videos. Enable 'Fetch Detailed Comments' for Step 2.")
+            else:
+                st.sidebar.info("💡 **Tip:** Enable 'Fetch Detailed Comments' to get actual comment text for word clouds and sentiment analysis.")
             
             fetch_detailed_comments = st.sidebar.checkbox(
                 "Fetch Detailed Comments",
@@ -2167,8 +2259,81 @@ def main():
                 create_instagram_monthly_analysis(posts, platform)
                 # Show monthly insights with word cloud and sentiment
                 create_instagram_monthly_insights(posts, platform)
+            elif platform == "YouTube":
+                # YouTube Two-Step Analysis: Channel Scraper + Comments Scraper
+                youtube_metrics = calculate_youtube_metrics(posts)
+                
+                # Display YouTube video metrics
+                col1, col2, col3, col4 = st.columns(4)
+                with col1:
+                    st.metric("Total Views", f"{youtube_metrics.get('total_views', 0):,}")
+                with col2:
+                    st.metric("Total Likes", f"{youtube_metrics.get('total_likes', 0):,}")
+                with col3:
+                    st.metric("Total Comments", f"{youtube_metrics.get('total_comments', 0):,}")
+                with col4:
+                    st.metric("Engagement Rate", f"{youtube_metrics.get('engagement_rate', 0):.2f}%")
+                
+                # Additional YouTube metrics
+                col1, col2, col3, col4 = st.columns(4)
+                with col1:
+                    st.metric("Avg Views", f"{youtube_metrics.get('avg_views', 0):,.0f}")
+                with col2:
+                    st.metric("Avg Likes", f"{youtube_metrics.get('avg_likes', 0):,.0f}")
+                with col3:
+                    st.metric("Avg Comments", f"{youtube_metrics.get('avg_comments', 0):,.0f}")
+                with col4:
+                    st.metric("Total Shares", f"{youtube_metrics.get('total_shares', 0):,}")
+                
+                # Step 2: Extract comments from videos if enabled
+                if fetch_detailed_comments:
+                    st.markdown("#### 💬 Comments Analysis")
+                    st.info("🔄 **Step 2:** Extracting comments from videos...")
+                    
+                    # Extract video URLs from posts
+                    video_urls = [post.get('url') for post in posts if post.get('url')]
+                    video_urls = [url for url in video_urls if url]  # Remove empty URLs
+                    
+                    if video_urls:
+                        st.write(f"Found {len(video_urls)} videos to analyze for comments")
+                        
+                        # Fetch comments from all videos
+                        with st.spinner("Fetching comments from videos..."):
+                            all_comments = fetch_youtube_comments(video_urls, apify_token, max_posts)
+                        
+                        if all_comments:
+                            st.success(f"✅ Successfully fetched {len(all_comments)} comments")
+                            
+                            # Display comment metrics
+                            total_comment_likes = sum(comment.get('voteCount', 0) for comment in all_comments)
+                            unique_comment_authors = len(set(comment.get('author', '') for comment in all_comments if comment.get('author')))
+                            
+                            col1, col2, col3, col4 = st.columns(4)
+                            with col1:
+                                st.metric("Total Comments", f"{len(all_comments):,}")
+                            with col2:
+                                st.metric("Comment Likes", f"{total_comment_likes:,}")
+                            with col3:
+                                st.metric("Unique Authors", f"{unique_comment_authors:,}")
+                            with col4:
+                                st.metric("Avg Likes/Comment", f"{total_comment_likes / len(all_comments):.1f}" if all_comments else "0")
+                            
+                            # Comments word cloud
+                            st.markdown("#### 📊 Comments Word Cloud")
+                            comment_texts = [comment.get('comment', '') for comment in all_comments if comment.get('comment')]
+                            if comment_texts:
+                                st.write(f"Analyzing {len(comment_texts)} comments...")
+                                create_wordcloud(comment_texts)
+                            else:
+                                st.info("No comment text available for word cloud.")
+                        else:
+                            st.warning("No comments found for the videos.")
+                    else:
+                        st.warning("No video URLs found to extract comments from.")
+                else:
+                    st.info("💡 **Tip:** Enable 'Fetch Detailed Comments' to analyze comments from the videos.")
             else:
-                # Facebook/YouTube analysis (existing code)
+                # Facebook analysis (existing code)
                 # Calculate metrics
                 total_reactions = calculate_total_reactions(posts)
                 total_comments = df['comments_count'].sum()
@@ -2381,8 +2546,15 @@ def main():
                     st.metric("Comments", selected_post['comments_count'])
                     if selected_post.get('type'):
                         st.metric("Type", selected_post['type'])
+                elif platform == "YouTube":
+                    # YouTube Video-specific metrics
+                    st.metric("Views", f"{selected_post.get('views', 0):,}")
+                    st.metric("Likes", f"{selected_post.get('likes', 0):,}")
+                    st.metric("Comments", f"{selected_post.get('comments_count', 0):,}")
+                    if selected_post.get('duration'):
+                        st.metric("Duration", selected_post['duration'])
                 else:
-                    # Facebook/YouTube metrics
+                    # Facebook metrics
                     st.metric("Shares", selected_post['shares_count'])
                     st.metric("Comments", selected_post['comments_count'])
             
@@ -2457,8 +2629,42 @@ def main():
                     st.info("This will use the Instagram Comments Scraper to extract actual comment text.")
                 else:
                     st.info("No comments found for this Instagram post.")
+            elif platform == "YouTube":
+                # YouTube Video-specific post details
+                if selected_post.get('channel'):
+                    st.markdown("#### 📺 Channel Information")
+                    st.write(f"**Channel:** {selected_post['channel']}")
+                    if selected_post.get('channel_username'):
+                        st.write(f"**Channel Username:** {selected_post['channel_username']}")
+                    if selected_post.get('subscriber_count'):
+                        st.write(f"**Subscribers:** {selected_post['subscriber_count']:,}")
+                
+                if selected_post.get('url'):
+                    st.markdown("#### 🔗 Video Link")
+                    st.write(f"[Watch Video]({selected_post['url']})")
+                
+                if selected_post.get('thumbnail_url'):
+                    st.markdown("#### 🖼️ Thumbnail")
+                    st.image(selected_post['thumbnail_url'], width=300)
+                
+                if selected_post.get('duration'):
+                    st.markdown("#### ⏱️ Video Details")
+                    st.write(f"**Duration:** {selected_post['duration']}")
+                
+                # Show video description
+                st.markdown("#### 📝 Video Description")
+                video_text = selected_post.get('text', 'No description available')
+                st.write(video_text)
+                
+                # YouTube video word cloud (for this specific video)
+                st.markdown("#### 📊 Video Analysis")
+                if video_text and video_text != 'No description available':
+                    st.write("Analyzing this video...")
+                    create_wordcloud([video_text])
+                else:
+                    st.info("No video description available for analysis.")
             else:
-                # Facebook/YouTube comments word cloud
+                # Facebook comments word cloud
                 st.markdown("#### 💬 Comments Word Cloud")
                 comments_list = selected_post.get('comments_list', [])
                 
@@ -2482,22 +2688,27 @@ def main():
                     st.info("No comment data available for word cloud.")
             
             # Only show word cloud for Facebook/YouTube (not Instagram)
-            if platform != "Instagram" and comment_texts:
-                create_wordcloud(comment_texts)
+            if platform != "Instagram":
+                # Ensure comment_texts is defined
+                if 'comment_texts' not in locals():
+                    comment_texts = []
                 
-                # Optional: Show sentiment distribution
-                with st.expander("📊 Sentiment Analysis (Beta)"):
-                    sentiments = [analyze_sentiment_placeholder(c) for c in comment_texts]
-                    sentiment_counts = pd.Series(sentiments).value_counts()
+                if comment_texts:
+                    create_wordcloud(comment_texts)
                     
-                    st.subheader("💭 Comment Sentiment Distribution")
-                    sentiment_df = pd.DataFrame({
-                        'Sentiment': sentiment_counts.index,
-                        'Count': sentiment_counts.values
-                    }).set_index('Sentiment')
-                    st.bar_chart(sentiment_df)
-            elif platform != "Instagram":
-                st.info("No comments available for this post")
+                    # Optional: Show sentiment distribution
+                    with st.expander("📊 Sentiment Analysis (Beta)"):
+                        sentiments = [analyze_sentiment_placeholder(c) for c in comment_texts]
+                        sentiment_counts = pd.Series(sentiments).value_counts()
+                        
+                        st.subheader("💭 Comment Sentiment Distribution")
+                        sentiment_df = pd.DataFrame({
+                            'Sentiment': sentiment_counts.index,
+                            'Count': sentiment_counts.values
+                        }).set_index('Sentiment')
+                        st.bar_chart(sentiment_df)
+                else:
+                    st.info("No comments available for this post")
 
 if __name__ == "__main__":
     main()
