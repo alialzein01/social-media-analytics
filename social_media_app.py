@@ -919,7 +919,13 @@ def create_monthly_overview_charts(df: pd.DataFrame):
     # Posts per day line chart
     st.subheader("📈 Posts Per Day")
     if PLOTLY_AVAILABLE:
-        fig = px.line(posts_per_day, x="date", y="count", markers=True, title="Posts Per Day")
+        fig = px.line(posts_per_day, x="date", y="count", markers=True, title="Posts Per Day",
+                     color_discrete_sequence=['#495E57'])
+        fig.update_layout(
+            plot_bgcolor='#F5F7F8',
+            paper_bgcolor='#F5F7F8',
+            font_color='#45474B'
+        )
         st.plotly_chart(fig, width='stretch')
     else:
         st.line_chart(posts_per_day.set_index('date'))
@@ -935,7 +941,13 @@ def create_monthly_overview_charts(df: pd.DataFrame):
         ]
     })
     if PLOTLY_AVAILABLE:
-        fig = px.bar(engagement_data, x="Metric", y="Count", title="Total Engagement Breakdown")
+        fig = px.bar(engagement_data, x="Metric", y="Count", title="Total Engagement Breakdown",
+                     color_discrete_sequence=['#495E57', '#F4CE14', '#45474B'])
+        fig.update_layout(
+            plot_bgcolor='#F5F7F8',
+            paper_bgcolor='#F5F7F8',
+            font_color='#45474B'
+        )
         st.plotly_chart(fig, width='stretch')
     else:
         st.bar_chart(engagement_data.set_index('Metric'))
@@ -948,7 +960,13 @@ def create_monthly_overview_charts(df: pd.DataFrame):
     top_posts['text'] = top_posts['text'].str[:50] + '...'
     if PLOTLY_AVAILABLE:
         fig = px.bar(top_posts.reset_index().rename(columns={'text':'Caption'}),
-                     x="Caption", y="total_engagement", title="Top 5 Posts by Engagement")
+                     x="Caption", y="total_engagement", title="Top 5 Posts by Engagement",
+                     color_discrete_sequence=['#495E57'])
+        fig.update_layout(
+            plot_bgcolor='#F5F7F8',
+            paper_bgcolor='#F5F7F8',
+            font_color='#45474B'
+        )
         st.plotly_chart(fig, width='stretch')
     else:
         top_posts = top_posts.set_index('text')
@@ -1045,16 +1063,17 @@ def create_wordcloud(comments: List[str], width: int = 800, height: int = 400, f
     wordcloud = WordCloud(
         width=width,
         height=height,
-        background_color='white',
+        background_color='#F5F7F8',  # Use theme background color
         colormap='viridis',
         relative_scaling=0.5,
         min_font_size=10
     ).generate_from_frequencies(wc_freqs)
     
     # Display
-    fig, ax = plt.subplots(figsize=figsize)
+    fig, ax = plt.subplots(figsize=figsize, facecolor='#F5F7F8')
     ax.imshow(wordcloud, interpolation='bilinear')
     ax.axis('off')
+    fig.patch.set_facecolor('#F5F7F8')
     st.pyplot(fig)
 
 def create_sentiment_pie_chart(sentiment_counts: Dict[str, int]):
@@ -1063,11 +1082,11 @@ def create_sentiment_pie_chart(sentiment_counts: Dict[str, int]):
         st.info("No sentiment data available")
         return
     
-    # Define colors
+    # Define colors using sage green palette
     colors = {
-        'positive': '#2ecc71',  # Green
-        'negative': '#e74c3c',  # Red
-        'neutral': '#95a5a6'    # Gray
+        'positive': '#495E57',  # Sage green
+        'negative': '#F4CE14',  # Golden yellow
+        'neutral': '#45474B'    # Dark grey
     }
     
     # Prepare data
@@ -1090,18 +1109,19 @@ def create_sentiment_pie_chart(sentiment_counts: Dict[str, int]):
     percentages = [f"{size/total*100:.1f}%" for size in sizes]
     
     # Create pie chart
-    fig, ax = plt.subplots(figsize=(8, 6))
+    fig, ax = plt.subplots(figsize=(8, 6), facecolor='#F5F7F8')
     wedges, texts, autotexts = ax.pie(
         sizes, 
         labels=labels, 
         colors=color_list,
         autopct='%1.1f%%',
         startangle=90,
-        textprops={'fontsize': 12, 'weight': 'bold'}
+        textprops={'fontsize': 12, 'weight': 'bold', 'color': '#45474B'}
     )
     
     # Customize the chart
-    ax.set_title('Sentiment Distribution', fontsize=16, fontweight='bold', pad=20)
+    ax.set_title('Sentiment Distribution', fontsize=16, fontweight='bold', pad=20, color='#45474B')
+    fig.patch.set_facecolor('#F5F7F8')
     
     # Add count information to legend
     legend_labels = [f"{label}: {size} ({percent})" for label, size, percent in zip(labels, sizes, percentages)]
@@ -1142,7 +1162,7 @@ def main():
     
     # Check for API token
     try:
-        apify_token = os.environ.get('APIFY_TOKEN', 'apify_api_re9vmjOyu3JAE1OWdBVcglApVHBrYq3IDeIG')
+        apify_token = os.environ.get('APIFY_TOKEN', 'apify_api_14gYxq0ETCby20EvyECx9plcTt0DgO4uSyss')
 
         # apify_token = st.secrets.get("APIFY_TOKEN") or os.environ.get("APIFY_TOKEN")
     except Exception:
@@ -1194,7 +1214,6 @@ def main():
         )
         
         # Calculate date range
-        from datetime import datetime, timedelta
         today = datetime.now()
         
         if date_range_option == "Last 30 Days":
