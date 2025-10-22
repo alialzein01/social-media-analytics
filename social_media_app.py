@@ -983,6 +983,34 @@ def create_wordcloud(comments: List[str], width: int = 800, height: int = 400, f
         st.info("• Comments are in a language not well supported")
         st.info("• Comments contain mostly emojis or special characters")
         st.info("• Comments may be empty or filtered out")
+        
+        # Create a word cloud anyway with raw text
+        st.info("🎨 **Creating word cloud with available text...**")
+        if comments:
+            # Use raw comments without filtering
+            raw_text = " ".join(comments)
+            if raw_text.strip():
+                # Create a simple word cloud with all text
+                try:
+                    wordcloud = WordCloud(
+                        width=width, height=height,
+                        background_color='white',
+                        max_words=50,
+                        colormap='viridis'
+                    ).generate(raw_text)
+                    
+                    fig, ax = plt.subplots(figsize=figsize)
+                    ax.imshow(wordcloud, interpolation='bilinear')
+                    ax.axis('off')
+                    ax.set_title("Word Cloud (Raw Text)", fontsize=16, pad=20)
+                    st.pyplot(fig)
+                    st.info("📝 This word cloud shows all available text without filtering")
+                except Exception as e:
+                    st.error(f"Failed to create word cloud: {str(e)}")
+            else:
+                st.info("📝 No text content available for word cloud")
+        else:
+            st.info("📝 No comments available for word cloud")
         return
     
     # Generate word cloud with optional Arabic shaping
@@ -1620,15 +1648,29 @@ def main():
                 # If no reaction breakdown, show simple metrics
                 st.info("Detailed reaction data not available for this post")
             
-            # Word cloud from comments
-            st.markdown("#### 💬 Comments Word Cloud")
+            # Show comments directly
+            st.markdown("#### 💬 Comments")
             comments_list = selected_post.get('comments_list', [])
             
-            # Extract text from comments (handle various formats)
-            comment_texts = []
-            
             # Check if comments_list is actually a list, not just a count
-            if isinstance(comments_list, list):
+            if isinstance(comments_list, list) and len(comments_list) > 0:
+                # Show first 10 comments
+                display_comments = comments_list[:10]
+                for i, comment in enumerate(display_comments, 1):
+                    if isinstance(comment, str):
+                        st.markdown(f"**{i}.** {comment}")
+                    elif isinstance(comment, dict):
+                        comment_text = comment.get('text', comment.get('comment', comment.get('message', str(comment))))
+                        comment_author = comment.get('author', comment.get('name', 'Unknown'))
+                        st.markdown(f"**{i}.** *{comment_author}*: {comment_text}")
+                    else:
+                        st.markdown(f"**{i}.** {comment}")
+                
+                if len(comments_list) > 10:
+                    st.info(f"Showing first 10 of {len(comments_list)} comments")
+                
+                # Extract text for word cloud
+                comment_texts = []
                 for comment in comments_list:
                     if isinstance(comment, str):
                         comment_texts.append(comment)
@@ -1636,12 +1678,19 @@ def main():
                         text = comment.get('text') or comment.get('comment') or comment.get('message', '')
                         if text:
                             comment_texts.append(text)
+                            
             elif isinstance(comments_list, int):
                 st.info(f"📊 Comments count: {comments_list}")
-                st.warning("💡 **To see comment word clouds:** Enable 'Fetch Detailed Comments' in the sidebar and re-analyze the page.")
-                st.info("This will use the Facebook Comments Scraper to extract actual comment text for analysis.")
+                st.warning("💡 **To see actual comments:** Enable 'Fetch Detailed Comments' in the sidebar and re-analyze the page.")
+                st.info("This will use the Facebook Comments Scraper to extract actual comment text.")
+                comment_texts = []
             else:
-                st.info("No comment data available for word cloud.")
+                st.info("No comments available for this post")
+                comment_texts = []
+            
+            # Word cloud from comments
+            if comment_texts:
+                st.markdown("#### 💬 Comments Word Cloud")
             
             if comment_texts:
                 create_wordcloud(comment_texts)

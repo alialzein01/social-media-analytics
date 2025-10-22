@@ -284,24 +284,52 @@ class PhraseWordCloudGenerator:
         content = content_data['content']
         
         if not content:
-            # Create empty plot with more helpful message
-            fig, ax = plt.subplots(figsize=(12, 6))
-            ax.text(0.5, 0.7, 'No meaningful content found', 
-                   ha='center', va='center', fontsize=16, color='gray', weight='bold')
-            ax.text(0.5, 0.5, 'This could be because:', 
-                   ha='center', va='center', fontsize=12, color='gray')
-            ax.text(0.5, 0.4, '• Comments are too short or contain only common words', 
-                   ha='center', va='center', fontsize=10, color='gray')
-            ax.text(0.5, 0.35, '• Comments are in a language not well supported', 
-                   ha='center', va='center', fontsize=10, color='gray')
-            ax.text(0.5, 0.3, '• Comments contain mostly emojis or special characters', 
-                   ha='center', va='center', fontsize=10, color='gray')
-            ax.text(0.5, 0.2, 'Try using the simple word cloud option in settings', 
-                   ha='center', va='center', fontsize=10, color='blue', style='italic')
-            ax.set_xlim(0, 1)
-            ax.set_ylim(0, 1)
-            ax.axis('off')
-            return fig, ax
+            # Create a word cloud with raw text instead of showing error
+            raw_text = " ".join(texts)
+            if raw_text.strip():
+                # Create a simple word cloud with all available text
+                try:
+                    from wordcloud import WordCloud
+                    wordcloud = WordCloud(
+                        width=800, height=400,
+                        background_color='white',
+                        max_words=50,
+                        colormap='viridis'
+                    ).generate(raw_text)
+                    
+                    fig, ax = plt.subplots(figsize=(12, 6))
+                    ax.imshow(wordcloud, interpolation='bilinear')
+                    ax.axis('off')
+                    ax.set_title("Word Cloud (Raw Text - No Filtering)", fontsize=16, pad=20)
+                    return fig, ax
+                except Exception as e:
+                    # Fallback to error message if word cloud creation fails
+                    fig, ax = plt.subplots(figsize=(12, 6))
+                    ax.text(0.5, 0.7, 'No meaningful content found', 
+                           ha='center', va='center', fontsize=16, color='gray', weight='bold')
+                    ax.text(0.5, 0.5, 'This could be because:', 
+                           ha='center', va='center', fontsize=12, color='gray')
+                    ax.text(0.5, 0.4, '• Comments are too short or contain only common words', 
+                           ha='center', va='center', fontsize=10, color='gray')
+                    ax.text(0.5, 0.35, '• Comments are in a language not well supported', 
+                           ha='center', va='center', fontsize=10, color='gray')
+                    ax.text(0.5, 0.3, '• Comments contain mostly emojis or special characters', 
+                           ha='center', va='center', fontsize=10, color='gray')
+                    ax.text(0.5, 0.2, 'Try using the simple word cloud option in settings', 
+                           ha='center', va='center', fontsize=10, color='blue', style='italic')
+                    ax.set_xlim(0, 1)
+                    ax.set_ylim(0, 1)
+                    ax.axis('off')
+                    return fig, ax
+            else:
+                # No text at all
+                fig, ax = plt.subplots(figsize=(12, 6))
+                ax.text(0.5, 0.5, 'No text content available', 
+                       ha='center', va='center', fontsize=16, color='gray', weight='bold')
+                ax.set_xlim(0, 1)
+                ax.set_ylim(0, 1)
+                ax.axis('off')
+                return fig, ax
         
         # Prepare text for display (handle Arabic shaping)
         display_content = {}

@@ -35,22 +35,72 @@ ARABIC_DIACRITICS = re.compile("""
         ـ     # Tatwil/Kashida
     """, re.VERBOSE)
 
-# Extended stopwords for phrase filtering
+# Comprehensive stopwords for phrase filtering
+ENGLISH_STOPWORDS = {
+    'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
+    'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are', 'were', 'be', 'been',
+    'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should',
+    'may', 'might', 'must', 'can', 'shall', 'this', 'that', 'these', 'those',
+    'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them',
+    'my', 'your', 'his', 'her', 'its', 'our', 'their', 'mine', 'yours', 'hers', 'ours', 'theirs',
+    'am', 'is', 'are', 'was', 'were', 'being', 'been', 'have', 'has', 'had', 'having',
+    'do', 'does', 'did', 'doing', 'will', 'would', 'could', 'should', 'may', 'might', 'must',
+    'here', 'there', 'where', 'when', 'why', 'how', 'all', 'any', 'both', 'each', 'few',
+    'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same',
+    'so', 'than', 'too', 'very', 'just', 'now', 'then', 'up', 'down', 'out', 'off',
+    'over', 'under', 'again', 'further', 'once', 'twice', 'thrice'
+}
+
 ARABIC_STOPWORDS = {
     'في', 'من', 'إلى', 'على', 'هذا', 'هذه', 'ذلك', 'التي', 'الذي',
     'أن', 'أو', 'لا', 'نعم', 'كان', 'يكون', 'ما', 'هل', 'قد', 'لقد',
     'عن', 'مع', 'بعد', 'قبل', 'عند', 'كل', 'بين', 'حتى', 'لكن', 'ثم',
     'و', 'أو', 'لم', 'لن', 'إن', 'أن', 'كما', 'لماذا', 'كيف', 'أين',
-    'متى', 'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
-    'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are', 'were', 'be', 'been',
-    'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should'
+    'متى', 'أين', 'متى', 'كيف', 'لماذا', 'أي', 'أيها', 'أيتها', 'هؤلاء',
+    'هذا', 'هذه', 'ذلك', 'تلك', 'هؤلاء', 'أولئك', 'التي', 'الذي', 'اللذان',
+    'اللتان', 'الذين', 'اللاتي', 'اللائي', 'اللذين', 'اللتين'
 }
+
+# Combined stopwords
+ALL_STOPWORDS = ENGLISH_STOPWORDS | ARABIC_STOPWORDS
 
 # Common meaningless phrases to filter out
 MEANINGLESS_PHRASES = {
     'في في', 'من من', 'على على', 'هذا هذا', 'هذه هذه',
     'the the', 'and and', 'or or', 'but but', 'in in', 'on on',
     'at at', 'to to', 'for for', 'of of', 'with with', 'by by'
+}
+
+# Important sentiment phrases that should be preserved as single units
+SENTIMENT_PHRASES = {
+    # English sentiment phrases
+    'thank you', 'very good', 'very bad', 'not good', 'not bad', 'so good', 'so bad',
+    'really good', 'really bad', 'pretty good', 'pretty bad', 'quite good', 'quite bad',
+    'absolutely amazing', 'absolutely terrible', 'totally awesome', 'totally awful',
+    'love it', 'hate it', 'like it', 'dislike it', 'enjoy it', 'enjoyed it',
+    'great job', 'good job', 'bad job', 'nice work', 'excellent work', 'poor work',
+    'well done', 'good work', 'bad work', 'amazing work', 'terrible work',
+    'highly recommend', 'strongly recommend', 'definitely recommend', 'would recommend',
+    'highly rated', 'well rated', 'poorly rated', 'badly rated',
+    'top quality', 'high quality', 'low quality', 'poor quality', 'excellent quality',
+    'worth it', 'not worth it', 'worthless', 'valuable', 'useless', 'helpful',
+    'user friendly', 'easy to use', 'hard to use', 'difficult to use',
+    'fast delivery', 'slow delivery', 'quick response', 'slow response',
+    'customer service', 'great service', 'poor service', 'excellent service',
+    'best ever', 'worst ever', 'never again', 'always good', 'always bad',
+    
+    # Arabic sentiment phrases
+    'شكراً لك', 'شكرا لك', 'شكراً', 'شكرا', 'مشكور', 'مشكورة',
+    'جيد جداً', 'جيد جدا', 'ممتاز جداً', 'ممتاز جدا', 'رائع جداً', 'رائع جدا',
+    'سيء جداً', 'سيء جدا', 'مروع جداً', 'مروع جدا', 'فظيع جداً', 'فظيع جدا',
+    'ليس جيد', 'ليس سيء', 'ليس ممتاز', 'ليس رائع', 'ليس مروع',
+    'أحب هذا', 'أكره هذا', 'أعجبني', 'لم يعجبني', 'استمتعت', 'لم أستمتع',
+    'عمل رائع', 'عمل جيد', 'عمل سيء', 'عمل ممتاز', 'عمل مروع',
+    'خدمة ممتازة', 'خدمة جيدة', 'خدمة سيئة', 'خدمة رائعة', 'خدمة مروعة',
+    'جودة عالية', 'جودة منخفضة', 'جودة ممتازة', 'جودة سيئة',
+    'يستحق', 'لا يستحق', 'مفيد', 'غير مفيد', 'قيم', 'عديم القيمة',
+    'سهل الاستخدام', 'صعب الاستخدام', 'سريع', 'بطيء', 'ممتاز', 'مروع',
+    'أفضل شيء', 'أسوأ شيء', 'أبداً مرة أخرى', 'دائماً جيد', 'دائماً سيء'
 }
 
 class PhraseExtractor:
@@ -101,20 +151,70 @@ class PhraseExtractor:
         
         return text
     
+    def preserve_sentiment_phrases(self, text: str) -> tuple:
+        """
+        Pre-process text to preserve important sentiment phrases as single units.
+        
+        This method replaces sentiment phrases with placeholders to prevent
+        them from being split during tokenization.
+        """
+        if not text:
+            return "", {}
+        
+        # Create a mapping of phrases to placeholders
+        phrase_placeholders = {}
+        processed_text = text.lower()
+        
+        # Sort phrases by length (longest first) to avoid partial replacements
+        sorted_phrases = sorted(SENTIMENT_PHRASES, key=len, reverse=True)
+        
+        for i, phrase in enumerate(sorted_phrases):
+            if phrase in processed_text:
+                placeholder = f"__SENTIMENT_PHRASE_{i}__"
+                phrase_placeholders[placeholder] = phrase
+                processed_text = processed_text.replace(phrase, placeholder)
+        
+        return processed_text, phrase_placeholders
+    
+    def restore_sentiment_phrases(self, tokens: List[str], phrase_placeholders: Dict[str, str]) -> List[str]:
+        """
+        Restore sentiment phrases from placeholders after tokenization.
+        """
+        restored_tokens = []
+        
+        for token in tokens:
+            if token in phrase_placeholders:
+                # Replace placeholder with the original phrase
+                phrase = phrase_placeholders[token]
+                restored_tokens.append(phrase)
+            else:
+                restored_tokens.append(token)
+        
+        return restored_tokens
+    
     def tokenize_text(self, text: str) -> List[str]:
-        """Tokenize text into words, filtering stopwords."""
-        text = self.clean_text(text)
-        tokens = TOKEN_RE.findall(text)
+        """Tokenize text into words, filtering stopwords and preserving sentiment phrases."""
+        # First preserve sentiment phrases
+        processed_text, phrase_placeholders = self.preserve_sentiment_phrases(text)
+        
+        # Clean the text
+        processed_text = self.clean_text(processed_text)
+        
+        # Tokenize
+        tokens = TOKEN_RE.findall(processed_text)
         
         # Filter stopwords and short tokens
         filtered_tokens = [
             token.lower() for token in tokens 
-            if (token.lower() not in ARABIC_STOPWORDS and 
+            if (token.lower() not in ALL_STOPWORDS and 
                 len(token) > 2 and 
                 not token.isdigit())
         ]
         
-        return filtered_tokens
+        # Restore sentiment phrases
+        restored_tokens = self.restore_sentiment_phrases(filtered_tokens, phrase_placeholders)
+        
+        return restored_tokens
     
     def extract_ngrams(self, tokens: List[str], n: int) -> List[Tuple[str, ...]]:
         """Extract n-grams from tokenized text."""
