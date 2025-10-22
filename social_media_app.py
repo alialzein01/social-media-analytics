@@ -155,7 +155,6 @@ def extract_keywords_nlp(comments: List[str], top_n: int = 50) -> Dict[str, int]
     all_text = ' '.join(comments)
     
     # Clean the text more thoroughly
-    import re
     # Remove URLs, mentions, hashtags for better keyword extraction
     cleaned_text = re.sub(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', '', all_text)
     cleaned_text = re.sub(r'@\w+', '', cleaned_text)  # Remove mentions
@@ -192,10 +191,6 @@ def extract_keywords_nlp(comments: List[str], top_n: int = 50) -> Dict[str, int]
     
     # Return top N most frequent words
     return dict(word_freq.most_common(top_n))
-
-# Pre-compile sentiment word sets for performance
-POSITIVE_WORDS = frozenset(['جيد', 'ممتاز', 'رائع', 'حلو', 'good', 'great', 'love', '❤️', '😊', '👍'])
-NEGATIVE_WORDS = frozenset(['سيء', 'سئ', 'bad', 'hate', 'terrible', '😢', '😡', '👎'])
 
 def analyze_sentiment_placeholder(text: str) -> str:
     """
@@ -1553,8 +1548,6 @@ def create_instagram_monthly_insights(posts: List[Dict], platform: str):
 
 def analyze_emojis_in_comments(comments: List[str]) -> Dict[str, int]:
     """Analyze emojis in comments and return frequency count."""
-    import re
-    
     # Emoji regex pattern
     emoji_pattern = re.compile(
         "["
@@ -1924,7 +1917,7 @@ def main():
                 try:
                     timestamp_part = filename.split('_', 1)[1].replace('.json', '').replace('.csv', '')
                     display_name = f"{timestamp_part} ({'JSON' if file_path.endswith('.json') else 'CSV'})"
-                except:
+                except (IndexError, ValueError, AttributeError):
                     display_name = filename
                 file_options.append((display_name, file_path))
             
@@ -2021,6 +2014,9 @@ def main():
             st.error(f"Invalid {platform} URL. Please check and try again.")
             st.stop()
         
+        # ═══════════════════════════════════════════════════════════
+        # INSTAGRAM WORKFLOW - STEP 1: FETCH POSTS (First Scraper)
+        # ═══════════════════════════════════════════════════════════
         # Fetch data
         with st.spinner(f"Fetching data from {platform}..."):
             raw_data = fetch_apify_data(platform, url, apify_token, max_posts, from_date, to_date)
@@ -2035,6 +2031,9 @@ def main():
         
         st.info(f"✅ Successfully processed {len(normalized_data)} posts")
         
+        # ═══════════════════════════════════════════════════════════
+        # INSTAGRAM WORKFLOW - STEP 2: FETCH COMMENTS (Second Actor)
+        # ═══════════════════════════════════════════════════════════
         # Phase 2: Fetch detailed comments if requested (Facebook and Instagram)
         if fetch_detailed_comments:
             if platform == "Facebook":
@@ -2052,7 +2051,9 @@ def main():
             elif platform == "Instagram":
                 st.info("💡 Note: Instagram Comments Scraper will extract comments from all posts. This may take some time.")
                 try:
-                    # Extract post URLs from Instagram posts
+                    # ─────────────────────────────────────────────────────
+                    # Extract post URLs from already-fetched posts (Step 1)
+                    # ─────────────────────────────────────────────────────
                     post_urls = []
                     for post in normalized_data:
                         if post.get('post_id'):
@@ -2063,11 +2064,15 @@ def main():
                     
                     if post_urls:
                         st.info(f"🔄 Found {len(post_urls)} Instagram posts to extract comments from...")
-                        # Scrape Instagram comments
+                        # ─────────────────────────────────────────────────────
+                        # Call second actor: Instagram Comments Scraper
+                        # ─────────────────────────────────────────────────────
                         comments_data = scrape_instagram_comments_batch(post_urls, apify_token, 25)  # Use 25 comments per post
                         
                         if comments_data:
-                            # Assign comments to posts
+                            # ─────────────────────────────────────────────────────
+                            # Assign comments back to their respective posts
+                            # ─────────────────────────────────────────────────────
                             normalized_data = assign_instagram_comments_to_posts(normalized_data, comments_data)
                             st.success(f"✅ Successfully assigned {len(comments_data)} comments to posts")
                         else:
@@ -2143,6 +2148,9 @@ def main():
         df[numeric_cols] = df[numeric_cols].apply(pd.to_numeric, errors='coerce').fillna(0).astype(int)
         df['text'] = df['text'].fillna("").astype(str)
         
+        # ═══════════════════════════════════════════════════════════
+        # INSTAGRAM WORKFLOW - STEP 3: SHOW MONTHLY OVERVIEW
+        # ═══════════════════════════════════════════════════════════
         # Enhanced KPI Cards for Facebook Data (wrapped in expander)
         title_section = "📈 Monthly Overview"
         expanded = st.session_state.get('selected_toc') == title_section
@@ -2323,6 +2331,9 @@ def main():
             width='stretch',
         )
         
+        # ═══════════════════════════════════════════════════════════
+        # INSTAGRAM WORKFLOW - STEP 4: SHOW POST DETAILS ANALYSIS
+        # ═══════════════════════════════════════════════════════════
         # Post selection
         st.markdown("### 🎯 Select a Post for Detailed Analysis")
         post_options = []
