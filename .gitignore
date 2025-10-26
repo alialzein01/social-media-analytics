@@ -93,3 +93,10 @@ celerybeat.pid
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# Project data outputs
+data/processed/
+data/raw/
+
+# Streamlit caches
+.streamlit/**/cache/
