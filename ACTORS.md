@@ -2,20 +2,29 @@
 
 This document lists each Apify actor the app calls, grouped by platform, with IDs/names and where they are used in the code.
 
-## Facebook
+## Facebook (3-Actor Workflow)
 
-- Posts Scraper
+### 1. Posts Scraper
+  - **Identifier:** `apify~facebook-posts-scraper` (KoJrdxJCTtpon81KY)
+  - **Purpose:** Fetches posts from Facebook pages
+  - **Input:** `startUrls`, `resultsLimit`, `proxy`
+  - **Output:** Posts with basic engagement data
+  - **Used in:** `app/services/data_fetcher.py` (ACTOR_CONFIG["Facebook"])
 
-  - Identifier: `zanTWNqB3Poz44qdY`
-  - Notes: Alias in comments refers to `scraper_one/facebook-posts-scraper` (better reactions data)
-  - Used in: `social_media_app.py` (ACTOR_CONFIG["Facebook"])
+### 2. Reactions Scraper
+  - **Identifier:** `scraper_one~facebook-reactions-scraper` (ZwTmldxYpNvDnWW5f)
+  - **Purpose:** Fetches detailed reaction breakdown (Like, Love, Haha, Wow, Sad, Angry)
+  - **Input:** `postUrls` (array), `resultsLimit`
+  - **Output:** Individual reactions (aggregated by app into counts)
+  - **Used in:** `app/services/__init__.py` (FACEBOOK_REACTIONS_ACTOR_ID; `fetch_facebook_reactions`)
 
-- Comments Scrapers (fallback sequence)
-  - `us5srxAYnsrkgUv2v` (primary example)
-  - `apify/facebook-comments-scraper`
-  - `facebook-comments-scraper`
-  - `alien_force/facebook-posts-comments-scraper`
-  - Used in: `social_media_app.py` (FACEBOOK_COMMENTS_ACTOR_IDS; `fetch_post_comments`, `fetch_comments_for_posts_batch`)
+### 3. Comments Scrapers (fallback sequence)
+  - `us5srxAYnsrkgUv2v` (primary)
+  - `apify/facebook-comments-scraper` (fallback 1)
+  - `facebook-comments-scraper` (fallback 2)
+  - `alien_force/facebook-posts-comments-scraper` (fallback 3)
+  - **Purpose:** Fetches comment text for word clouds and sentiment analysis
+  - **Used in:** `app/services/data_fetcher.py` (FACEBOOK_COMMENTS_ACTOR_IDS; `_fetch_facebook_comments_batch`)
 
 ## Instagram
 

@@ -348,7 +348,7 @@ class DataFetchingService:
         to_date: Optional[str] = None
     ) -> Optional[List[Dict]]:
         """
-        Fetch complete dataset with posts and comments.
+        Fetch complete dataset with posts, reactions, and comments.
 
         Args:
             adapter: Platform adapter instance
@@ -360,7 +360,7 @@ class DataFetchingService:
             to_date: End date filter
 
         Returns:
-            Complete dataset with posts and comments
+            Complete dataset with posts, reactions, and comments
         """
         # Step 1: Fetch posts
         posts = self.fetch_platform_posts(
@@ -374,7 +374,11 @@ class DataFetchingService:
         if not posts:
             return None
 
-        # Step 2: Fetch comments if requested
+        # Step 2: Fetch detailed reactions for Facebook
+        if adapter.platform_name == "Facebook":
+            posts = self.fetch_facebook_reactions(posts)
+
+        # Step 3: Fetch comments if requested
         if fetch_comments:
             posts = self.fetch_post_comments(
                 adapter=adapter,
@@ -383,3 +387,125 @@ class DataFetchingService:
             )
 
         return posts
+    
+    def fetch_facebook_reactions(self, posts: List[Dict]) -> List[Dict]:
+        """
+        Fetch detailed reaction breakdown for Facebook posts.
+        
+        Uses scraper_one~facebook-reactions-scraper to get individual reactions,
+        then aggregates them by post and reaction type.
+        
+        NOTE: Actor only accepts max 5 post URLs per request, so we batch them.
+        
+        Args:
+            posts: List of Facebook posts with URLs
+            
+        Returns:
+            Posts with detailed reaction counts added
+        """
+        if not posts:
+            return posts
+        
+        # Extract post URLs
+        post_urls = [p.get('post_url') for p in posts if p.get('post_url')]
+        
+        if not post_urls:
+            st.warning("⚠️ No post URLs found for reaction fetching")
+            return posts
+        
+        st.info(f"🎭 Fetching detailed reactions for {len(post_urls)} posts (batched in groups of 5)...")
+        
+        # Batch post URLs into chunks of 5 (actor limit)
+        batch_size = 5
+        all_reactions = []
+        
+        # Import actor ID
+        from app.services.data_fetcher import FACEBOOK_REACTIONS_ACTOR_ID
+        
+        # Process in batches
+        total_batches = (len(post_urls) + batch_size - 1) // batch_size
+        for i in range(0, len(post_urls), batch_size):
+            batch_urls = post_urls[i:i+batch_size]
+            batch_num = i // batch_size + 1
+            
+            st.info(f"🔄 Processing reactions batch {batch_num}/{total_batches} ({len(batch_urls)} posts)...")
+            
+            try:
+                # Build reactions actor input for this batch
+                reactions_input = {
+                    "postUrls": batch_urls,
+                    "resultsLimit": 500  # Optimized: 500 reactions per batch
+                }
+                
+                # Call reactions scraper actor
+                run = self.apify.client.actor(FACEBOOK_REACTIONS_ACTOR_ID).call(
+                    run_input=reactions_input
+                )
+                
+                # Fetch reaction data for this batch
+                batch_reactions = []
+                for item in self.apify.client.dataset(run["defaultDatasetId"]).iterate_items():
+                    batch_reactions.append(item)
+                
+                all_reactions.extend(batch_reactions)
+                st.success(f"✅ Batch {batch_num}: Fetched {len(batch_reactions)} reactions")
+                
+            except Exception as e:
+                st.warning(f"⚠️ Batch {batch_num} failed: {str(e)}")
+                st.info("Continuing with next batch...")
+                continue
+        
+        if not all_reactions:
+            st.info("ℹ️ No reactions data returned from any batch")
+            return posts
+        
+        st.success(f"✅ Total: Fetched {len(all_reactions)} individual reactions from {len(post_urls)} posts")
+        
+        # Aggregate reactions by post URL and type
+        reactions_by_post = self._aggregate_reactions(all_reactions)
+        
+        # Merge reactions back into posts
+        for post in posts:
+            post_url = post.get('post_url')
+            if post_url and post_url in reactions_by_post:
+                post['reactions'] = reactions_by_post[post_url]
+                # Update total likes count
+                post['likes'] = sum(reactions_by_post[post_url].values())
+        
+        st.success(f"✅ Added detailed reaction breakdown to posts")
+        
+        return posts
+    
+    def _aggregate_reactions(self, reactions_data: List[Dict]) -> Dict[str, Dict[str, int]]:
+        """
+        Aggregate individual reactions into counts by post and type.
+        
+        Args:
+            reactions_data: List of individual reaction objects from reactions scraper
+            
+        Returns:
+            Dict mapping post URL to reaction type counts
+            {
+                "post_url": {
+                    "like": 100,
+                    "love": 50,
+                    "haha": 30,
+                    "wow": 20,
+                    "sad": 10,
+                    "angry": 5
+                }
+            }
+        """
+        from collections import defaultdict
+        
+        aggregated = defaultdict(lambda: defaultdict(int))
+        
+        for reaction in reactions_data:
+            post_url = reaction.get('postUrl', '')
+            reaction_type = reaction.get('reactionType', '').lower()
+            
+            if post_url and reaction_type:
+                aggregated[post_url][reaction_type] += 1
+        
+        # Convert defaultdict to regular dict
+        return {url: dict(counts) for url, counts in aggregated.items()}

@@ -1,0 +1,172 @@
+{
+  "test_config": {
+    "url": "https://facebook.com/nasa",
+    "max_posts": 5,
+    "fetch_comments": false,
+    "max_comments_per_post": 10,
+    "from_date": "2025-10-01",
+    "to_date": null
+  },
+  "passed": [
+    {
+      "test": "Environment: APIFY_TOKEN",
+      "message": "Token found (length: 46)",
+      "time": "2025-10-31T15:07:58.799777"
+    },
+    {
+      "test": "Environment: Python Version",
+      "message": "Python 3.13.7",
+      "time": "2025-10-31T15:07:58.799786"
+    },
+    {
+      "test": "Adapter: Initialization",
+      "message": "FacebookAdapter created successfully",
+      "time": "2025-10-31T15:07:58.799798"
+    },
+    {
+      "test": "Adapter: Method validate_url",
+      "message": "Method exists",
+      "time": "2025-10-31T15:07:58.799803"
+    },
+    {
+      "test": "Adapter: Method build_actor_input",
+      "message": "Method exists",
+      "time": "2025-10-31T15:07:58.799808"
+    },
+    {
+      "test": "Adapter: Method normalize_post",
+      "message": "Method exists",
+      "time": "2025-10-31T15:07:58.799812"
+    },
+    {
+      "test": "Adapter: Method normalize_comment",
+      "message": "Method exists",
+      "time": "2025-10-31T15:07:58.799815"
+    },
+    {
+      "test": "Adapter: Method get_actor_id",
+      "message": "Method exists",
+      "time": "2025-10-31T15:07:58.799834"
+    },
+    {
+      "test": "URL Validation: Valid NASA Facebook URL",
+      "message": "Correctly identified as valid",
+      "time": "2025-10-31T15:07:58.799845"
+    },
+    {
+      "test": "URL Validation: Valid Facebook URL",
+      "message": "Correctly identified as valid",
+      "time": "2025-10-31T15:07:58.799850"
+    },
+    {
+      "test": "URL Validation: Valid Facebook URL with www",
+      "message": "Correctly identified as valid",
+      "time": "2025-10-31T15:07:58.799854"
+    },
+    {
+      "test": "URL Validation: Invalid - Instagram URL",
+      "message": "Correctly identified as invalid",
+      "time": "2025-10-31T15:07:58.799857"
+    },
+    {
+      "test": "URL Validation: Invalid - Not a URL",
+      "message": "Correctly identified as invalid",
+      "time": "2025-10-31T15:07:58.799861"
+    },
+    {
+      "test": "URL Validation: Invalid - Empty string",
+      "message": "Correctly identified as invalid",
+      "time": "2025-10-31T15:07:58.799865"
+    },
+    {
+      "test": "Actor Input: fromDate",
+      "message": "Date parameter set: 2025-10-01",
+      "time": "2025-10-31T15:07:58.799955"
+    },
+    {
+      "test": "Data Fetching: Posts",
+      "message": "Fetched 3 posts",
+      "time": "2025-10-31T15:08:17.380201"
+    },
+    {
+      "test": "Post Structure: post_id",
+      "message": "Found: str",
+      "time": "2025-10-31T15:08:17.380381"
+    },
+    {
+      "test": "Post Structure: published_at",
+      "message": "Found: Timestamp",
+      "time": "2025-10-31T15:08:17.380388"
+    },
+    {
+      "test": "Post Structure: text",
+      "message": "Found: str",
+      "time": "2025-10-31T15:08:17.380394"
+    },
+    {
+      "test": "Post Structure: likes",
+      "message": "Found: int",
+      "time": "2025-10-31T15:08:17.380399"
+    },
+    {
+      "test": "Post Structure: comments_count",
+      "message": "Found: int",
+      "time": "2025-10-31T15:08:17.380403"
+    },
+    {
+      "test": "Post Structure: shares_count",
+      "message": "Found: int",
+      "time": "2025-10-31T15:08:17.380407"
+    },
+    {
+      "test": "Post Structure: post_url",
+      "message": "Found: str",
+      "time": "2025-10-31T15:08:17.380411"
+    },
+    {
+      "test": "NLP: Phrase Extraction",
+      "message": "Extracted 0 phrases",
+      "time": "2025-10-31T15:08:17.381372"
+    },
+    {
+      "test": "NLP: Sentiment Analysis",
+      "message": "Sample sentiment: neutral",
+      "time": "2025-10-31T15:08:17.381665"
+    }
+  ],
+  "failed": [
+    {
+      "test": "Actor Input: pageUrls",
+      "error": "Missing required key",
+      "time": "2025-10-31T15:07:58.799875"
+    },
+    {
+      "test": "Actor Input: resultsLimit",
+      "error": "Missing required key",
+      "time": "2025-10-31T15:07:58.799881"
+    },
+    {
+      "test": "Post Structure: platform",
+      "error": "Required field missing",
+      "time": "2025-10-31T15:08:17.380369"
+    },
+    {
+      "test": "Analytics: Calculations",
+      "error": "unsupported format string passed to dict.__format__\nTraceback (most recent call last):\n  File \"/Users/ali/Desktop/claudeProject/scripts/test_facebook.py\", line 400, in test_analytics\n    f\"Calculated: {total_engagement:,}\"\n                  ^^^^^^^^^^^^^^^^^^^^\nTypeError: unsupported format string passed to dict.__format__\n",
+      "time": "2025-10-31T15:08:17.380806"
+    }
+  ],
+  "warnings": [
+    {
+      "test": "Post Structure: Validation",
+      "message": "3 posts missing some fields",
+      "time": "2025-10-31T15:08:17.380420"
+    },
+    {
+      "test": "NLP: Text Content",
+      "message": "No comments available for NLP testing",
+      "time": "2025-10-31T15:08:17.380831"
+    }
+  ],
+  "duration": 18.582109
+}

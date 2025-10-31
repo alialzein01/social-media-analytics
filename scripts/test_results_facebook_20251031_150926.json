@@ -1,0 +1,181 @@
+{
+  "test_config": {
+    "url": "https://facebook.com/nasa",
+    "max_posts": 5,
+    "fetch_comments": false,
+    "max_comments_per_post": 10,
+    "from_date": "2025-10-01",
+    "to_date": null
+  },
+  "passed": [
+    {
+      "test": "Environment: APIFY_TOKEN",
+      "message": "Token found (length: 46)",
+      "time": "2025-10-31T15:09:06.787853"
+    },
+    {
+      "test": "Environment: Python Version",
+      "message": "Python 3.13.7",
+      "time": "2025-10-31T15:09:06.787860"
+    },
+    {
+      "test": "Adapter: Initialization",
+      "message": "FacebookAdapter created successfully",
+      "time": "2025-10-31T15:09:06.787866"
+    },
+    {
+      "test": "Adapter: Method validate_url",
+      "message": "Method exists",
+      "time": "2025-10-31T15:09:06.787869"
+    },
+    {
+      "test": "Adapter: Method build_actor_input",
+      "message": "Method exists",
+      "time": "2025-10-31T15:09:06.787871"
+    },
+    {
+      "test": "Adapter: Method normalize_post",
+      "message": "Method exists",
+      "time": "2025-10-31T15:09:06.787873"
+    },
+    {
+      "test": "Adapter: Method normalize_comment",
+      "message": "Method exists",
+      "time": "2025-10-31T15:09:06.787876"
+    },
+    {
+      "test": "Adapter: Method get_actor_id",
+      "message": "Method exists",
+      "time": "2025-10-31T15:09:06.787878"
+    },
+    {
+      "test": "URL Validation: Valid NASA Facebook URL",
+      "message": "Correctly identified as valid",
+      "time": "2025-10-31T15:09:06.787882"
+    },
+    {
+      "test": "URL Validation: Valid Facebook URL",
+      "message": "Correctly identified as valid",
+      "time": "2025-10-31T15:09:06.787885"
+    },
+    {
+      "test": "URL Validation: Valid Facebook URL with www",
+      "message": "Correctly identified as valid",
+      "time": "2025-10-31T15:09:06.787887"
+    },
+    {
+      "test": "URL Validation: Invalid - Instagram URL",
+      "message": "Correctly identified as invalid",
+      "time": "2025-10-31T15:09:06.787889"
+    },
+    {
+      "test": "URL Validation: Invalid - Not a URL",
+      "message": "Correctly identified as invalid",
+      "time": "2025-10-31T15:09:06.787890"
+    },
+    {
+      "test": "URL Validation: Invalid - Empty string",
+      "message": "Correctly identified as invalid",
+      "time": "2025-10-31T15:09:06.787892"
+    },
+    {
+      "test": "Actor Input: URLs",
+      "message": "Found URL configuration",
+      "time": "2025-10-31T15:09:06.787897"
+    },
+    {
+      "test": "Actor Input: Results Limit",
+      "message": "Found limit configuration",
+      "time": "2025-10-31T15:09:06.787899"
+    },
+    {
+      "test": "Actor Input: fromDate",
+      "message": "Date parameter set: 2025-10-01",
+      "time": "2025-10-31T15:09:06.787901"
+    },
+    {
+      "test": "Data Fetching: Posts",
+      "message": "Fetched 3 posts",
+      "time": "2025-10-31T15:09:26.770164"
+    },
+    {
+      "test": "Post Structure: post_id",
+      "message": "Found: str",
+      "time": "2025-10-31T15:09:26.770265"
+    },
+    {
+      "test": "Post Structure: published_at",
+      "message": "Found: Timestamp",
+      "time": "2025-10-31T15:09:26.770270"
+    },
+    {
+      "test": "Post Structure: text",
+      "message": "Found: str",
+      "time": "2025-10-31T15:09:26.770273"
+    },
+    {
+      "test": "Post Structure: likes",
+      "message": "Found: int",
+      "time": "2025-10-31T15:09:26.770275"
+    },
+    {
+      "test": "Post Structure: comments_count",
+      "message": "Found: int",
+      "time": "2025-10-31T15:09:26.770278"
+    },
+    {
+      "test": "Post Structure: shares_count",
+      "message": "Found: int",
+      "time": "2025-10-31T15:09:26.770280"
+    },
+    {
+      "test": "Post Structure: post_url",
+      "message": "Found: str",
+      "time": "2025-10-31T15:09:26.770282"
+    },
+    {
+      "test": "Post Structure: Validation",
+      "message": "All 3 posts have required fields",
+      "time": "2025-10-31T15:09:26.770289"
+    },
+    {
+      "test": "Analytics: Total Engagement",
+      "message": "Calculated: 26,060 (detailed breakdown available)",
+      "time": "2025-10-31T15:09:26.770317"
+    },
+    {
+      "test": "Analytics: Hashtags",
+      "message": "Found 0 unique hashtags",
+      "time": "2025-10-31T15:09:26.770452"
+    },
+    {
+      "test": "Analytics: Comment Aggregation",
+      "message": "Aggregated 0 comments",
+      "time": "2025-10-31T15:09:26.770462"
+    },
+    {
+      "test": "NLP: Phrase Extraction",
+      "message": "Extracted 0 phrases",
+      "time": "2025-10-31T15:09:26.771235"
+    },
+    {
+      "test": "NLP: Sentiment Analysis",
+      "message": "Sample sentiment: neutral",
+      "time": "2025-10-31T15:09:26.771634"
+    }
+  ],
+  "failed": [],
+  "warnings": [
+    {
+      "test": "Analytics: Emoji Analysis",
+      "message": "No comments to analyze",
+      "time": "2025-10-31T15:09:26.770473"
+    },
+    {
+      "test": "NLP: Text Content",
+      "message": "No comments available for NLP testing",
+      "time": "2025-10-31T15:09:26.770480"
+    }
+  ],
+  "duration": 19.984044
+}

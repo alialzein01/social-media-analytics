@@ -66,8 +66,46 @@ def create_json_download_button(
         st.warning("No data available to export")
         return
 
+    # Convert to JSON - ensure all datetimes / pandas Timestamps are serializable
+    def _serialize(obj: Any):
+        """Recursively convert objects to JSON-serializable types."""
+        # Primitives
+        if obj is None or isinstance(obj, (bool, int, float, str)):
+            return obj
+
+        # Datetime / pandas Timestamp
+        try:
+            import pandas as _pd
+        except Exception:
+            _pd = None
+
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+
+        if _pd is not None and isinstance(obj, _pd.Timestamp):
+            # pandas Timestamp has isoformat method
+            try:
+                return obj.isoformat()
+            except Exception:
+                return str(obj)
+
+        # Dictionaries and lists
+        if isinstance(obj, dict):
+            return {k: _serialize(v) for k, v in obj.items()}
+
+        if isinstance(obj, (list, tuple)):
+            return [_serialize(v) for v in obj]
+
+        # Fallback - try to convert to string
+        try:
+            return str(obj)
+        except Exception:
+            return None
+
+    serializable = _serialize(data)
+
     # Convert to JSON
-    json_str = json.dumps(data, indent=2, ensure_ascii=False)
+    json_str = json.dumps(serializable, indent=2, ensure_ascii=False)
 
     # Create download button
     st.download_button(

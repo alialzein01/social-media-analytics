@@ -7,6 +7,7 @@ Handles Facebook-specific data fetching, normalization, and analysis.
 
 from typing import List, Dict, Optional, Any
 import pandas as pd
+from datetime import datetime, timedelta
 from . import PlatformAdapter
 
 
@@ -23,9 +24,9 @@ class FacebookAdapter(PlatformAdapter):
     def get_actor_id(self) -> str:
         """
         Return the Apify actor ID for Facebook scraping.
-        Using the community actor for page posts.
+        Using apify~facebook-posts-scraper (KoJrdxJCTtpon81KY).
         """
-        return "apify/facebook-posts-scraper"
+        return "apify~facebook-posts-scraper"
 
     def validate_url(self, url: str) -> bool:
         """
@@ -52,22 +53,38 @@ class FacebookAdapter(PlatformAdapter):
         """
         Build Facebook actor input configuration.
 
-        Returns input dict for apify/facebook-posts-scraper.
+        Returns input dict for apify~facebook-posts-scraper.
+        Uses proper parameter names for this actor.
+        
+        Automatically fetches posts from the last 30 days if no date range specified.
         """
         actor_input = {
             "startUrls": [{"url": url}],
-            "maxPosts": max_posts,
-            "scrapeAbout": False,
-            "scrapeReviews": False,
-            "scrapeServices": False
+            "resultsLimit": max_posts,  # Correct parameter name for this actor
+            "maxRequestRetries": 10,
+            "proxy": {
+                "useApifyProxy": True,
+                "apifyProxyGroups": ["RESIDENTIAL"]  # Better reliability
+            }
         }
 
-        # Add date filters if provided
+        # Date filtering: Default to last 30 days if not specified
         if from_date:
-            actor_input["fromDate"] = from_date
+            # User provided a specific from_date
+            actor_input["onlyPostsNewerThan"] = from_date
+        else:
+            # Calculate 30 days ago from today
+            thirty_days_ago = datetime.now() - timedelta(days=30)
+            calculated_date = thirty_days_ago.strftime("%Y-%m-%d")
+            actor_input["onlyPostsNewerThan"] = calculated_date
+            # Log for user awareness
+            print(f"📅 Fetching posts from {calculated_date} to today ({datetime.now().strftime('%Y-%m-%d')})")
+        
+        # Optional: to_date parameter (if you want to limit posts older than a date)
         if to_date:
-            actor_input["toDate"] = to_date
-
+            actor_input["onlyPostsOlderThan"] = to_date
+        # Note: onlyPostsOlderThan typically not needed for "last 30 days" use case
+        
         return actor_input
 
     def normalize_post(self, raw_post: Dict) -> Dict:
