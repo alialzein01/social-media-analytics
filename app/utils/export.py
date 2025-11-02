@@ -66,8 +66,20 @@ def create_json_download_button(
         st.warning("No data available to export")
         return
 
-    # Convert to JSON
-    json_str = json.dumps(data, indent=2, ensure_ascii=False)
+    # Custom JSON encoder to handle Timestamp and other non-serializable objects
+    def json_serializer(obj):
+        """Custom JSON serializer for objects not serializable by default json code"""
+        import pandas as pd
+        if isinstance(obj, (pd.Timestamp, pd.DatetimeTZDtype)):
+            return obj.isoformat() if hasattr(obj, 'isoformat') else str(obj)
+        elif hasattr(obj, 'isoformat'):  # datetime objects
+            return obj.isoformat()
+        elif isinstance(obj, (pd.Series, pd.DataFrame)):
+            return obj.to_dict()
+        return str(obj)
+
+    # Convert to JSON with custom serializer
+    json_str = json.dumps(data, indent=2, ensure_ascii=False, default=json_serializer)
 
     # Create download button
     st.download_button(

@@ -470,9 +470,15 @@ def create_top_posts_chart(posts: List[Dict], top_n: int = 5) -> None:
         comments = post.get('comments_count', 0)
         engagement = likes + comments
 
+        # Safely handle text field (might be float/NaN)
+        text = post.get('text', '')
+        if not isinstance(text, str):
+            text = str(text) if text is not None else ''
+        text_preview = text[:100] + '...' if len(text) > 100 else text
+
         posts_with_engagement.append({
             'post_id': post.get('post_id', ''),
-            'text': post.get('text', '')[:100] + '...' if len(post.get('text', '')) > 100 else post.get('text', ''),
+            'text': text_preview,
             'likes': likes,
             'comments': comments,
             'engagement': engagement,
