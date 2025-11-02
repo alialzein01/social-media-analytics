@@ -40,7 +40,7 @@ class ApifyService:
         Fetch posts from an Apify actor.
 
         Args:
-            actor_id: Apify actor identifier (e.g., "apify/facebook-posts-scraper")
+            actor_id: Apify actor identifier (e.g., "scraper_one/facebook-posts-scraper")
             actor_input: Input configuration for the actor
             timeout: Maximum time to wait for actor run (seconds)
 

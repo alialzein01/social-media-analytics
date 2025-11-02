@@ -13,7 +13,9 @@ import re
 
 # Apify Actor Names/IDs - Main actors for fetching posts
 ACTOR_CONFIG = {
-    "Facebook": "zanTWNqB3Poz44qdY",  # Actor ID: scraper_one/facebook-posts-scraper
+    # Use the community posts scraper explicitly for Facebook posts
+    # (scraper_one/facebook-posts-scraper) — this repo only runs this posts actor.
+    "Facebook": "scraper_one/facebook-posts-scraper",
     "Instagram": "apify/instagram-scraper",
     "YouTube": "h7sDV53CddomktSi5"  # streamers~youtube-scraper
 }
@@ -23,17 +25,15 @@ YOUTUBE_COMMENTS_ACTOR_ID = "p7UMdpQnjKmmpR21D"
 
 # Actor IDs for direct calls (when needed)
 ACTOR_IDS = {
-    "Facebook": "KoJrdxJCTtpon81KY",
+    "Facebook": "scraper_one/facebook-posts-scraper",
     "Instagram": "shu8hvrXbJbY3Eb9W",
     "YouTube": "p7UMdpQnjKmmpR21D"
 }
 
 # Facebook Comments Scraper Actors (tried in order)
+# For Facebook comments we only use the official Apify comments actor.
 FACEBOOK_COMMENTS_ACTOR_IDS = [
-    "us5srxAYnsrkgUv2v",  # Primary actor
-    "apify/facebook-comments-scraper",
-    "facebook-comments-scraper",
-    "alien_force/facebook-posts-comments-scraper"
+    "apify/facebook-comments-scraper"
 ]
 
 # Instagram Comments Scraper Actors (tried in order)

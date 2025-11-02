@@ -23,9 +23,9 @@ class FacebookAdapter(PlatformAdapter):
     def get_actor_id(self) -> str:
         """
         Return the Apify actor name for Facebook scraping.
-        Using apify/facebook-posts-scraper which supports date filtering.
+        Uses the repository-standard posts actor `scraper_one/facebook-posts-scraper`.
         """
-        return "apify/facebook-posts-scraper"
+        return "scraper_one/facebook-posts-scraper"
 
     def validate_url(self, url: str) -> bool:
         """
@@ -51,12 +51,14 @@ class FacebookAdapter(PlatformAdapter):
     ) -> Dict[str, Any]:
         """
         Build Facebook actor input configuration.
-
-        Returns input dict for apify/facebook-posts-scraper.
-        Uses onlyPostsNewerThan/onlyPostsOlderThan for date filtering.
+        Build input compatible with `scraper_one/facebook-posts-scraper`.
+        This actor expects `pageUrls` (list) and `resultsLimit` (int).
+        Date filtering is not universally supported by that actor; if
+        `from_date`/`to_date` are provided they will be included where
+        supported as `onlyPostsNewerThan` / `onlyPostsOlderThan`.
         """
         actor_input = {
-            "startUrls": [url],
+            "pageUrls": [url],
             "resultsLimit": max_posts
         }
 
@@ -123,14 +125,40 @@ class FacebookAdapter(PlatformAdapter):
         """
         Normalize Facebook comment from Apify actor.
         """
+        # Normalize common key variations from different actors
+        likes = None
+        # numeric-like values may be strings in some actor outputs
+        if 'likes_count' in raw_comment:
+            likes = raw_comment.get('likes_count')
+        elif 'like_count' in raw_comment:
+            likes = raw_comment.get('like_count')
+        elif 'likesCount' in raw_comment:
+            likes = raw_comment.get('likesCount')
+
+        # try to coerce likes to int
+        try:
+            likes_count = int(likes) if likes is not None and likes != '' else 0
+        except Exception:
+            likes_count = 0
+
+        # map possible text fields
+        text = raw_comment.get('text') or raw_comment.get('message') or raw_comment.get('commentText') or raw_comment.get('comment', '')
+
+        # author name
+        author = raw_comment.get('author_name') or (raw_comment.get('from') or {}).get('name', '') or raw_comment.get('author')
+
+        # map facebookUrl -> post_url for backward compatibility
+        post_url = raw_comment.get('post_url') or raw_comment.get('facebookUrl') or raw_comment.get('facebook_url') or raw_comment.get('postUrl')
+
         return {
-            'comment_id': raw_comment.get('comment_id') or raw_comment.get('id', ''),
-            'text': raw_comment.get('text') or raw_comment.get('message', ''),
-            'author_name': raw_comment.get('author_name') or raw_comment.get('from', {}).get('name', ''),
-            'created_time': raw_comment.get('created_time') or raw_comment.get('created_at', ''),
-            'likes_count': raw_comment.get('likes_count') or raw_comment.get('like_count', 0),
-            'parent_id': raw_comment.get('parent_id', ''),
-            'replies_count': raw_comment.get('replies_count', 0)
+            'comment_id': raw_comment.get('comment_id') or raw_comment.get('id', '') or raw_comment.get('cid', ''),
+            'text': text,
+            'author_name': author if isinstance(author, str) else str(author),
+            'created_time': raw_comment.get('created_time') or raw_comment.get('created_at') or raw_comment.get('timestamp', ''),
+            'likes_count': likes_count,
+            'parent_id': raw_comment.get('parent_id', '') or raw_comment.get('replyToCid', ''),
+            'replies_count': raw_comment.get('replies_count', 0) or raw_comment.get('replyCount', 0),
+            'post_url': post_url
         }
 
     def calculate_engagement_rate(self, post: Dict) -> float:

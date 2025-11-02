@@ -4,13 +4,13 @@ Social Media Analytics Dashboard
 
 How to run:
 1. Set your Apify API token:
-   export APIFY_TOKEN=your_token_here
+    export APIFY_TOKEN=your_token_here
 
 2. Install dependencies:
-   pip install -r requirements.txt
+    pip install -r requirements.txt
 
 3. Run the app:
-   streamlit run app.py
+    streamlit run social_media_app.py
 
 This app connects to Apify actors to analyze social media posts from Facebook,
 Instagram, and YouTube for the current month.
@@ -135,9 +135,11 @@ from app.analytics import (
 
 # Apify Actor Names - Using full actor names for clarity and reliability
 ACTOR_CONFIG = {
-    "Facebook": "apify/facebook-posts-scraper",  # Supports date filtering via onlyPostsNewerThan/onlyPostsOlderThan
-    "Instagram": "apify/instagram-scraper",  # Instagram posts scraper
-    "YouTube": "streamers/youtube-scraper"  # YouTube videos/channels scraper
+    # Use the community posts scraper explicitly for Facebook posts
+    # (scraper_one/facebook-posts-scraper). The app will only call this posts actor for Facebook.
+    "Facebook": "scraper_one/facebook-posts-scraper",
+    "Instagram": "apify/instagram-scraper",
+    "YouTube": "streamers/youtube-scraper"
 }
 
 # YouTube Comments Scraper Actor (full name)
@@ -145,18 +147,17 @@ YOUTUBE_COMMENTS_ACTOR_ID = "streamers/youtube-comments-scraper"
 
 # Actor IDs for direct calls (when needed)
 ACTOR_IDS = {
-    "Facebook": "KoJrdxJCTtpon81KY",  # Placeholder
-    "Instagram": "shu8hvrXbJbY3Eb9W",  # Instagram scraper actor ID
-    "YouTube": "p7UMdpQnjKmmpR21D"  # Placeholder
+    # Keep actor name/ID mapping minimal and consistent; Facebook posts use the community posts actor.
+    "Facebook": "scraper_one/facebook-posts-scraper",
+    "Instagram": "shu8hvrXbJbY3Eb9W",
+    "YouTube": "p7UMdpQnjKmmpR21D"
 }
 
 # Facebook Comments Scraper Actor
 # Try different actors if one fails
 FACEBOOK_COMMENTS_ACTOR_IDS = [
-    "apify/facebook-comments-scraper",  # Primary - official Apify actor
-    "us5srxAYnsrkgUv2v",  # Fallback actor ID
-    "facebook-comments-scraper",  # Alternative name format
-    "alien_force/facebook-posts-comments-scraper"  # Alternative actor
+    # Only use the official Apify comments scraper for Facebook comments
+    "apify/facebook-comments-scraper"
 ]
 FACEBOOK_COMMENTS_ACTOR_ID = FACEBOOK_COMMENTS_ACTOR_IDS[0]
 
@@ -673,11 +674,20 @@ def fetch_apify_data(platform: str, url: str, _apify_token: str, max_posts: int 
                 "searchLimit": 10  # Default search limit
             }
         elif platform == "Facebook":
-            # apify/facebook-posts-scraper format (supports date filtering)
-            run_input = {
-                "startUrls": [url],
-                "resultsLimit": max_posts
-            }
+            # Facebook posts actor: use the repo-configured actor_name to choose input shape.
+            # The community `scraper_one/facebook-posts-scraper` expects `pageUrls` while
+            # some official variants expect `startUrls`. Use the appropriate key.
+            if actor_name and actor_name.startswith('scraper_one'):
+                run_input = {
+                    "pageUrls": [url],
+                    "resultsLimit": max_posts
+                }
+            else:
+                # Fallback to legacy startUrls shape for other actors
+                run_input = {
+                    "startUrls": [url],
+                    "resultsLimit": max_posts
+                }
             # Add date range parameters if specified (ISO format: YYYY-MM-DD or relative like "3 days ago")
             if from_date:
                 run_input["onlyPostsNewerThan"] = from_date
@@ -751,13 +761,10 @@ def fetch_post_comments(post_url: str, _apify_token: str) -> Optional[List[Dict]
     client = ApifyClient(_apify_token)
 
     # Try different actors with unified input format
+    # Only attempt the official Apify Facebook comments scraper.
     actor_configs = [
         {"actor_id": "apify/facebook-comments-scraper",
-         "input": {"startUrls": [{"url": post_url}], "maxComments": 50, "includeNestedComments": False}},
-        {"actor_id": "facebook-comments-scraper",
-         "input": {"startUrls": [{"url": post_url}], "maxComments": 50, "includeNestedComments": False}},
-        {"actor_id": "alien_force/facebook-posts-comments-scraper",
-         "input": {"startUrls": [{"url": post_url}], "maxComments": 50}}
+         "input": {"startUrls": [{"url": post_url}], "maxComments": 50, "includeNestedComments": False}}
     ]
 
     for i, config in enumerate(actor_configs):
