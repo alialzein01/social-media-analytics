@@ -22,8 +22,8 @@ class FacebookAdapter(PlatformAdapter):
 
     def get_actor_id(self) -> str:
         """
-        Return the Apify actor ID for Facebook scraping.
-        Using the community actor for page posts.
+        Return the Apify actor name for Facebook scraping.
+        Using apify/facebook-posts-scraper which supports date filtering.
         """
         return "apify/facebook-posts-scraper"
 
@@ -53,20 +53,18 @@ class FacebookAdapter(PlatformAdapter):
         Build Facebook actor input configuration.
 
         Returns input dict for apify/facebook-posts-scraper.
+        Uses onlyPostsNewerThan/onlyPostsOlderThan for date filtering.
         """
         actor_input = {
-            "startUrls": [{"url": url}],
-            "maxPosts": max_posts,
-            "scrapeAbout": False,
-            "scrapeReviews": False,
-            "scrapeServices": False
+            "startUrls": [url],
+            "resultsLimit": max_posts
         }
 
-        # Add date filters if provided
+        # Add date filters if provided (ISO format: YYYY-MM-DD or relative like "3 days ago")
         if from_date:
-            actor_input["fromDate"] = from_date
+            actor_input["onlyPostsNewerThan"] = from_date
         if to_date:
-            actor_input["toDate"] = to_date
+            actor_input["onlyPostsOlderThan"] = to_date
 
         return actor_input
 

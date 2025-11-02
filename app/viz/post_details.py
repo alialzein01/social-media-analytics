@@ -479,9 +479,8 @@ def create_comment_analytics(post: Dict, platform: str) -> None:
             else:
                 st.bar_chart(df.set_index('Author'))
 
-    # Emoji analysis
+    # Emoji analysis (create_emoji_chart adds its own title)
     st.markdown("---")
-    st.markdown("#### 😀 Emoji Analysis")
 
     from app.analytics import analyze_emojis_in_comments
     from app.viz.charts import create_emoji_chart

@@ -100,3 +100,6 @@ data/raw/
 
 # Streamlit caches
 .streamlit/**/cache/
+
+documentation.pdf
+documentation.md

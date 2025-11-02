@@ -78,14 +78,12 @@ class CommentFetchingService:
                             st.info(f"🔍 Trying Instagram comments actor: {actor_id}")
 
                             # Configure input for Instagram comments scraper
+                            # apify/instagram-comment-scraper only supports these parameters:
                             run_input = {
                                 "directUrls": [post_url],
-                                "resultsLimit": 50,
-                                "maxComments": 50,
-                                "includeReplies": True,
-                                "sortBy": "newest",
-                                "maxResults": 50,
-                                "limit": 50
+                                "resultsLimit": max_comments_per_post,
+                                "includeNestedComments": True,  # Include comment replies (up to 3 levels)
+                                "isNewestComments": False  # Set to True for newest first (pay-only feature)
                             }
 
                             # Run the actor

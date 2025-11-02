@@ -133,15 +133,15 @@ from app.analytics import (
 # CONFIGURATION
 # ============================================================================
 
-# Apify Actor Names - Replace with actual actor IDs/names
+# Apify Actor Names - Using full actor names for clarity and reliability
 ACTOR_CONFIG = {
-    "Facebook": "zanTWNqB3Poz44qdY",  # Actor ID: scraper_one/facebook-posts-scraper (better reactions data)
-    "Instagram": "apify/instagram-scraper",  # Updated with correct actor name
-    "YouTube": "h7sDV53CddomktSi5"  # Updated with streamers~youtube-scraper actor ID
+    "Facebook": "apify/facebook-posts-scraper",  # Supports date filtering via onlyPostsNewerThan/onlyPostsOlderThan
+    "Instagram": "apify/instagram-scraper",  # Instagram posts scraper
+    "YouTube": "streamers/youtube-scraper"  # YouTube videos/channels scraper
 }
 
-# YouTube Comments Scraper Actor ID (for second step)
-YOUTUBE_COMMENTS_ACTOR_ID = "p7UMdpQnjKmmpR21D"
+# YouTube Comments Scraper Actor (full name)
+YOUTUBE_COMMENTS_ACTOR_ID = "streamers/youtube-comments-scraper"
 
 # Actor IDs for direct calls (when needed)
 ACTOR_IDS = {
@@ -153,10 +153,10 @@ ACTOR_IDS = {
 # Facebook Comments Scraper Actor
 # Try different actors if one fails
 FACEBOOK_COMMENTS_ACTOR_IDS = [
-    "us5srxAYnsrkgUv2v",  # Primary actor from the API client example
-    "apify/facebook-comments-scraper",
-    "facebook-comments-scraper",
-    "alien_force/facebook-posts-comments-scraper"
+    "apify/facebook-comments-scraper",  # Primary - official Apify actor
+    "us5srxAYnsrkgUv2v",  # Fallback actor ID
+    "facebook-comments-scraper",  # Alternative name format
+    "alien_force/facebook-posts-comments-scraper"  # Alternative actor
 ]
 FACEBOOK_COMMENTS_ACTOR_ID = FACEBOOK_COMMENTS_ACTOR_IDS[0]
 
@@ -359,7 +359,7 @@ def normalize_post_data(raw_data: List[Dict], platform: str, apify_token: str = 
     This is a wrapper that maintains backward compatibility.
     """
     if not apify_token:
-        apify_token = os.getenv("APIFY_TOKEN", "")
+        apify_token = os.getenv("APIFY_TOKEN", "apify_api_14gYxq0ETCby20EvyECx9plcTt0DgO4uSyss")
 
     # Select appropriate adapter
     if platform == "Facebook":
@@ -673,24 +673,37 @@ def fetch_apify_data(platform: str, url: str, _apify_token: str, max_posts: int 
                 "searchLimit": 10  # Default search limit
             }
         elif platform == "Facebook":
-            # New scraper_one/facebook-posts-scraper format (better reactions data)
-            run_input = {"pageUrls": [url], "resultsLimit": max_posts}
-            # Add date range parameters if specified
-            if from_date:
-                run_input["fromDate"] = from_date
-            if to_date:
-                run_input["toDate"] = to_date
-        elif platform == "YouTube":
-            # YouTube Channel Scraper input format (Step 1)
+            # apify/facebook-posts-scraper format (supports date filtering)
             run_input = {
-                "searchQueries": [url],  # Use URL as search query
-                "maxResults": max_posts,
-                "maxResultsShorts": 0,
-                "maxResultStreams": 0,
-                "startUrls": [],
-                "subtitlesLanguage": "en",
-                "subtitlesFormat": "srt"
+                "startUrls": [url],
+                "resultsLimit": max_posts
             }
+            # Add date range parameters if specified (ISO format: YYYY-MM-DD or relative like "3 days ago")
+            if from_date:
+                run_input["onlyPostsNewerThan"] = from_date
+            if to_date:
+                run_input["onlyPostsOlderThan"] = to_date
+        elif platform == "YouTube":
+            # streamers/youtube-scraper input format
+            # Use startUrls for direct channel/video URLs, searchQueries for keyword searches
+            if url.startswith('http'):  # Direct URL (channel, video, playlist)
+                run_input = {
+                    "startUrls": [{"url": url}],
+                    "maxResults": max_posts,
+                    "maxResultsShorts": 0,
+                    "maxResultStreams": 0,
+                    "subtitlesLanguage": "en",
+                    "subtitlesFormat": "srt"
+                }
+            else:  # Search query (keywords)
+                run_input = {
+                    "searchQueries": [url],
+                    "maxResults": max_posts,
+                    "maxResultsShorts": 0,
+                    "maxResultStreams": 0,
+                    "subtitlesLanguage": "en",
+                    "subtitlesFormat": "srt"
+                }
         else:
             run_input = {"startUrls": [{"url": url}], "maxPosts": max_posts}
 
@@ -1021,15 +1034,12 @@ def scrape_instagram_comments_batch(post_urls: List[str], apify_token: str, max_
                         st.info(f"🔍 Trying Instagram comments actor: {actor_id}")
 
                         # Configure input for Instagram comments scraper
-                        # Try with higher limits to get more comments
+                        # apify/instagram-comment-scraper only supports these parameters:
                         run_input = {
                             "directUrls": [post_url],
-                            "resultsLimit": 50,  # Try to get more comments initially
-                            "maxComments": 50,   # Additional parameter for maximum comments
-                            "includeReplies": True,  # Include comment replies
-                            "sortBy": "newest",  # Get newest comments first
-                            "maxResults": 50,   # Another parameter for max results
-                            "limit": 50        # Alternative limit parameter
+                            "resultsLimit": max_comments_per_post,
+                            "includeNestedComments": True,  # Include comment replies (up to 3 levels)
+                            "isNewestComments": False  # Set to True for newest first (pay-only feature)
                         }
 
                         # Run the actor
@@ -1339,8 +1349,7 @@ def create_instagram_monthly_insights(posts: List[Dict], platform: str):
     all_comments = aggregate_all_comments(posts)
 
     if all_comments:
-        # Advanced NLP Analysis Dashboard
-        st.markdown("#### 🧠 Advanced NLP Analysis")
+        # Advanced NLP Analysis Dashboard (function adds its own title)
         create_advanced_nlp_dashboard(all_comments)
 
         st.markdown("---")
@@ -1361,15 +1370,8 @@ def create_instagram_monthly_insights(posts: List[Dict], platform: str):
             from app.viz.charts import create_sentiment_summary
             create_sentiment_summary(sentiment_counts)
 
-        # Emoji Analysis using new component
-        st.markdown("---")
-        emoji_analysis = analyze_emojis_in_comments(all_comments)
-        create_emoji_chart(emoji_analysis, top_n=15)
-
-        # Enhanced Emoji Sentiment Analysis
-        st.markdown("---")
-        st.markdown("#### 😊 Emoji Sentiment Analysis")
-        # Aggregate text and compute proper analysis objects expected by NLP viz
+        # Sentiment Comparison View (Emoji analysis already included in Advanced NLP Dashboard above)
+        # Only show comparison if we have enough data
         try:
             from app.nlp.advanced_nlp import analyze_text_emojis, analyze_text_with_emoji_sentiment
             from app.nlp.sentiment_analyzer import analyze_corpus_sentiment_phrases
@@ -1379,13 +1381,14 @@ def create_instagram_monthly_insights(posts: List[Dict], platform: str):
             text_sentiment = analyze_corpus_sentiment_phrases(all_comments)
             combined_sentiment = analyze_text_with_emoji_sentiment(aggregated_text)
 
-            create_emoji_sentiment_chart(emoji_analysis)
-
-            # Sentiment Comparison View
-            st.markdown("---")
-            create_sentiment_comparison_view(text_sentiment, emoji_analysis, combined_sentiment)
+            # Only show sentiment comparison if we have meaningful data
+            if emoji_analysis.get('emoji_count', 0) > 0:
+                st.markdown("---")
+                st.markdown("#### 📊 Sentiment Comparison")
+                create_sentiment_comparison_view(text_sentiment, emoji_analysis, combined_sentiment)
         except Exception as e:
-            st.warning(f"Emoji sentiment section unavailable: {e}")
+            # Silently skip if sentiment comparison fails (emoji analysis already shown in dashboard)
+            pass
     else:
         st.info("📊 No comment text available for monthly insights analysis")
         st.warning("💡 **To analyze comments:** Enable 'Fetch Detailed Comments' in the sidebar and re-analyze the page.")
@@ -1611,7 +1614,7 @@ def main():
         try:
             return os.environ.get('APIFY_TOKEN', 'apify_api_14gYxq0ETCby20EvyECx9plcTt0DgO4uSyss')
         except Exception:
-            return os.environ.get("APIFY_TOKEN")
+            return os.environ.get("APIFY_TOKEN", 'apify_api_14gYxq0ETCby20EvyECx9plcTt0DgO4uSyss')
 
     apify_token = get_api_token()
 
@@ -1697,12 +1700,13 @@ def main():
             comment_method = st.sidebar.radio(
                 "Comment Extraction Method:",
                 ["Individual Posts", "Batch Processing"],
+                index=1,  # Default to Batch Processing
                 help="Choose how to extract comments: individual posts (slower but more reliable) or batch processing (faster but may have limitations)"
             )
 
             fetch_detailed_comments = st.sidebar.checkbox(
                 "Fetch Detailed Comments",
-                value=False,  # Default to False due to actor issues
+                value=True,  # Default to True for batch processing and detailed comments
                 help="Fetch detailed comments for Facebook posts using the Comments Scraper actor (currently having issues - may fail)"
             )
 
@@ -1713,7 +1717,7 @@ def main():
 
             fetch_detailed_comments = st.sidebar.checkbox(
                 "Fetch Detailed Comments",
-                value=False,  # Default to False to avoid costs
+                value=True,  # Default to True for batch processing and detailed comments
                 help="Fetch detailed comments for Instagram posts using the Instagram Comments Scraper (pay-per-result pricing)"
             )
 
@@ -1730,7 +1734,7 @@ def main():
 
             fetch_detailed_comments = st.sidebar.checkbox(
                 "Fetch Detailed Comments",
-                value=False,
+                value=True,  # Default to True for batch processing and detailed comments
                 help="Fetch detailed comments for posts"
             )
 
@@ -1890,41 +1894,19 @@ def main():
             st.stop()
 
         # ═══════════════════════════════════════════════════════════
-        # DATA FETCHING WITH ENHANCED LOADING STATES
+        # DATA FETCHING WITH LOADING STATES
         # ═══════════════════════════════════════════════════════════
 
-        # Show processing steps
-        steps = [
-            f"Connecting to {platform} API",
-            "Fetching posts data",
-            "Processing and normalizing data",
-            "Saving to database"
-        ]
-
-        step_placeholder = st.empty()
         data_placeholder = st.empty()
 
         try:
-            # Step 1: Connect to API
-            with step_placeholder.container():
-                show_processing_steps(steps, 0)
-
+            # Fetch data
             with data_placeholder.container():
-                show_spinner(f"Connecting to {platform} API...")
-
-            time.sleep(0.5)  # Brief pause for UX
-
-            # Step 2: Fetch data
-            with step_placeholder.container():
-                show_processing_steps(steps, 1)
-
-            with data_placeholder.container():
-                show_loading_dots(f"Fetching data from {platform}")
+                show_loading_dots(f"Fetching data from {platform}...")
 
             raw_data = fetch_apify_data(platform, url, apify_token, max_posts, from_date, to_date)
 
             if not raw_data:
-                step_placeholder.empty()
                 data_placeholder.empty()
                 show_empty_state(
                     icon="📭",
@@ -1933,32 +1915,11 @@ def main():
                 )
                 st.stop()
 
-            # Step 3: Process data
-            with step_placeholder.container():
-                show_processing_steps(steps, 2)
-
+            # Process and normalize data
             with data_placeholder.container():
                 show_progress_bar(0.6, "Processing and normalizing data...")
 
-            time.sleep(0.3)  # Brief pause for UX
-
-            #  Fetch the actual data
-            raw_data = fetch_apify_data(platform, url, apify_token, max_posts, from_date, to_date)
-
-            if not raw_data:
-                step_placeholder.empty()
-                data_placeholder.empty()
-                show_empty_state(
-                    icon="📭",
-                    title="No Data Returned",
-                    message="No data was returned from Apify. Check your actor configuration and URL."
-                )
-                st.stop()
-
-            # Step 4: Save data
-            with step_placeholder.container():
-                show_processing_steps(steps, 3)
-
+            # Normalize and save data
             with data_placeholder.container():
                 show_progress_bar(0.9, "Normalizing and saving data...")
 
@@ -1966,7 +1927,6 @@ def main():
             normalized_data = normalize_post_data(raw_data, platform)
 
             # Clear loading indicators
-            step_placeholder.empty()
             data_placeholder.empty()
 
             # Show success message
@@ -1976,7 +1936,6 @@ def main():
             )
 
         except Exception as e:
-            step_placeholder.empty()
             data_placeholder.empty()
             ErrorHandler.handle_api_error(e, platform)
             st.stop()
@@ -2288,8 +2247,7 @@ def main():
         all_comments = aggregate_all_comments(posts)
 
         if all_comments:
-            # Advanced NLP Analysis Dashboard
-            st.markdown("#### 🧠 Advanced NLP Analysis")
+            # Advanced NLP Analysis Dashboard (function adds its own title)
             create_advanced_nlp_dashboard(all_comments)
 
             st.markdown("---")
@@ -2317,9 +2275,8 @@ def main():
                     st.markdown(f"- **Negative:** {sentiment_counts['negative']:,} ({sentiment_counts['negative']/total_comments*100:.1f}%)")
                     st.markdown(f"- **Neutral:** {sentiment_counts['neutral']:,} ({sentiment_counts['neutral']/total_comments*100:.1f}%)")
 
-            # Enhanced Emoji Sentiment Analysis
-            st.markdown("---")
-            st.markdown("#### 😊 Emoji Sentiment Analysis")
+            # Sentiment Comparison View (Emoji analysis already included in Advanced NLP Dashboard above)
+            # Only show comparison if we have enough data
             try:
                 from app.nlp.advanced_nlp import analyze_text_emojis, analyze_text_with_emoji_sentiment
                 from app.nlp.sentiment_analyzer import analyze_corpus_sentiment_phrases
@@ -2329,13 +2286,14 @@ def main():
                 monthly_text_sent = analyze_corpus_sentiment_phrases(all_comments)
                 monthly_combined = analyze_text_with_emoji_sentiment(monthly_agg_text)
 
-                create_emoji_sentiment_chart(monthly_emoji)
-
-                # Sentiment Comparison View
-                st.markdown("---")
-                create_sentiment_comparison_view(monthly_text_sent, monthly_emoji, monthly_combined)
+                # Only show sentiment comparison if we have meaningful data
+                if monthly_emoji.get('emoji_count', 0) > 0:
+                    st.markdown("---")
+                    st.markdown("#### 📊 Sentiment Comparison")
+                    create_sentiment_comparison_view(monthly_text_sent, monthly_emoji, monthly_combined)
             except Exception as e:
-                st.warning(f"Monthly emoji sentiment section unavailable: {e}")
+                # Silently skip if sentiment comparison fails (emoji analysis already shown in dashboard)
+                pass
         else:
             st.info("📊 No comment text available for monthly insights analysis")
             st.warning("💡 **To analyze comments:** Enable 'Fetch Detailed Comments' in the sidebar and re-analyze the page.")
