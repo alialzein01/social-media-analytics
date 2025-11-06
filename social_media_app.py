@@ -888,7 +888,7 @@ def assign_comments_to_posts(posts: List[Dict], comments_data: List[Dict]) -> Li
     # Assign comments to posts
     assigned_comments = 0
     unmatched_comments = 0
-    
+
     for comment in comments_data:
         # Try to find the post this comment belongs to
         comment_url = comment.get('url') or comment.get('postUrl') or comment.get('facebookUrl')
@@ -896,7 +896,7 @@ def assign_comments_to_posts(posts: List[Dict], comments_data: List[Dict]) -> Li
         if not comment_url:
             unmatched_comments += 1
             continue
-            
+
         matched = False
         if comment_url:
             # Find matching post
@@ -908,7 +908,7 @@ def assign_comments_to_posts(posts: List[Dict], comments_data: List[Dict]) -> Li
                     assigned_comments += 1
                     matched = True
                     break
-        
+
         if not matched:
             unmatched_comments += 1
 
@@ -1382,7 +1382,7 @@ def create_instagram_monthly_insights(posts: List[Dict], platform: str):
 
     # Use analytics module to aggregate comments
     all_comments = aggregate_all_comments(posts)
-    
+
     # DEBUG: Show what we got
     st.write(f"🔍 DEBUG: aggregate_all_comments returned {len(all_comments)} comment texts")
     if posts:
@@ -1826,7 +1826,7 @@ def main():
         value=False,
         help="Use simple word cloud instead of phrase-based analysis. Try this if you see 'No meaningful content found'."
     )
-    
+
     use_entity_extraction = st.sidebar.checkbox(
         "Enable Entity Extraction (GLiNER)",
         value=True,
@@ -2300,7 +2300,7 @@ def main():
 
         # Aggregate all comments for analysis
         all_comments = aggregate_all_comments(posts)
-        
+
         # DEBUG: Show what we got
         st.write(f"🔍 DEBUG: aggregate_all_comments returned {len(all_comments)} comment texts")
         if posts:
