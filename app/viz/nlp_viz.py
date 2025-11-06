@@ -384,6 +384,21 @@ def create_advanced_nlp_dashboard(
             except Exception:
                 # Fallback: skip emoji chart if transformation fails
                 pass
+    
+    # Entity Extraction (if GLiNER is available and enabled)
+    import streamlit as st
+    use_entity_extraction = st.session_state.get('use_entity_extraction', True)
+    
+    if use_entity_extraction:
+        try:
+            from app.viz.entity_viz import display_entity_dashboard
+            display_entity_dashboard(texts)
+        except ImportError:
+            # GLiNER not installed, skip entity extraction
+            pass
+        except Exception as e:
+            # Silently skip if entity extraction fails
+            pass
 
 
 # ============================================================================

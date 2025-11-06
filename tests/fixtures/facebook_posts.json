@@ -1,0 +1,48 @@
+[
+  {
+    "url": "https://www.facebook.com/ul.fsciences/posts/pfbid02RQFkBznr3x9MwKvPeBh2VHhboC7JEzbzEW3QG5aWXJnLuiXjfGhT21hhKA1zLXuXl",
+    "postId": "1220007700156055",
+    "postText": "إعلان عن صدور نتائج المعادلات للطلاب القادمين من داخل الجامعة اللبنانية",
+    "reactions": { "like": 31 },
+    "reactionsCount": 31,
+    "timestamp": 1761638896000,
+    "commentsCount": 1,
+    "author": {
+      "id": "100064405103773",
+      "name": "Lebanese University - Faculty of Science",
+      "profilePicture": "https://scontent-iad3-1.xx.fbcdn.net/...",
+      "profileUrl": "https://www.facebook.com/ul.fsciences"
+    },
+    "attachments": [
+      {
+        "type": "photo",
+        "url": "https://www.facebook.com/photo/?fbid=1220007673489391&set=a.465364825620350",
+        "id": "1220007673489391",
+        "accessibilityCaption": "May be an image of ticket stub and text"
+      }
+    ]
+  },
+  {
+    "url": "https://www.facebook.com/ul.fsciences/posts/pfbid02rmKG1AiB2cRdtVwaKvLXXvdf8VUyXSxaMG6ugc2SYj2roqFeK2i36wgN7QeokLtzl",
+    "postId": "1206928638130628",
+    "postText": "صدور نتائج طلبات المعادلة للطلاب القادمين من خارج الجامعة اللبنانية، وذلك للعام الجامعي 2025-2026",
+    "reactions": { "like": 59 },
+    "reactionsCount": 59,
+    "timestamp": 1760346931000,
+    "commentsCount": 5,
+    "author": {
+      "id": "100064405103773",
+      "name": "Lebanese University - Faculty of Science",
+      "profilePicture": "https://scontent-iad3-1.xx.fbcdn.net/...",
+      "profileUrl": "https://www.facebook.com/ul.fsciences"
+    },
+    "attachments": [
+      {
+        "type": "photo",
+        "url": "https://www.facebook.com/photo/?fbid=1206928614797297&set=a.465364825620350",
+        "id": "1206928614797297",
+        "accessibilityCaption": "May be an image of text"
+      }
+    ]
+  }
+]

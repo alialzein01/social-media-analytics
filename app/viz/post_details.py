@@ -399,6 +399,11 @@ def create_comment_analytics(post: Dict, platform: str) -> None:
         st.info("No comment text available for analysis")
         return
 
+    # DEBUG: Show comment extraction
+    st.write(f"🔍 DEBUG (Post Details): Extracted {len(comment_texts)} comment texts")
+    if comment_texts:
+        st.write(f"🔍 DEBUG: Sample comment text: {comment_texts[0][:100]}")
+
     # Comment metrics
     col1, col2, col3, col4 = st.columns(4)
 

@@ -241,9 +241,13 @@ def extract_keywords_nlp(comments: List[str], top_n: int = 50) -> Dict[str, int]
     # Try to use phrase extraction if available
     try:
         from app.nlp.phrase_extractor import extract_phrases_simple
-        return extract_phrases_simple(comments, top_n)
-    except ImportError:
-        # Fallback to improved word-based extraction
+        phrases = extract_phrases_simple(comments, top_n)
+        # If phrase extraction returns results, use them
+        if phrases:
+            return phrases
+        # Otherwise fall back to word-based extraction
+    except Exception as e:
+        # Fallback to improved word-based extraction on any error
         pass
 
     # Improved fallback: Better text processing
@@ -870,12 +874,30 @@ def assign_comments_to_posts(posts: List[Dict], comments_data: List[Dict]) -> Li
             post_url_map[post_url] = post
             post['comments_list'] = []  # Initialize empty comments list
 
+    # DEBUG: Show what we're working with
+    st.write(f"🔍 DEBUG: Have {len(post_url_map)} post URLs")
+    st.write(f"🔍 DEBUG: Have {len(comments_data)} comments to assign")
+    if post_url_map:
+        st.write("🔍 DEBUG: Sample post URL:", list(post_url_map.keys())[0][:80])
+    if comments_data:
+        sample_comment = comments_data[0]
+        comment_url = sample_comment.get('url') or sample_comment.get('postUrl') or sample_comment.get('facebookUrl')
+        st.write(f"🔍 DEBUG: Sample comment URL field: {comment_url[:80] if comment_url else 'NONE'}")
+        st.write(f"🔍 DEBUG: Sample comment keys: {list(sample_comment.keys())}")
+
     # Assign comments to posts
     assigned_comments = 0
+    unmatched_comments = 0
+    
     for comment in comments_data:
         # Try to find the post this comment belongs to
         comment_url = comment.get('url') or comment.get('postUrl') or comment.get('facebookUrl')
 
+        if not comment_url:
+            unmatched_comments += 1
+            continue
+            
+        matched = False
         if comment_url:
             # Find matching post
             for post_url, post in post_url_map.items():
@@ -884,9 +906,15 @@ def assign_comments_to_posts(posts: List[Dict], comments_data: List[Dict]) -> Li
                     normalized_comment = normalize_comment_data(comment)
                     post['comments_list'].append(normalized_comment)
                     assigned_comments += 1
+                    matched = True
                     break
+        
+        if not matched:
+            unmatched_comments += 1
 
     st.info(f"📊 Assigned {assigned_comments} comments to {len(posts)} posts")
+    if unmatched_comments > 0:
+        st.warning(f"⚠️ {unmatched_comments} comments could not be matched to posts")
     return posts
 
 def fetch_comments_for_posts(posts: List[Dict], apify_token: str) -> List[Dict]:
@@ -1354,6 +1382,19 @@ def create_instagram_monthly_insights(posts: List[Dict], platform: str):
 
     # Use analytics module to aggregate comments
     all_comments = aggregate_all_comments(posts)
+    
+    # DEBUG: Show what we got
+    st.write(f"🔍 DEBUG: aggregate_all_comments returned {len(all_comments)} comment texts")
+    if posts:
+        st.write(f"🔍 DEBUG: Total posts: {len(posts)}")
+        posts_with_comments = sum(1 for p in posts if p.get('comments_list'))
+        st.write(f"🔍 DEBUG: Posts with comments_list: {posts_with_comments}")
+        if posts_with_comments > 0:
+            sample_post = next(p for p in posts if p.get('comments_list'))
+            st.write(f"🔍 DEBUG: Sample post has {len(sample_post.get('comments_list', []))} comments")
+            if sample_post.get('comments_list'):
+                st.write(f"🔍 DEBUG: Sample comment structure: {list(sample_post['comments_list'][0].keys())}")
+                st.write(f"🔍 DEBUG: Sample comment text: {sample_post['comments_list'][0].get('text', 'NO TEXT')[:100]}")
 
     if all_comments:
         # Advanced NLP Analysis Dashboard (function adds its own title)
@@ -1785,6 +1826,12 @@ def main():
         value=False,
         help="Use simple word cloud instead of phrase-based analysis. Try this if you see 'No meaningful content found'."
     )
+    
+    use_entity_extraction = st.sidebar.checkbox(
+        "Enable Entity Extraction (GLiNER)",
+        value=True,
+        help="Extract named entities (people, locations, organizations, etc.) from comments using AI. Requires GLiNER library."
+    )
 
     # File selector for loading saved data
     if data_source == "Load from File":
@@ -1842,6 +1889,7 @@ def main():
     st.session_state.use_phrase_analysis = use_phrase_analysis
     st.session_state.use_sentiment_coloring = use_sentiment_coloring
     st.session_state.use_simple_wordcloud = use_simple_wordcloud
+    st.session_state.use_entity_extraction = use_entity_extraction
 
     # Main area - URL Input (only for API fetch)
     if data_source == "Fetch from API":
@@ -2252,6 +2300,19 @@ def main():
 
         # Aggregate all comments for analysis
         all_comments = aggregate_all_comments(posts)
+        
+        # DEBUG: Show what we got
+        st.write(f"🔍 DEBUG: aggregate_all_comments returned {len(all_comments)} comment texts")
+        if posts:
+            st.write(f"🔍 DEBUG: Total posts: {len(posts)}")
+            posts_with_comments = sum(1 for p in posts if p.get('comments_list'))
+            st.write(f"🔍 DEBUG: Posts with comments_list: {posts_with_comments}")
+            if posts_with_comments > 0:
+                sample_post = next(p for p in posts if p.get('comments_list'))
+                st.write(f"🔍 DEBUG: Sample post has {len(sample_post.get('comments_list', []))} comments")
+                if sample_post.get('comments_list'):
+                    st.write(f"🔍 DEBUG: Sample comment structure: {list(sample_post['comments_list'][0].keys())}")
+                    st.write(f"🔍 DEBUG: Sample comment text: {sample_post['comments_list'][0].get('text', 'NO TEXT')[:100]}")
 
         if all_comments:
             # Advanced NLP Analysis Dashboard (function adds its own title)
