@@ -364,7 +364,7 @@ def normalize_post_data(raw_data: List[Dict], platform: str, apify_token: str = 
     This is a wrapper that maintains backward compatibility.
     """
     if not apify_token:
-        # Try Streamlit secrets first, then environment variable, then fallback
+        # Try Streamlit secrets first, then environment variable
         try:
             if hasattr(st, 'secrets') and 'APIFY_TOKEN' in st.secrets:
                 apify_token = st.secrets['APIFY_TOKEN']
@@ -1671,10 +1671,10 @@ def main():
             if hasattr(st, 'secrets') and 'APIFY_TOKEN' in st.secrets:
                 return st.secrets['APIFY_TOKEN']
             # Then try environment variable
-            return os.environ.get(.APIFY_TOKEN.)
+            return os.environ.get('APIFY_TOKEN')
         except Exception:
-            # Fallback to environment variable or default
-            return os.environ.get(.APIFY_TOKEN.)
+            # Fallback to environment variable
+            return os.environ.get("APIFY_TOKEN")
 
     apify_token = get_api_token()
 
