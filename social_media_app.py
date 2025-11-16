@@ -364,7 +364,14 @@ def normalize_post_data(raw_data: List[Dict], platform: str, apify_token: str = 
     This is a wrapper that maintains backward compatibility.
     """
     if not apify_token:
-        apify_token = os.getenv("APIFY_TOKEN")
+        # Try Streamlit secrets first, then environment variable, then fallback
+        try:
+            if hasattr(st, 'secrets') and 'APIFY_TOKEN' in st.secrets:
+                apify_token = st.secrets['APIFY_TOKEN']
+            else:
+                apify_token = os.getenv("APIFY_TOKEN")
+        except Exception:
+            apify_token = os.getenv("APIFY_TOKEN")
 
     # Select appropriate adapter
     if platform == "Facebook":
@@ -1660,8 +1667,13 @@ def main():
     @with_error_boundary("API Token Error", show_details=True)
     def get_api_token():
         try:
+            # First try Streamlit secrets
+            if hasattr(st, 'secrets') and 'APIFY_TOKEN' in st.secrets:
+                return st.secrets['APIFY_TOKEN']
+            # Then try environment variable
             return os.environ.get(.APIFY_TOKEN.)
         except Exception:
+            # Fallback to environment variable or default
             return os.environ.get(.APIFY_TOKEN.)
 
     apify_token = get_api_token()
