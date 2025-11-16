@@ -102,11 +102,19 @@ class CommentRepository:
         Returns:
             List of comment documents
         """
+        # Be tolerant of schema differences: post_id vs postId, and allow case-insensitive platform
+        query = {
+            'platform': {'$regex': f'^{platform}$', '$options': 'i'},
+            '$or': [
+                {'post_id': post_id},
+                {'postId': post_id},
+                {'post_url': {'$regex': post_id}},
+                {'url': {'$regex': post_id}}
+            ]
+        }
+
         return list(
-            self.collection.find({
-                'post_id': post_id,
-                'platform': platform
-            })
+            self.collection.find(query)
             .sort('created_time', DESCENDING)
             .limit(limit)
         )
@@ -128,8 +136,10 @@ class CommentRepository:
         Returns:
             List of comment documents
         """
+        # Case-insensitive platform matching to avoid mismatches
+        query = {'platform': {'$regex': f'^{platform}$', '$options': 'i'}}
         return list(
-            self.collection.find({'platform': platform})
+            self.collection.find(query)
             .sort('created_time', DESCENDING)
             .skip(skip)
             .limit(limit)
@@ -153,10 +163,11 @@ class CommentRepository:
             List of matching comments
         """
         query = {'$text': {'$search': search_text}}
-        
+
         if platform:
-            query['platform'] = platform
-        
+            # Use case-insensitive platform match
+            query['platform'] = {'$regex': f'^{platform}$', '$options': 'i'}
+
         return list(
             self.collection.find(query)
             .limit(limit)
@@ -209,8 +220,14 @@ class CommentRepository:
         """
         query = {}
         if platform:
-            query['platform'] = platform
+            query['platform'] = {'$regex': f'^{platform}$', '$options': 'i'}
         if post_id:
-            query['post_id'] = post_id
-        
+            # Count comments by either post_id or alternate keys
+            query['$or'] = [
+                {'post_id': post_id},
+                {'postId': post_id},
+                {'post_url': {'$regex': post_id}},
+                {'url': {'$regex': post_id}}
+            ]
+
         return self.collection.count_documents(query)

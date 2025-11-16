@@ -552,30 +552,35 @@ def save_data_to_database(raw_data: List[Dict], normalized_data: List[Dict], pla
             comments_list = post.get('comments_list', [])
             if isinstance(comments_list, list):
                 for i, comment in enumerate(comments_list):
-                    if isinstance(comment, dict):
-                        # Ensure comment_id exists
-                        if 'comment_id' not in comment or not comment.get('comment_id'):
-                            # Generate a unique comment_id from post_id, text, and position
-                            post_id = post.get('post_id', '')
-                            comment_text = comment.get('text', '')
-                            unique_string = f"{post_id}_{comment_text}_{i}_{platform}"
-                            comment['comment_id'] = hashlib.md5(unique_string.encode()).hexdigest()
-                        
-                        # Ensure text field exists
-                        if 'text' not in comment:
-                            comment['text'] = ''
-                        
-                        # Ensure author_name exists
-                        if 'author_name' not in comment:
-                            comment['author_name'] = comment.get('ownerUsername', '') or comment.get('authorDisplayName', '') or 'Unknown'
-                        
-                        # Ensure created_time exists
-                        if 'created_time' not in comment:
-                            comment['created_time'] = comment.get('timestamp', '') or comment.get('publishedAt', '') or ''
-                        
-                        # Ensure likes_count exists
-                        if 'likes_count' not in comment:
-                            comment['likes_count'] = comment.get('likesCount', 0) or comment.get('likeCount', 0) or 0
+                    # If comment is a plain string (actor sometimes returns simple strings),
+                    # convert it into a dict so later save logic can process it.
+                    if not isinstance(comment, dict):
+                        comments_list[i] = {'text': str(comment)}
+                        comment = comments_list[i]
+
+                    # Ensure comment_id exists
+                    if 'comment_id' not in comment or not comment.get('comment_id'):
+                        # Generate a unique comment_id from post_id, text, and position
+                        post_id = post.get('post_id', '')
+                        comment_text = comment.get('text', '')
+                        unique_string = f"{post_id}_{comment_text}_{i}_{platform}"
+                        comment['comment_id'] = hashlib.md5(unique_string.encode()).hexdigest()
+
+                    # Ensure text field exists
+                    if 'text' not in comment:
+                        comment['text'] = ''
+
+                    # Ensure author_name exists
+                    if 'author_name' not in comment:
+                        comment['author_name'] = comment.get('ownerUsername', '') or comment.get('authorDisplayName', '') or 'Unknown'
+
+                    # Ensure created_time exists
+                    if 'created_time' not in comment:
+                        comment['created_time'] = comment.get('timestamp', '') or comment.get('publishedAt', '') or ''
+
+                    # Ensure likes_count exists
+                    if 'likes_count' not in comment:
+                        comment['likes_count'] = comment.get('likesCount', 0) or comment.get('likeCount', 0) or 0
         
         # Save to MongoDB
         with st.spinner("💾 Saving to database..."):
@@ -653,8 +658,20 @@ def load_data_from_database(platform: str, days_back: int = 30, limit: int = 100
                 end_date=end_date,
                 limit=limit
             )
-            
+            fallback_used = False
+
+            if not posts:
+                # If no posts found for the date range, attempt a platform-only load as a fallback.
+                # This helps when published_at fields are stored as strings or date parsing mismatches occur.
+                try:
+                    posts = db_service.get_posts_for_analysis(platform=platform, limit=limit)
+                    fallback_used = True
+                except Exception:
+                    posts = None
+
             if posts:
+                if fallback_used:
+                    st.warning("⚠️ No posts matched the requested date range — showing recent posts for the platform instead.")
                 # Load associated comments
                 for post in posts:
                     post_id = post.get('post_id')
@@ -780,36 +797,129 @@ def fetch_apify_data(platform: str, url: str, _apify_token: str, max_posts: int 
             st.error(f"No actor configured for {platform}")
             return None
 
-        # Configure input based on platform with documented formats
-        if platform == "Instagram":
-            # Instagram scraper input format based on documentation
-            run_input = {
-                "directUrls": [url],
-                "resultsType": "posts",
-                "resultsLimit": max_posts,
-                "searchLimit": 10  # Default search limit
-            }
-        elif platform == "Facebook":
-            # New scraper_one/facebook-posts-scraper format (better reactions data)
-            run_input = {"pageUrls": [url], "resultsLimit": max_posts}
-            # Add date range parameters if specified
-            if from_date:
-                run_input["fromDate"] = from_date
-            if to_date:
-                run_input["toDate"] = to_date
-        elif platform == "YouTube":
-            # YouTube Channel Scraper input format (Step 1)
-            run_input = {
-                "searchQueries": [url],  # Use URL as search query
-                "maxResults": max_posts,
-                "maxResultsShorts": 0,
-                "maxResultStreams": 0,
-                "startUrls": [],
-                "subtitlesLanguage": "en",
-                "subtitlesFormat": "srt"
-            }
+        # Configure input based on platform using adapters when available.
+        # Ensure date filters are converted to ISO8601 where expected by many actors.
+        def to_iso_range(f, t):
+            """Convert from_date/to_date strings like 'YYYY-MM-DD' to ISO datetimes with Z suffix.
+
+            Returns tuple (from_iso, to_iso) where either may be None if not provided.
+            """
+            from_iso = None
+            to_iso = None
+            try:
+                if f:
+                    # If already looks like ISO with time, pass through
+                    if 'T' in f:
+                        from_iso = f
+                    else:
+                        # Date-only -> start of day
+                        from_iso = f + 'T00:00:00Z'
+                if t:
+                    if 'T' in t:
+                        to_iso = t
+                    else:
+                        # Date-only -> end of day
+                        to_iso = t + 'T23:59:59Z'
+            except Exception:
+                from_iso = f
+                to_iso = t
+            return from_iso, to_iso
+
+        # Prefer adapter-built input so actor-specific param names are correct
+        adapter = None
+        try:
+            if platform == 'Facebook':
+                adapter = FacebookAdapter(_apify_token)
+            elif platform == 'Instagram':
+                adapter = InstagramAdapter(_apify_token)
+            elif platform == 'YouTube':
+                adapter = YouTubeAdapter(_apify_token)
+        except Exception:
+            adapter = None
+
+        # Convert provided date strings to ISO range format expected by many Apify actors
+        from_iso, to_iso = to_iso_range(from_date, to_date)
+
+        if adapter and hasattr(adapter, 'build_actor_input'):
+            try:
+                run_input = adapter.build_actor_input(url, max_posts=max_posts, from_date=from_iso, to_date=to_iso)
+                # Some adapters return different key names; ensure max/limit are set
+                if isinstance(run_input, dict):
+                    if 'maxPosts' not in run_input and 'resultsLimit' not in run_input and 'maxResults' not in run_input:
+                        # set a generic fallback
+                        run_input['maxPosts'] = max_posts
+            except Exception:
+                run_input = {"startUrls": [{"url": url}], "maxPosts": max_posts}
         else:
-            run_input = {"startUrls": [{"url": url}], "maxPosts": max_posts}
+            # Fallback to prior heuristics
+            if platform == "Instagram":
+                run_input = {
+                    "directUrls": [url],
+                    "resultsType": "posts",
+                    "resultsLimit": max_posts,
+                    "searchLimit": 10
+                }
+                if from_iso:
+                    run_input['fromDate'] = from_iso
+                if to_iso:
+                    run_input['toDate'] = to_iso
+            elif platform == "Facebook":
+                run_input = {"pageUrls": [url], "resultsLimit": max_posts}
+                if from_iso:
+                    run_input["fromDate"] = from_iso
+                if to_iso:
+                    run_input["toDate"] = to_iso
+            elif platform == "YouTube":
+                run_input = {
+                    "searchQueries": [url],
+                    "maxResults": max_posts,
+                    "maxResultsShorts": 0,
+                    "maxResultStreams": 0,
+                    "startUrls": [],
+                    "subtitlesLanguage": "en",
+                    "subtitlesFormat": "srt"
+                }
+            else:
+                run_input = {"startUrls": [{"url": url}], "maxPosts": max_posts}
+
+        # Normalize actor input for common actor expectations (e.g., facebook actors expect 'pageUrls')
+        try:
+            if platform == 'Facebook' or (isinstance(actor_name, str) and 'facebook' in actor_name.lower()):
+                if isinstance(run_input, dict) and 'pageUrls' not in run_input:
+                    # Convert startUrls -> pageUrls if available
+                    start_urls = run_input.get('startUrls') or run_input.get('startUrls')
+                    urls = []
+                    if isinstance(start_urls, list) and start_urls:
+                        for entry in start_urls:
+                            if isinstance(entry, dict):
+                                u = entry.get('url') or entry.get('pageUrl') or entry.get('postUrl')
+                                if u:
+                                    urls.append(u)
+                            elif isinstance(entry, str):
+                                urls.append(entry)
+                    # If adapter used 'directUrls' or similar, try those too
+                    if not urls:
+                        direct = run_input.get('directUrls') or run_input.get('direct_urls')
+                        if isinstance(direct, list):
+                            for d in direct:
+                                if isinstance(d, dict):
+                                    u = d.get('url')
+                                    if u:
+                                        urls.append(u)
+                                elif isinstance(d, str):
+                                    urls.append(d)
+
+                    if urls:
+                        run_input['pageUrls'] = urls
+                    else:
+                        # Fallback to single provided url
+                        run_input.setdefault('pageUrls', [url])
+
+            # Ensure there is a numeric limit key present for safety
+            if isinstance(run_input, dict) and not any(k in run_input for k in ['resultsLimit', 'maxResults', 'maxPosts', 'results_limit']):
+                run_input.setdefault('resultsLimit', max_posts)
+        except Exception as _e:
+            st.warning(f"⚠️ Failed to normalize actor input: {_e}")
 
         # Run the actor
         st.info(f"Calling Apify actor: {actor_name}")
@@ -825,14 +935,42 @@ def fetch_apify_data(platform: str, url: str, _apify_token: str, max_posts: int 
                 date_info += f"to {to_date}"
             st.info(f"📅 {date_info}")
 
+        # Primary call
         run = client.actor(actor_name).call(run_input=run_input)
 
         # Fetch results
         items = []
-        for item in client.dataset(run["defaultDatasetId"]).iterate_items():
-            items.append(item)
+        dataset_id = run.get("defaultDatasetId")
+        if dataset_id:
+            for item in client.dataset(dataset_id).iterate_items():
+                items.append(item)
 
         st.info(f"✅ Received {len(items)} posts from actor (requested {max_posts})")
+
+        # If actor returned 0 items and we used date filters, retry once without date filters
+        if len(items) == 0 and (from_iso or to_iso):
+            st.warning("⚠️ Actor returned 0 posts for the given date range — retrying without date filters...")
+            # Build a no-date input copy
+            retry_input = dict(run_input)
+            # Remove common date keys
+            for k in ['fromDate', 'toDate', 'from_date', 'to_date', 'startDate', 'endDate']:
+                retry_input.pop(k, None)
+
+            try:
+                time.sleep(1)
+                run2 = client.actor(actor_name).call(run_input=retry_input)
+                items2 = []
+                dataset_id2 = run2.get('defaultDatasetId')
+                if dataset_id2:
+                    for item in client.dataset(dataset_id2).iterate_items():
+                        items2.append(item)
+                st.info(f"🔁 Retry returned {len(items2)} posts (no-date)")
+                # Prefer the retry results if non-empty
+                if len(items2) > 0:
+                    return items2
+            except Exception as e:
+                st.warning(f"⚠️ Retry without date filters failed: {e}")
+
         return items
 
     except Exception as e:
@@ -1742,6 +1880,19 @@ def main():
     @with_error_boundary("API Token Error", show_details=True)
     def get_api_token():
         try:
+            # Prefer Streamlit secrets (safer for deployed apps)
+            try:
+                # Common secret keys we expect: 'apify_token' or 'APIFY_TOKEN'
+                if hasattr(st, 'secrets') and st.secrets:
+                    if 'apify_token' in st.secrets:
+                        return st.secrets['apify_token']
+                    if 'APIFY_TOKEN' in st.secrets:
+                        return st.secrets['APIFY_TOKEN']
+            except Exception:
+                # If secrets are not available or not configured, ignore and fallback
+                pass
+
+            # Fallback to environment variable, then to built-in default token
             return os.environ.get('APIFY_TOKEN', 'apify_api_14gYxq0ETCby20EvyECx9plcTt0DgO4uSyss')
         except Exception:
             return os.environ.get("APIFY_TOKEN")
@@ -1876,7 +2027,7 @@ def main():
 
             fetch_detailed_comments = st.sidebar.checkbox(
                 "Fetch Detailed Comments",
-                value=False,  # Default to False due to actor issues
+                value=True,  # Default to True for word clouds and sentiment analysis
                 help="Fetch detailed comments for Facebook posts using the Comments Scraper actor (currently having issues - may fail)"
             )
 
@@ -1887,7 +2038,7 @@ def main():
 
             fetch_detailed_comments = st.sidebar.checkbox(
                 "Fetch Detailed Comments",
-                value=False,  # Default to False to avoid costs
+                value=True,  # Default to True for word clouds and sentiment analysis
                 help="Fetch detailed comments for Instagram posts using the Instagram Comments Scraper (pay-per-result pricing)"
             )
 
@@ -1904,7 +2055,7 @@ def main():
 
             fetch_detailed_comments = st.sidebar.checkbox(
                 "Fetch Detailed Comments",
-                value=False,
+                value=True,  # Default to True for word clouds and sentiment analysis
                 help="Fetch detailed comments for posts"
             )
 
@@ -2251,7 +2402,10 @@ def main():
                 with col1:
                     st.metric("Posts Saved", save_result.get('total_posts', 0))
                 with col2:
-                    st.metric("Comments Saved", save_result.get('total_comments', 0))
+                    comments_saved = save_result.get('total_comments', 0)
+                    st.metric("Comments Saved", comments_saved)
+                    if comments_saved == 0:
+                        st.warning("⚠️ No comments saved!")
                 with col3:
                     st.metric("Job ID", save_result.get('job_id', '')[:8] + "...")
                 
@@ -2262,6 +2416,18 @@ def main():
                 if 'comments' in save_result:
                     comments_stats = save_result['comments']
                     st.text(f"Comments: {comments_stats.get('inserted', 0)} new, {comments_stats.get('updated', 0)} updated")
+                
+                # Warning if no comments were saved
+                if save_result.get('total_comments', 0) == 0:
+                    st.warning("⚠️ **No comments were saved to the database!**")
+                    st.info("""
+                    **Possible reasons:**
+                    1. **'Fetch Detailed Comments' was disabled** - Enable it in the sidebar before scraping
+                    2. **Posts have no comments** - Try scraping posts with more engagement
+                    3. **Comments failed to fetch** - Check the scraping logs above for errors
+                    
+                    **To fix:** Re-scrape with 'Fetch Detailed Comments' enabled in the sidebar.
+                    """)
             
             # Show file save results
             if save_result.get('json_path'):

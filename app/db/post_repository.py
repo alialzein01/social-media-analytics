@@ -201,19 +201,53 @@ class PostRepository:
         Returns:
             List of post documents
         """
-        query = {
-            'platform': platform,
-            'published_at': {
-                '$gte': start_date.isoformat(),
-                '$lte': end_date.isoformat()
-            }
-        }
-        
-        return list(
-            self.collection.find(query)
-            .sort('published_at', DESCENDING)
-            .limit(limit)
-        )
+        # Stored `published_at` can be either datetime objects or ISO-format strings.
+        # MongoDB range queries against datetimes won't match string fields, so be tolerant:
+        # - Fetch posts for the platform, then parse/filter published_at in Python.
+        def _parse_published_at(val):
+            if val is None:
+                return None
+            # If already a datetime, return as-is
+            if isinstance(val, datetime):
+                return val
+            if isinstance(val, str):
+                s = val.strip()
+                # Common ISO formats we may encounter: "YYYY-MM-DDTHH:MM:SS.%fZ" or without ms
+                try:
+                    # Remove trailing Z for fromisoformat
+                    if s.endswith('Z'):
+                        s2 = s[:-1]
+                    else:
+                        s2 = s
+                    # Try fromisoformat (Python 3.11+ handles many variants)
+                    return datetime.fromisoformat(s2)
+                except Exception:
+                    # Try common formats
+                    for fmt in ('%Y-%m-%dT%H:%M:%S.%f', '%Y-%m-%dT%H:%M:%S'):
+                        try:
+                            return datetime.strptime(s2, fmt)
+                        except Exception:
+                            continue
+                    return None
+            return None
+
+        # Query posts for platform (case-insensitive)
+        query = {'platform': {'$regex': f'^{platform}$', '$options': 'i'}}
+        cursor = self.collection.find(query).sort('published_at', DESCENDING).limit(limit * 2)
+
+        results = []
+        for p in cursor:
+            pa_raw = p.get('published_at')
+            pa = _parse_published_at(pa_raw)
+            if pa is None:
+                continue
+            # Compare as naive UTC datetimes
+            if start_date <= pa <= end_date:
+                results.append(p)
+
+        # Sort by parsed published_at descending
+        results.sort(key=lambda x: _parse_published_at(x.get('published_at')) or datetime.min, reverse=True)
+        return results[:limit]
     
     def get_posts_by_job(
         self,
@@ -277,12 +311,13 @@ class PostRepository:
         Returns:
             Dict with aggregated stats
         """
-        match_query = {'platform': platform}
-        
+        # Case-insensitive platform matching and datetime range comparisons
+        match_query = {'platform': {'$regex': f'^{platform}$', '$options': 'i'}}
+
         if start_date and end_date:
             match_query['published_at'] = {
-                '$gte': start_date.isoformat(),
-                '$lte': end_date.isoformat()
+                '$gte': start_date,
+                '$lte': end_date
             }
         
         pipeline = [
