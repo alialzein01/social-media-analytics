@@ -308,6 +308,9 @@ def create_advanced_nlp_dashboard(
         show_emoji_analysis: Whether to show emoji analysis
         show_statistics: Whether to show text statistics
     """
+    # Ensure streamlit is available (fix for UnboundLocalError in deployed environments)
+    import streamlit as st
+    
     if not texts:
         st.warning("No text data available for analysis")
         return
