@@ -308,15 +308,15 @@ def create_advanced_nlp_dashboard(
         show_emoji_analysis: Whether to show emoji analysis
         show_statistics: Whether to show text statistics
     """
-    # Ensure streamlit is available (fix for UnboundLocalError in deployed environments)
-    import streamlit as st
+    # Import streamlit locally to avoid UnboundLocalError in deployed environments
+    import streamlit as _st
     
     if not texts:
-        st.warning("No text data available for analysis")
+        _st.warning("No text data available for analysis")
         return
 
-    st.markdown("## 🧠 Advanced NLP Analysis")
-    st.markdown("---")
+    _st.markdown("## 🧠 Advanced NLP Analysis")
+    _st.markdown("---")
 
     # Import advanced NLP functions
     from app.nlp.advanced_nlp import (
@@ -325,31 +325,31 @@ def create_advanced_nlp_dashboard(
     )
 
     # Run comprehensive analysis
-    with st.spinner("Analyzing text corpus..."):
+    with _st.spinner("Analyzing text corpus..."):
         analysis = analyze_corpus_advanced(texts)
 
     # Text Statistics
     if show_statistics:
         create_text_statistics_dashboard(analysis['statistics'])
-        st.markdown("---")
+        _st.markdown("---")
 
     # Topic Modeling
     if show_topics and SKLEARN_AVAILABLE:
         if analysis['topics']:
             create_topic_modeling_view(analysis['topics'])
-            st.markdown("---")
+            _st.markdown("---")
         else:
-            st.info("💡 Topic modeling requires at least 10 texts with sufficient content.")
+            _st.info("💡 Topic modeling requires at least 10 texts with sufficient content.")
     elif show_topics and not SKLEARN_AVAILABLE:
-        st.warning("📦 Install scikit-learn for topic modeling: `pip install scikit-learn`")
+        _st.warning("📦 Install scikit-learn for topic modeling: `pip install scikit-learn`")
 
     # Keyword Extraction
     if show_keywords and SKLEARN_AVAILABLE:
         if analysis['keywords']:
             create_keyword_cloud(analysis['keywords'], "Most Important Keywords (TF-IDF)")
-            st.markdown("---")
+            _st.markdown("---")
     elif show_keywords and not SKLEARN_AVAILABLE:
-        st.warning("📦 Install scikit-learn for keyword extraction: `pip install scikit-learn`")
+        _st.warning("📦 Install scikit-learn for keyword extraction: `pip install scikit-learn`")
 
     # Emoji Analysis
     if show_emoji_analysis and analysis.get('emoji_analysis'):
@@ -383,7 +383,7 @@ def create_advanced_nlp_dashboard(
                 }
 
                 create_emoji_sentiment_chart(transformed)
-                st.markdown("---")
+                _st.markdown("---")
             except Exception:
                 # Fallback: skip emoji chart if transformation fails
                 pass
