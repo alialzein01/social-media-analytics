@@ -12,8 +12,8 @@ numpy>=1.24.0
 # NLP (Arabic-capable options)
 # Uncomment the ones you want to use:
 
-# Option 1: GLiNER for NER (recommended for Arabic)
-gliner>=0.2.0
+# Option 1: GLiNER for NER (recommended for Arabic) - REMOVED (too slow to build)
+# gliner>=0.2.0
 
 # Option 2: CAMeL Tools for comprehensive Arabic NLP
 # camel-tools>=1.5.0

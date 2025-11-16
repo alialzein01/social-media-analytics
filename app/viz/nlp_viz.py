@@ -308,8 +308,21 @@ def create_advanced_nlp_dashboard(
         show_emoji_analysis: Whether to show emoji analysis
         show_statistics: Whether to show text statistics
     """
+    # Validate input
     if not texts:
         st.warning("No text data available for analysis")
+        return
+    
+    # Ensure texts is a list of strings
+    if not isinstance(texts, list):
+        st.error("Invalid input: texts must be a list")
+        return
+    
+    # Filter out non-string items and empty strings
+    texts = [str(t).strip() for t in texts if t and str(t).strip()]
+    
+    if not texts:
+        st.warning("No valid text data available for analysis")
         return
 
     st.markdown("## 🧠 Advanced NLP Analysis")
@@ -385,20 +398,19 @@ def create_advanced_nlp_dashboard(
                 # Fallback: skip emoji chart if transformation fails
                 pass
 
-    # Entity Extraction (if GLiNER is available and enabled)
-    import streamlit as st
-    use_entity_extraction = st.session_state.get('use_entity_extraction', True)
-
-    if use_entity_extraction:
-        try:
-            from app.viz.entity_viz import display_entity_dashboard
-            display_entity_dashboard(texts)
-        except ImportError:
-            # GLiNER not installed, skip entity extraction
-            pass
-        except Exception as e:
-            # Silently skip if entity extraction fails
-            pass
+    # Entity Extraction (GLiNER) - REMOVED (too slow to build)
+    # use_entity_extraction = st.session_state.get('use_entity_extraction', True)
+    #
+    # if use_entity_extraction:
+    #     try:
+    #         from app.viz.entity_viz import display_entity_dashboard
+    #         display_entity_dashboard(texts)
+    #     except ImportError:
+    #         # GLiNER not installed, skip entity extraction
+    #         pass
+    #     except Exception as e:
+    #         # Silently skip if entity extraction fails
+    #         pass
 
 
 # ============================================================================

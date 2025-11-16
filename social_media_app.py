@@ -364,7 +364,7 @@ def normalize_post_data(raw_data: List[Dict], platform: str, apify_token: str = 
     This is a wrapper that maintains backward compatibility.
     """
     if not apify_token:
-        apify_token = os.getenv("APIFY_TOKEN", "apify_api_14gYxq0ETCby20EvyECx9plcTt0DgO4uSyss")
+        apify_token = os.getenv("APIFY_TOKEN")
 
     # Select appropriate adapter
     if platform == "Facebook":
@@ -1622,12 +1622,12 @@ def main():
         initial_sidebar_state="expanded"
     )
 
-    # Apply custom theme (check session state for theme preference)
-    if 'theme' not in st.session_state:
-        st.session_state.theme = 'light'
-
-    # Inject custom CSS
-    st.markdown(get_custom_css(st.session_state.theme), unsafe_allow_html=True)
+    # Custom theme disabled - using Streamlit's default light theme
+    # if 'theme' not in st.session_state:
+    #     st.session_state.theme = 'light'
+    #
+    # # Inject custom CSS
+    # st.markdown(get_custom_css(st.session_state.theme), unsafe_allow_html=True)
 
     # App Header
     st.markdown("""
@@ -1639,30 +1639,30 @@ def main():
     </div>
     """, unsafe_allow_html=True)
 
-    # Theme Toggle in Sidebar
-    st.sidebar.markdown("### ⚙️ Settings")
-    theme_toggle = st.sidebar.checkbox(
-        "🌙 Dark Mode",
-        value=st.session_state.theme == 'dark',
-        help="Toggle between light and dark themes"
-    )
-
-    if theme_toggle and st.session_state.theme != 'dark':
-        st.session_state.theme = 'dark'
-        st.rerun()
-    elif not theme_toggle and st.session_state.theme != 'light':
-        st.session_state.theme = 'light'
-        st.rerun()
-
-    st.sidebar.markdown("---")
+    # Theme Toggle disabled - using Streamlit's default light theme
+    # st.sidebar.markdown("### ⚙️ Settings")
+    # theme_toggle = st.sidebar.checkbox(
+    #     "🌙 Dark Mode",
+    #     value=st.session_state.theme == 'dark',
+    #     help="Toggle between light and dark themes"
+    # )
+    #
+    # if theme_toggle and st.session_state.theme != 'dark':
+    #     st.session_state.theme = 'dark'
+    #     st.rerun()
+    # elif not theme_toggle and st.session_state.theme != 'light':
+    #     st.session_state.theme = 'light'
+    #     st.rerun()
+    #
+    # st.sidebar.markdown("---")
 
     # Check for API token with better error handling
     @with_error_boundary("API Token Error", show_details=True)
     def get_api_token():
         try:
-            return os.environ.get('APIFY_TOKEN', 'apify_api_14gYxq0ETCby20EvyECx9plcTt0DgO4uSyss')
+            return os.environ.get(.APIFY_TOKEN.)
         except Exception:
-            return os.environ.get("APIFY_TOKEN", 'apify_api_14gYxq0ETCby20EvyECx9plcTt0DgO4uSyss')
+            return os.environ.get(.APIFY_TOKEN.)
 
     apify_token = get_api_token()
 
@@ -1827,11 +1827,12 @@ def main():
         help="Use simple word cloud instead of phrase-based analysis. Try this if you see 'No meaningful content found'."
     )
 
-    use_entity_extraction = st.sidebar.checkbox(
-        "Enable Entity Extraction (GLiNER)",
-        value=True,
-        help="Extract named entities (people, locations, organizations, etc.) from comments using AI. Requires GLiNER library."
-    )
+    # Entity Extraction (GLiNER) - REMOVED (too slow to build)
+    # use_entity_extraction = st.sidebar.checkbox(
+    #     "Enable Entity Extraction (GLiNER)",
+    #     value=True,
+    #     help="Extract named entities (people, locations, organizations, etc.) from comments using AI. Requires GLiNER library."
+    # )
 
     # File selector for loading saved data
     if data_source == "Load from File":
@@ -1889,7 +1890,7 @@ def main():
     st.session_state.use_phrase_analysis = use_phrase_analysis
     st.session_state.use_sentiment_coloring = use_sentiment_coloring
     st.session_state.use_simple_wordcloud = use_simple_wordcloud
-    st.session_state.use_entity_extraction = use_entity_extraction
+    # st.session_state.use_entity_extraction = use_entity_extraction  # REMOVED (GLiNER disabled)
 
     # Main area - URL Input (only for API fetch)
     if data_source == "Fetch from API":
