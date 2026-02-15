@@ -7,7 +7,7 @@ Handles Facebook-specific data fetching, normalization, and analysis.
 
 from typing import List, Dict, Optional, Any
 import pandas as pd
-from . import PlatformAdapter
+from . import PlatformAdapter, parse_published_at
 
 
 class FacebookAdapter(PlatformAdapter):
@@ -91,7 +91,7 @@ class FacebookAdapter(PlatformAdapter):
         post = {
             # Required fields
             'post_id': str(post_id) if post_id else '',
-            'published_at': self._parse_timestamp(
+            'published_at': parse_published_at(
                 raw_post.get('time') or
                 raw_post.get('timestamp') or
                 raw_post.get('createdTime', '')
@@ -176,25 +176,6 @@ class FacebookAdapter(PlatformAdapter):
 
         # Return raw engagement if we don't have reach data
         return float(total_engagement)
-
-    def _parse_timestamp(self, timestamp) -> Any:
-        """
-        Parse Facebook timestamp to datetime.
-
-        Facebook returns milliseconds since epoch or ISO string.
-        """
-        if not timestamp:
-            return None
-
-        try:
-            # Convert to pandas datetime (handles both int timestamps and ISO strings)
-            dt = pd.to_datetime(timestamp, errors='coerce', utc=True)
-            if pd.isna(dt):
-                return None
-            # Return timezone-naive datetime
-            return dt.tz_convert(None)
-        except:
-            return timestamp
 
     def _count_total_reactions(self, reactions: Dict) -> int:
         """

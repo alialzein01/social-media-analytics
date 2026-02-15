@@ -47,8 +47,10 @@ except ImportError:
 
 # Config defaults for consistency with settings
 from app.config.settings import DEFAULT_MAX_POSTS, DEFAULT_MAX_COMMENTS
+from app.config import URL_PATTERNS
 
 # Platform adapters for data normalization
+from app.adapters import parse_published_at
 from app.adapters.facebook import FacebookAdapter
 from app.adapters.instagram import InstagramAdapter
 from app.adapters.youtube import YouTubeAdapter
@@ -91,11 +93,15 @@ from app.viz.charts import (
     create_emoji_chart
 )
 
-# Dashboard components
+# Dashboard components (single import block)
 from app.viz.dashboards import (
     create_kpi_dashboard,
     create_trends_dashboard,
-    create_cross_platform_comparison
+    create_cross_platform_comparison,
+    create_engagement_trend_chart,
+    create_posting_frequency_chart,
+    create_performance_comparison,
+    create_insights_summary,
 )
 
 # UI/UX Components
@@ -119,13 +125,6 @@ from app.styles.errors import (
     validate_input
 )
 from app.utils.export import create_comprehensive_export_section
-from app.viz.dashboards import (
-    create_kpi_dashboard,
-    create_engagement_trend_chart,
-    create_posting_frequency_chart,
-    create_performance_comparison,
-    create_insights_summary
-)
 
 # Post detail analysis components
 from app.viz.post_details import (
@@ -1708,63 +1707,9 @@ def create_instagram_post_analysis(selected_post: Dict, platform: str):
         st.info("No comments available for this post")
         st.warning("💡 **To see post analysis:** Enable 'Fetch Detailed Comments' in the sidebar and re-analyze the page.")
 
-def create_sentiment_pie_chart(sentiment_counts: Dict[str, int]):
-    """Create sentiment distribution pie chart with custom colors."""
-    if not sentiment_counts or sum(sentiment_counts.values()) == 0:
-        st.info("No sentiment data available")
-        return
-
-    # Prepare data
-    labels = []
-    sizes = []
-    color_list = []
-
-    for sentiment, count in sentiment_counts.items():
-        if count > 0:
-            labels.append(sentiment.title())
-            sizes.append(count)
-            color_list.append(SENTIMENT_COLORS.get(sentiment, THEME_COLORS['tertiary']))
-
-    if not sizes:
-        st.info("No sentiment data to display")
-        return
-
-    # Calculate percentages
-    total = sum(sizes)
-    percentages = [f"{size/total*100:.1f}%" for size in sizes]
-
-    # Create pie chart
-    fig, ax = plt.subplots(figsize=(8, 6), facecolor=THEME_COLORS['background'])
-    wedges, texts, autotexts = ax.pie(
-        sizes,
-        labels=labels,
-        colors=color_list,
-        autopct='%1.1f%%',
-        startangle=90,
-        textprops={'fontsize': 12, 'weight': 'bold', 'color': THEME_COLORS['text']}
-    )
-
-    # Customize the chart
-    ax.set_title('Sentiment Distribution', fontsize=16, fontweight='bold', pad=20, color=THEME_COLORS['text'])
-    fig.patch.set_facecolor(THEME_COLORS['background'])
-
-    # Add count information to legend
-    legend_labels = [f"{label}: {size} ({percent})" for label, size, percent in zip(labels, sizes, percentages)]
-    ax.legend(wedges, legend_labels, title="Sentiment Analysis", loc="center left", bbox_to_anchor=(1, 0, 0.5, 1))
-
-    plt.tight_layout()
-    st.pyplot(fig)
-
 # ============================================================================
-# URL VALIDATION
+# URL VALIDATION (uses URL_PATTERNS from app.config)
 # ============================================================================
-
-# Pre-compiled URL validation patterns for performance
-URL_PATTERNS = {
-    "Facebook": re.compile(r"^https?://(www\.)?(facebook|fb)\.com/[^/?#]+", re.IGNORECASE),
-    "Instagram": re.compile(r"^https?://(www\.)?instagram\.com/[^/?#]+", re.IGNORECASE),
-    "YouTube": re.compile(r"^https?://(www\.)?(youtube\.com/(watch\?v=|channel/|@|c/|user/)|youtu\.be/)[^/?#]+", re.IGNORECASE),
-}
 
 def validate_url(url: str, platform: str) -> bool:
     """Tighten platform URL validation with pre-compiled regex patterns."""
@@ -2521,6 +2466,11 @@ def main():
                     st.markdown("### 😊 Reactions Breakdown")
                     create_reaction_pie_chart(reactions_breakdown)
 
+                # Facebook: point users to Monthly Insights for word cloud & sentiment
+                if platform == "Facebook":
+                    st.markdown("---")
+                    st.info("💡 **Word cloud and sentiment analysis** are in the **💡 Monthly Insights** section below. Enable **Fetch Detailed Comments** in the sidebar if you don't see them.")
+
         st.markdown("---")
 
         # Monthly Insights Section
@@ -2646,7 +2596,12 @@ def main():
         display_df = df[['published_at', 'text', 'likes', 'comments_count', 'shares_count']].copy()
         display_df['text'] = display_df['text'].str[:100] + '...'
 
-        # Optimized: vectorized datetime formatting
+        # Normalize timestamps (APIs often return ms; pandas default is ns → wrong date)
+        def _safe_published_at(val):
+            if isinstance(val, (int, float)) and val != 0:
+                return parse_published_at(val)
+            return val
+        display_df['published_at'] = display_df['published_at'].apply(_safe_published_at)
         display_df['published_at'] = pd.to_datetime(display_df['published_at'], utc=True).dt.tz_localize(None)
         display_df['published_at'] = display_df['published_at'].dt.strftime('%Y-%m-%d %H:%M').fillna('Unknown')
         display_df.columns = ['Date', 'Caption', 'Likes', 'Comments', 'Shares']

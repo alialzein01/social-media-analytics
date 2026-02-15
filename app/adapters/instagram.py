@@ -7,7 +7,7 @@ Handles Instagram-specific data fetching, normalization, and analysis.
 
 from typing import List, Dict, Optional, Any
 import pandas as pd
-from . import PlatformAdapter
+from . import PlatformAdapter, parse_published_at
 
 
 class InstagramAdapter(PlatformAdapter):
@@ -77,7 +77,7 @@ class InstagramAdapter(PlatformAdapter):
         post = {
             # Required fields
             'post_id': str(post_id) if post_id else '',
-            'published_at': raw_post.get('timestamp', ''),
+            'published_at': parse_published_at(raw_post.get('timestamp')),
             'text': raw_post.get('caption', ''),
 
             # Engagement metrics

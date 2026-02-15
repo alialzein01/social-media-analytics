@@ -12,6 +12,29 @@ from datetime import datetime
 import pandas as pd
 
 
+def parse_published_at(timestamp) -> Optional[Any]:
+    """
+    Parse a timestamp from platform APIs into a timezone-naive datetime.
+
+    Many APIs return milliseconds since Unix epoch; pandas treats numbers as
+    nanoseconds by default, which produces 1970-01-01 for large ms values.
+    This helper uses unit='ms' when the value is >= 1e12, else 's'.
+    """
+    if timestamp is None or (isinstance(timestamp, (int, float)) and timestamp == 0):
+        return None
+    try:
+        if isinstance(timestamp, (int, float)):
+            unit = "ms" if abs(timestamp) >= 1e12 else "s"
+            dt = pd.to_datetime(timestamp, unit=unit, utc=True)
+        else:
+            dt = pd.to_datetime(timestamp, errors="coerce", utc=True)
+        if pd.isna(dt):
+            return None
+        return dt.tz_convert(None)
+    except Exception:
+        return None
+
+
 class PlatformAdapter(ABC):
     """
     Abstract base class for platform-specific data adapters.

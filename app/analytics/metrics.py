@@ -72,9 +72,14 @@ def aggregate_all_comments(posts: List[Dict]) -> List[str]:
         if isinstance(comments_list, list):
             for comment in comments_list:
                 if isinstance(comment, dict):
-                    text = comment.get('text', '')
-                    if text and text.strip():
-                        all_comments.append(text.strip())
+                    # Support multiple keys (Facebook uses 'message', normalized uses 'text')
+                    text = (
+                        comment.get('text', '')
+                        or comment.get('message', '')
+                        or comment.get('content', '')
+                    )
+                    if text and str(text).strip():
+                        all_comments.append(str(text).strip())
                 elif isinstance(comment, str) and comment.strip():
                     all_comments.append(comment.strip())
 
@@ -95,9 +100,13 @@ def extract_comment_texts(comments_list: List[Any]) -> List[str]:
 
     for comment in comments_list:
         if isinstance(comment, dict):
-            text = comment.get('text', '')
-            if text and text.strip():
-                comment_texts.append(text.strip())
+            text = (
+                comment.get('text', '')
+                or comment.get('message', '')
+                or comment.get('content', '')
+            )
+            if text and str(text).strip():
+                comment_texts.append(str(text).strip())
         elif isinstance(comment, str) and comment.strip():
             comment_texts.append(comment.strip())
 

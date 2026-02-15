@@ -379,9 +379,10 @@ def create_comment_analytics(post: Dict, platform: str) -> None:
 
     for comment in comments_list:
         if isinstance(comment, dict):
-            text = comment.get('text', '')
-            if text and text.strip():
-                comment_texts.append(text.strip())
+            text = comment.get('text', '') or comment.get('message', '') or comment.get('content', '')
+            if text and str(text).strip():
+                text = str(text).strip()
+                comment_texts.append(text)
                 comment_data.append({
                     'text': text,
                     'author': comment.get('ownerUsername', comment.get('author', 'Unknown')),
