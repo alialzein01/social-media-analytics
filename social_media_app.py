@@ -21,6 +21,8 @@ import re
 import json
 import glob
 import time
+import hashlib
+import traceback
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
@@ -69,6 +71,13 @@ from app.viz.nlp_viz import (
     create_sentiment_comparison_view
 )
 from app.services.persistence import DataPersistenceService
+
+try:
+    from app.services.mongodb_service import MongoDBService
+    MONGODB_AVAILABLE = True
+except Exception:
+    MongoDBService = None
+    MONGODB_AVAILABLE = False
 
 # Visualization components
 from app.viz.charts import (
@@ -609,6 +618,146 @@ def load_data_from_file(file_path: str) -> Optional[List[Dict]]:
     except Exception as e:
         st.error(f"Error loading file: {str(e)}")
         return None
+
+
+def save_data_to_files_only(raw_data: List[Dict], normalized_data: List[Dict], platform: str) -> Dict[str, Any]:
+    """
+    Fallback: Save data to files only (no database).
+    Returns dict with file paths for consistent UI.
+    """
+    try:
+        persistence = DataPersistenceService()
+        json_path, csv_path, comments_path = persistence.save_dataset(
+            raw_data=raw_data,
+            normalized_data=normalized_data,
+            platform=platform
+        )
+        return {
+            'json_path': json_path,
+            'csv_path': csv_path,
+            'comments_path': comments_path,
+            'total_posts': len(normalized_data),
+            'total_comments': sum(len(p.get('comments_list', []) or []) for p in normalized_data if isinstance(p.get('comments_list'), list))
+        }
+    except Exception as e:
+        st.error(f"Error saving files: {str(e)}")
+        return {}
+
+
+def save_data_to_database(raw_data: List[Dict], normalized_data: List[Dict], platform: str, url: str, max_posts: int) -> Dict[str, Any]:
+    """
+    Save data to MongoDB using MongoDBService, and to files as backup.
+    Returns dict with job_id and statistics when DB is connected; otherwise falls back to files only.
+    """
+    try:
+        db_service = st.session_state.get('db_service')
+        if not db_service:
+            st.warning("Database not initialized. Saving to files only.")
+            return save_data_to_files_only(raw_data, normalized_data, platform)
+
+        # Ensure all comments have required fields before saving
+        for post in normalized_data:
+            comments_list = post.get('comments_list', [])
+            if isinstance(comments_list, list):
+                for i, comment in enumerate(comments_list):
+                    if not isinstance(comment, dict):
+                        comments_list[i] = {'text': str(comment)}
+                        comment = comments_list[i]
+
+                    if 'comment_id' not in comment or not comment.get('comment_id'):
+                        post_id = post.get('post_id', '')
+                        comment_text = comment.get('text', '')
+                        unique_string = f"{post_id}_{comment_text}_{i}_{platform}"
+                        comment['comment_id'] = hashlib.md5(unique_string.encode()).hexdigest()
+
+                    if 'text' not in comment:
+                        comment['text'] = ''
+                    if 'author_name' not in comment:
+                        comment['author_name'] = comment.get('ownerUsername', '') or comment.get('authorDisplayName', '') or 'Unknown'
+                    if 'created_time' not in comment:
+                        comment['created_time'] = comment.get('timestamp', '') or comment.get('publishedAt', '') or ''
+                    if 'likes_count' not in comment:
+                        comment['likes_count'] = comment.get('likesCount', 0) or comment.get('likeCount', 0) or 0
+
+        with st.spinner("💾 Saving to database..."):
+            result = db_service.save_scraping_results(
+                platform=platform,
+                url=url,
+                normalized_posts=normalized_data,
+                max_posts=max_posts
+            )
+
+        persistence = DataPersistenceService()
+        json_path, csv_path, comments_path = persistence.save_dataset(
+            raw_data=raw_data,
+            normalized_data=normalized_data,
+            platform=platform
+        )
+        result['json_path'] = json_path
+        result['csv_path'] = csv_path
+        result['comments_path'] = comments_path
+
+        return result
+
+    except Exception as e:
+        st.error(f"Error saving to database: {str(e)}")
+        st.warning("Falling back to file-only storage...")
+        return save_data_to_files_only(raw_data, normalized_data, platform)
+
+
+def load_data_from_database(platform: str, days_back: int = 30, limit: int = 1000) -> Optional[List[Dict]]:
+    """
+    Load data from MongoDB for the specified platform and date range.
+    Returns normalized data in the same format as from API.
+    """
+    try:
+        db_service = st.session_state.get('db_service')
+        if not db_service:
+            st.warning("Database not initialized. Please use 'Load from File' option.")
+            return None
+
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days_back)
+
+        with st.spinner(f"📊 Loading {platform} data from database..."):
+            posts = db_service.get_posts_for_analysis(
+                platform=platform,
+                start_date=start_date,
+                end_date=end_date,
+                limit=limit
+            )
+            fallback_used = False
+
+            if not posts:
+                try:
+                    posts = db_service.get_posts_for_analysis(platform=platform, limit=limit)
+                    fallback_used = True
+                except Exception:
+                    posts = None
+
+            if posts:
+                if fallback_used:
+                    st.warning("⚠️ No posts matched the requested date range — showing recent posts for the platform instead.")
+                for post in posts:
+                    post_id = post.get('post_id')
+                    if post_id:
+                        comments = db_service.get_comments_for_analysis(
+                            platform=platform,
+                            post_id=post_id,
+                            limit=500
+                        )
+                        post['comments_list'] = comments or []
+
+                st.success(f"✅ Loaded {len(posts)} posts from database")
+                return posts
+            else:
+                st.info(f"No {platform} data found in database for the last {days_back} days")
+                return None
+
+    except Exception as e:
+        st.error(f"Error loading from database: {str(e)}")
+        return None
+
 
 @functools.lru_cache(maxsize=1)
 def get_saved_files() -> Dict[str, List[str]]:
@@ -1721,6 +1870,27 @@ def main():
         )
         st.stop()
 
+    # Initialize MongoDB (optional); only set db_service when connection succeeds
+    @st.cache_resource
+    def _init_db():
+        if not MONGODB_AVAILABLE or MongoDBService is None:
+            return None
+        try:
+            from app.config.database import get_database
+            if get_database().test_connection():
+                return MongoDBService()
+        except Exception:
+            pass
+        return None
+
+    if 'db_service' not in st.session_state:
+        st.session_state.db_service = _init_db()
+
+    if st.session_state.db_service:
+        st.sidebar.success("🗄️ Database connected")
+    else:
+        st.sidebar.caption("🗄️ Database not configured (optional)")
+
     # Sidebar - Platform Selection
     st.sidebar.markdown("### 📱 Platform Selection")
     platform = st.sidebar.radio(
@@ -1735,10 +1905,13 @@ def main():
     # Data Source Selection
     st.sidebar.markdown("---")
     st.sidebar.markdown("### 📁 Data Source")
+    data_source_options = ["Fetch from API", "Load from File"]
+    if st.session_state.get('db_service'):
+        data_source_options = ["Fetch from API", "Load from Database", "Load from File"]
     data_source = st.sidebar.radio(
         "Choose data source:",
-        ["Fetch from API", "Load from File"],
-        help="Select whether to fetch new data from API or load previously saved data"
+        data_source_options,
+        help="Fetch new data, load from MongoDB, or load from saved files"
     )
 
     # Facebook Configuration Options
@@ -1928,6 +2101,10 @@ def main():
             st.sidebar.info(f"No saved files found for {platform}")
             st.sidebar.markdown("**Tip:** Fetch data from API first to create saved files")
 
+    if data_source == "Load from Database" and st.session_state.get('db_service'):
+        st.sidebar.markdown("#### Database Options")
+        st.sidebar.caption("Configure load range below in the main area.")
+
     # Initialize session state
     if 'posts_data' not in st.session_state:
         st.session_state.posts_data = None
@@ -1956,10 +2133,22 @@ def main():
             st.markdown("<br>", unsafe_allow_html=True)
             analyze_button = st.button("🔍 Analyze", type="primary", width='stretch')
     else:
-        # For file loading, we don't need URL input
-        st.header(f"{platform} Analysis - Loaded from File")
-        analyze_button = False
-        url = ""
+        # Load from File or Load from Database
+        if data_source == "Load from Database":
+            st.header(f"{platform} Analysis - Load from Database")
+            days_back = st.slider("Days of history", 1, 365, 30, help="Load posts from the last N days")
+            max_posts_db = st.slider("Maximum posts to load", 10, 1000, 100, help="Cap the number of posts to load")
+            if st.session_state.get('db_service') and st.button("📊 Load from Database", type="primary"):
+                posts_data = load_data_from_database(platform, days_back=days_back, limit=max_posts_db)
+                if posts_data:
+                    st.session_state.posts_data = posts_data
+                    st.rerun()
+            analyze_button = False
+            url = ""
+        else:
+            st.header(f"{platform} Analysis - Loaded from File")
+            analyze_button = False
+            url = ""
 
     # In-page Table of Contents for expanders
     toc_items = [
@@ -2107,18 +2296,36 @@ def main():
 
         st.info(f"✅ Final result: {len(normalized_data)} posts with {total_comments} total comments")
 
-        # Save data to files
-        with st.spinner("💾 Saving data to files..."):
-            json_path, csv_path, comments_csv_path = save_data_to_files(raw_data, normalized_data, platform)
-
-        if json_path and csv_path:
-            st.success("✅ Data saved successfully!")
-            st.info(f"📄 Raw JSON: `{json_path}`")
-            st.info(f"📊 Processed CSV: `{csv_path}`")
-            if comments_csv_path:
-                st.info(f"💬 Comments CSV: `{comments_csv_path}`")
+        # Save: to database + files when DB connected, else files only
+        if st.session_state.get('db_service'):
+            save_result = save_data_to_database(raw_data, normalized_data, platform, url, max_posts)
+            if save_result:
+                st.success("✅ Data saved successfully!")
+                if save_result.get('job_id'):
+                    st.info("🗄️ **Database:** Saved to MongoDB")
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("Posts Saved", save_result.get('total_posts', 0))
+                    with col2:
+                        st.metric("Comments Saved", save_result.get('total_comments', 0))
+                    with col3:
+                        st.metric("Job ID", (save_result.get('job_id', '') or '')[:8] + "..." if save_result.get('job_id') else "—")
+                if save_result.get('json_path'):
+                    st.info(f"📄 Raw JSON: `{save_result.get('json_path')}`")
+                    st.info(f"📊 Processed CSV: `{save_result.get('csv_path')}`")
+                    if save_result.get('comments_path'):
+                        st.info(f"💬 Comments CSV: `{save_result.get('comments_path')}`")
         else:
-            st.warning("⚠️ Failed to save data to files")
+            with st.spinner("💾 Saving data to files..."):
+                json_path, csv_path, comments_csv_path = save_data_to_files(raw_data, normalized_data, platform)
+            if json_path and csv_path:
+                st.success("✅ Data saved successfully!")
+                st.info(f"📄 Raw JSON: `{json_path}`")
+                st.info(f"📊 Processed CSV: `{csv_path}`")
+                if comments_csv_path:
+                    st.info(f"💬 Comments CSV: `{comments_csv_path}`")
+            else:
+                st.warning("⚠️ Failed to save data to files")
 
         # Option to show all posts or filter by current month
         filter_option = st.radio(

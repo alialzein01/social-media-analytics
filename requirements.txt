@@ -25,6 +25,9 @@ numpy>=1.24.0
 # Option 4: VADER sentiment (basic fallback)
 # vaderSentiment>=3.3.2
 
+# Database (optional - for Load from Database feature)
+pymongo>=4.6.0
+
 # Utilities
 python-dateutil>=2.8.0
 pytz>=2023.3

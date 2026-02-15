@@ -22,6 +22,7 @@ A powerful Streamlit application that analyzes social media content from Faceboo
 - **Modern UI**: Clean, responsive interface built with Streamlit
 - **Flexible Date Filtering**: View all posts or filter by current month
 - **Batch Comment Processing**: Efficient extraction of comments from multiple posts
+- **Optional MongoDB**: Save scraped data to MongoDB and load it later via "Load from Database" (when `MONGODB_URI` is configured)
 
 ## 🚀 Quick Start
 
@@ -53,8 +54,16 @@ A powerful Streamlit application that analyzes social media content from Faceboo
    ```bash
    export APIFY_TOKEN=your_apify_token_here
    ```
+   Or add to `.streamlit/secrets.toml`: `APIFY_TOKEN = "your_token"`
 
-5. **Run the application**
+5. **(Optional) Set up MongoDB for "Load from Database"**
+   To enable saving and loading data from MongoDB:
+   - Set `MONGODB_URI` (e.g. `mongodb://localhost:27017/` or your Atlas URI)
+   - Set `MONGODB_DATABASE` (default: `social_media_analytics`)
+   - In `.streamlit/secrets.toml`: `MONGODB_URI = "..."` and `MONGODB_DATABASE = "social_media_analytics"`
+   - Or use environment variables. If not set, the app runs without database (file-only save/load).
+
+6. **Run the application**
    ```bash
    streamlit run social_media_app.py
    ```
