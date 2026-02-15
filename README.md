@@ -68,6 +68,45 @@ A powerful Streamlit application that analyzes social media content from Faceboo
    streamlit run social_media_app.py
    ```
 
+## ✅ Set everything (full setup)
+
+Follow these steps in order so the app and optional database are configured.
+
+1. **Install Python deps**
+   ```bash
+   cd social-media-analytics   # or your project folder
+   pip install -r requirements.txt
+   ```
+   This installs Streamlit, Apify client, pymongo, etc.
+
+2. **Create Streamlit secrets**
+   Create `.streamlit/secrets.toml` in the project root (create the `.streamlit` folder if needed):
+
+   ```toml
+   # Required for "Fetch from API"
+   APIFY_TOKEN = "your_apify_token_here"
+
+   # Optional: for "Load from Database"
+   MONGODB_URI = "mongodb://localhost:27017/"
+   MONGODB_DATABASE = "social_media_analytics"
+   ```
+
+   - Replace `your_apify_token_here` with your real [Apify](https://apify.com) API token.
+   - For **MongoDB**: use `mongodb://localhost:27017/` if MongoDB runs on your machine, or a [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) URI like `mongodb+srv://USER:PASSWORD@cluster.xxxxx.mongodb.net/`.
+
+3. **Optional: MongoDB**
+   - **Local:** Install and start MongoDB (e.g. [community server](https://www.mongodb.com/try/download/community)) so it listens on `localhost:27017`. Then the app will show "Database connected" and you can use "Load from Database".
+   - **Atlas:** Create a free cluster, get the connection string, put it in `MONGODB_URI` in `secrets.toml`. No local install needed.
+   - If you skip MongoDB, the app still runs; you can only "Fetch from API" and "Load from File".
+
+4. **Run the app**
+   ```bash
+   streamlit run social_media_app.py
+   ```
+   Open the URL shown (e.g. http://localhost:8501). Choose platform, data source (Fetch from API / Load from Database / Load from File), and analyze.
+
+**Summary:** Set `APIFY_TOKEN` in `.streamlit/secrets.toml` (required for fetch). Optionally set `MONGODB_URI` and `MONGODB_DATABASE` and have MongoDB running for "Load from Database".
+
 ## 🔄 Facebook Comments Workflow
 
 The app now features a sophisticated two-phase workflow for Facebook analysis:

@@ -1874,22 +1874,28 @@ def main():
     @st.cache_resource
     def _init_db():
         if not MONGODB_AVAILABLE or MongoDBService is None:
-            return None
+            return None, "pymongo not installed (pip install pymongo)"
         try:
             from app.config.database import get_database
-            if get_database().test_connection():
-                return MongoDBService()
-        except Exception:
-            pass
-        return None
+            db = get_database()
+            if db.test_connection():
+                return MongoDBService(), None
+            return None, "Connection test failed (is MongoDB running?)"
+        except Exception as e:
+            return None, str(e)
 
     if 'db_service' not in st.session_state:
-        st.session_state.db_service = _init_db()
+        _db, _err = _init_db()
+        st.session_state.db_service = _db
+        st.session_state.db_error = _err
 
     if st.session_state.db_service:
         st.sidebar.success("🗄️ Database connected")
     else:
         st.sidebar.caption("🗄️ Database not configured (optional)")
+        err = st.session_state.get("db_error")
+        if err:
+            st.sidebar.caption(f"ℹ️ {err[:80]}{'…' if len(err) > 80 else ''}")
 
     # Sidebar - Platform Selection
     st.sidebar.markdown("### 📱 Platform Selection")
