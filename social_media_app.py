@@ -21,6 +21,7 @@ import re
 import json
 import glob
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
 import streamlit as st
@@ -41,6 +42,9 @@ except ImportError:
 # ============================================================================
 # IMPORT NEW MODULAR COMPONENTS
 # ============================================================================
+
+# Config defaults for consistency with settings
+from app.config.settings import DEFAULT_MAX_POSTS, DEFAULT_MAX_COMMENTS
 
 # Platform adapters for data normalization
 from app.adapters.facebook import FacebookAdapter
@@ -498,28 +502,50 @@ def calculate_youtube_metrics(posts: List[Dict]) -> Dict[str, Any]:
 def fetch_youtube_comments(video_urls: List[str], _apify_token: str, max_comments_per_video: int = 10) -> List[Dict]:
     """
     Fetch comments from YouTube videos using the YouTube Comments Scraper.
+    Tries one batched run with all URLs when supported; falls back to per-video runs on failure.
     Cached for 1 hour per video URL combination.
     """
+    if not video_urls:
+        return []
+
     try:
         client = ApifyClient(_apify_token)
         all_comments = []
 
+        # Try batched run: single actor call with all video URLs
+        batch_input = {
+            "startUrls": [{"url": u} for u in video_urls],
+            "maxComments": max_comments_per_video,
+            "commentsSortBy": "1"  # 1 = most relevant comments
+        }
+        try:
+            st.info(f"Fetching comments from {len(video_urls)} video(s) in one batch...")
+            run = client.actor(YOUTUBE_COMMENTS_ACTOR_ID).call(run_input=batch_input)
+            cap = len(video_urls) * max_comments_per_video
+            for item in client.dataset(run["defaultDatasetId"]).iterate_items():
+                all_comments.append(item)
+                if len(all_comments) >= cap:
+                    break
+            if all_comments:
+                return all_comments
+        except Exception:
+            all_comments = []
+
+        # Fallback: per-video runs
         for video_url in video_urls:
             st.info(f"Fetching comments from: {video_url}")
-
-            # YouTube Comments Scraper input format
             run_input = {
                 "startUrls": [{"url": video_url}],
                 "maxComments": max_comments_per_video,
-                "commentsSortBy": "1"  # 1 = most relevant comments
+                "commentsSortBy": "1"
             }
-
-            # Run the comments scraper
             run = client.actor(YOUTUBE_COMMENTS_ACTOR_ID).call(run_input=run_input)
-
-            # Fetch results
+            n = 0
             for item in client.dataset(run["defaultDatasetId"]).iterate_items():
                 all_comments.append(item)
+                n += 1
+                if n >= max_comments_per_video:
+                    break
 
         return all_comments
 
@@ -659,7 +685,6 @@ def extract_main_titles_from_source(file_path: str) -> List[str]:
 # ============================================================================
 
 @st.cache_data(ttl=3600, max_entries=64, show_spinner=False)
-@functools.lru_cache(maxsize=32)
 def fetch_apify_data(platform: str, url: str, _apify_token: str, max_posts: int = 10, from_date: str = None, to_date: str = None) -> Optional[List[Dict]]:
     """
     Fetch data from Apify actor for the given platform and URL.
@@ -744,10 +769,12 @@ def fetch_apify_data(platform: str, url: str, _apify_token: str, max_posts: int 
 
         run = client.actor(actor_name).call(run_input=run_input)
 
-        # Fetch results
+        # Fetch results, respecting requested limit
         items = []
         for item in client.dataset(run["defaultDatasetId"]).iterate_items():
             items.append(item)
+            if len(items) >= max_posts:
+                break
 
         st.info(f"✅ Received {len(items)} posts from actor (requested {max_posts})")
         return items
@@ -757,12 +784,11 @@ def fetch_apify_data(platform: str, url: str, _apify_token: str, max_posts: int 
         return None
 
 @st.cache_data(ttl=3600, max_entries=256, show_spinner=False)
-@functools.lru_cache(maxsize=128)
-def fetch_post_comments(post_url: str, _apify_token: str) -> Optional[List[Dict]]:
+def fetch_post_comments(post_url: str, _apify_token: str, max_comments: int = DEFAULT_MAX_COMMENTS) -> Optional[List[Dict]]:
     """
     Fetch detailed comments for a specific Facebook post using the Comments Scraper actor.
     Tries different actors and input formats if one fails.
-    Cached for 1 hour per post URL.
+    Cached for 1 hour per post URL + max_comments.
     """
     # Validate URL format
     if not post_url or not post_url.startswith('http'):
@@ -775,7 +801,7 @@ def fetch_post_comments(post_url: str, _apify_token: str) -> Optional[List[Dict]
     # Only attempt the official Apify Facebook comments scraper.
     actor_configs = [
         {"actor_id": "apify/facebook-comments-scraper",
-         "input": {"startUrls": [{"url": post_url}], "maxComments": 50, "includeNestedComments": False}}
+         "input": {"startUrls": [{"url": post_url}], "maxComments": max_comments, "includeNestedComments": False}}
     ]
 
     for i, config in enumerate(actor_configs):
@@ -785,10 +811,12 @@ def fetch_post_comments(post_url: str, _apify_token: str) -> Optional[List[Dict]
             # Run the actor
             run = client.actor(config["actor_id"]).call(run_input=config["input"])
 
-            # Fetch results
+            # Fetch results, respecting requested limit
             comments = []
             for item in client.dataset(run["defaultDatasetId"]).iterate_items():
                 comments.append(item)
+                if len(comments) >= max_comments:
+                    break
 
             if comments:
                 st.success(f"✅ Successfully fetched {len(comments)} comments using {config['actor_id']}")
@@ -805,7 +833,7 @@ def fetch_post_comments(post_url: str, _apify_token: str) -> Optional[List[Dict]
     st.error(f"❌ All comment scrapers failed for post: {post_url}")
     return None
 
-def fetch_comments_for_posts_batch(posts: List[Dict], apify_token: str, max_comments_per_post: int = 25) -> List[Dict]:
+def fetch_comments_for_posts_batch(posts: List[Dict], apify_token: str, max_comments_per_post: int = DEFAULT_MAX_COMMENTS) -> List[Dict]:
     """
     Fetch detailed comments for all Facebook posts using batch processing with the Comments Scraper actor.
     This uses the workflow where we extract all post URLs first, then batch process them for comments.
@@ -846,10 +874,13 @@ def fetch_comments_for_posts_batch(posts: List[Dict], apify_token: str, max_comm
             # Run the actor
             run = client.actor(actor_id).call(run_input=comments_input)
 
-            # Fetch results
+            # Fetch results, cap total to avoid over-reading
+            max_total = len(posts) * max_comments_per_post
             comments_data = []
             for item in client.dataset(run["defaultDatasetId"]).iterate_items():
                 comments_data.append(item)
+                if len(comments_data) >= max_total:
+                    break
 
             if comments_data:
                 st.success(f"✅ Successfully fetched {len(comments_data)} comments using {actor_id}")
@@ -924,7 +955,7 @@ def assign_comments_to_posts(posts: List[Dict], comments_data: List[Dict]) -> Li
         st.warning(f"⚠️ {unmatched_comments} comments could not be matched to posts")
     return posts
 
-def fetch_comments_for_posts(posts: List[Dict], apify_token: str) -> List[Dict]:
+def fetch_comments_for_posts(posts: List[Dict], apify_token: str, max_comments_per_post: int = DEFAULT_MAX_COMMENTS) -> List[Dict]:
     """
     Fetch detailed comments for all Facebook posts using the Comments Scraper actor.
     This is a separate phase after initial post normalization.
@@ -959,7 +990,7 @@ def fetch_comments_for_posts(posts: List[Dict], apify_token: str) -> List[Dict]:
                     time.sleep(2)
 
                 # Fetch comments for this post
-                raw_comments = fetch_post_comments(post['post_url'], apify_token)
+                raw_comments = fetch_post_comments(post['post_url'], apify_token, max_comments_per_post)
                 if raw_comments:
                     # Normalize comment data
                     normalized_comments = []
@@ -1052,74 +1083,79 @@ def normalize_comment_data(raw_comment: Dict) -> Dict:
 # VISUALIZATION FUNCTIONS
 # ============================================================================
 
-def scrape_instagram_comments_batch(post_urls: List[str], apify_token: str, max_comments_per_post: int = 25) -> List[Dict]:
-    """Scrape Instagram comments from multiple post URLs using batch processing."""
+def _fetch_one_instagram_post_comments(
+    post_url: str,
+    client: ApifyClient,
+    max_comments_per_post: int,
+) -> List[Dict]:
+    """
+    Fetch comments for a single Instagram post. Tries primary actor first, then fallbacks on failure.
+    Safe to call from a thread (no st.* calls).
+    """
+    run_input = {
+        "directUrls": [post_url],
+        "resultsLimit": max_comments_per_post,
+        "includeNestedComments": True,
+        "isNewestComments": False,
+    }
+    # Primary actor first
+    for actor_id in INSTAGRAM_COMMENTS_ACTOR_IDS:
+        try:
+            run = client.actor(actor_id).call(run_input=run_input)
+            if run and run.get("status") == "SUCCEEDED":
+                dataset = client.dataset(run["defaultDatasetId"])
+                comments_data = []
+                for item in dataset.iterate_items():
+                    comments_data.append(item)
+                    if len(comments_data) >= max_comments_per_post:
+                        break
+                if comments_data:
+                    return comments_data
+                # Empty result: try next actor only if there are fallbacks
+                if actor_id == INSTAGRAM_COMMENTS_ACTOR_ID:
+                    continue
+                return []
+        except Exception:
+            continue
+    return []
+
+
+def scrape_instagram_comments_batch(
+    post_urls: List[str], apify_token: str, max_comments_per_post: int = DEFAULT_MAX_COMMENTS
+) -> List[Dict]:
+    """Scrape Instagram comments from multiple post URLs with limited concurrency."""
     if not post_urls:
         return []
 
     client = ApifyClient(apify_token)
     all_comments = []
+    max_workers = 3
 
-    st.info(f"🔄 Starting Instagram comments extraction for {len(post_urls)} posts...")
+    st.info(f"🔄 Starting Instagram comments extraction for {len(post_urls)} posts (concurrency: {max_workers})...")
 
-    # Process posts in batches to avoid overwhelming the API
-    batch_size = 5  # Process 5 posts at a time
-    for i in range(0, len(post_urls), batch_size):
-        batch_urls = post_urls[i:i + batch_size]
-        st.info(f"📊 Processing batch {i//batch_size + 1}/{(len(post_urls) + batch_size - 1)//batch_size} ({len(batch_urls)} posts)")
-
-        for post_url in batch_urls:
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_url = {
+            executor.submit(
+                _fetch_one_instagram_post_comments,
+                post_url,
+                client,
+                max_comments_per_post,
+            ): post_url
+            for post_url in post_urls
+        }
+        done = 0
+        for future in as_completed(future_to_url):
+            post_url = future_to_url[future]
             try:
-                # Try different Instagram comments actors
-                for actor_id in INSTAGRAM_COMMENTS_ACTOR_IDS:
-                    try:
-                        st.info(f"🔍 Trying Instagram comments actor: {actor_id}")
-
-                        # Configure input for Instagram comments scraper
-                        # apify/instagram-comment-scraper only supports these parameters:
-                        run_input = {
-                            "directUrls": [post_url],
-                            "resultsLimit": max_comments_per_post,
-                            "includeNestedComments": True,  # Include comment replies (up to 3 levels)
-                            "isNewestComments": False  # Set to True for newest first (pay-only feature)
-                        }
-
-                        # Run the actor
-                        run = client.actor(actor_id).call(run_input=run_input)
-
-                        if run and run.get("status") == "SUCCEEDED":
-                            # Get the results
-                            dataset = client.dataset(run["defaultDatasetId"])
-                            comments_data = list(dataset.iterate_items())
-
-                            if comments_data:
-                                st.success(f"✅ Extracted {len(comments_data)} comments from {post_url}")
-                                st.info(f"📊 Comment extraction details:")
-                                st.info(f"   - Requested: 50 comments (max)")
-                                st.info(f"   - Retrieved: {len(comments_data)} comments")
-                                st.info(f"   - Post URL: {post_url}")
-                                if len(comments_data) < 25:
-                                    st.warning(f"⚠️ Only {len(comments_data)} comments retrieved. Instagram may have limited comment access for this post.")
-                                all_comments.extend(comments_data)
-                                break  # Success, move to next post
-                            else:
-                                st.warning(f"⚠️ No comments found for {post_url}")
-                                st.info(f"🔍 Debug info: Actor {actor_id} returned empty results")
-                                break
-                        else:
-                            st.warning(f"⚠️ Actor {actor_id} failed for {post_url}")
-                            continue
-
-                    except Exception as e:
-                        st.warning(f"⚠️ Actor {actor_id} error for {post_url}: {str(e)}")
-                        continue
-
-                # Small delay between posts to be respectful
-                time.sleep(2)
-
+                comments_data = future.result()
+                if comments_data:
+                    all_comments.extend(comments_data)
+                    st.success(f"✅ Extracted {len(comments_data)} comments from post ({done + 1}/{len(post_urls)} done)")
+                done += 1
+                if done % max_workers == 0:
+                    time.sleep(2)  # Brief delay between batches to avoid rate limits
             except Exception as e:
-                st.error(f"❌ Error processing {post_url}: {str(e)}")
-                continue
+                st.warning(f"❌ Error processing {post_url}: {str(e)}")
 
     st.success(f"🎉 Instagram comments extraction complete! Total comments: {len(all_comments)}")
     return all_comments
@@ -1766,8 +1802,8 @@ def main():
 
             fetch_detailed_comments = st.sidebar.checkbox(
                 "Fetch Detailed Comments",
-                value=True,  # Default to True for batch processing and detailed comments
-                help="Fetch detailed comments for Facebook posts using the Comments Scraper actor (currently having issues - may fail)"
+                value=False,
+                help="Fetch detailed comments for Facebook posts using the Comments Scraper actor (extra Apify runs; currently having issues - may fail)"
             )
 
         elif platform == "Instagram":
@@ -1777,8 +1813,8 @@ def main():
 
             fetch_detailed_comments = st.sidebar.checkbox(
                 "Fetch Detailed Comments",
-                value=True,  # Default to True for batch processing and detailed comments
-                help="Fetch detailed comments for Instagram posts using the Instagram Comments Scraper (pay-per-result pricing)"
+                value=False,
+                help="Fetch detailed comments for Instagram posts using the Instagram Comments Scraper (pay-per-result pricing; extra Apify runs)"
             )
 
             # Instagram uses batch processing by default
@@ -1794,8 +1830,8 @@ def main():
 
             fetch_detailed_comments = st.sidebar.checkbox(
                 "Fetch Detailed Comments",
-                value=True,  # Default to True for batch processing and detailed comments
-                help="Fetch detailed comments for posts"
+                value=False,
+                help="Fetch detailed comments for posts (extra Apify actor runs)"
             )
 
             comment_method = "Batch Processing"
@@ -1806,16 +1842,16 @@ def main():
                 "Max Comments per Post",
                 min_value=10,
                 max_value=100,
-                value=25,
+                value=DEFAULT_MAX_COMMENTS,
                 help="Maximum number of comments to extract per post"
             )
         else:
-            max_comments_per_post = 25
+            max_comments_per_post = DEFAULT_MAX_COMMENTS
     else:
         fetch_detailed_comments = False
         comment_method = "Individual Posts"
-        max_comments_per_post = 25
-        max_posts = 10
+        max_comments_per_post = DEFAULT_MAX_COMMENTS
+        max_posts = DEFAULT_MAX_POSTS
         from_date = None
         to_date = None
 
@@ -2021,7 +2057,7 @@ def main():
                         normalized_data = fetch_comments_for_posts_batch(normalized_data, apify_token, max_comments_per_post)
                     else:
                         st.info("🔄 Using individual post processing for comment extraction...")
-                        normalized_data = fetch_comments_for_posts(normalized_data, apify_token)
+                        normalized_data = fetch_comments_for_posts(normalized_data, apify_token, max_comments_per_post)
                 except Exception as e:
                     st.error(f"❌ Failed to fetch Facebook comments: {str(e)}")
 
