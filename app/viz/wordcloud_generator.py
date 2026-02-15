@@ -26,6 +26,7 @@ import numpy as np
 from ..nlp.phrase_extractor import PhraseExtractor, extract_phrases_simple
 from ..nlp.sentiment_analyzer import PhraseSentimentAnalyzer, analyze_sentiment_phrases_detailed
 from ..utils.phrase_dictionaries import get_phrase_sentiment_score, get_phrase_sentiment_label
+from ..styles.theme import THEME_COLORS, SENTIMENT_COLORS
 
 # Arabic text shaping support
 try:
@@ -100,17 +101,13 @@ class PhraseWordCloudGenerator:
             self.phrase_extractor = PhraseExtractor(language=language)
             self.sentiment_analyzer = PhraseSentimentAnalyzer(language=language)
         
-        # Sentiment color mapping using sage green palette
-        self.sentiment_colors = {
-            'positive': '#495E57',  # Sage green
-            'negative': '#F4CE14',  # Golden yellow
-            'neutral': '#45474B'    # Dark grey
-        }
-        
-        # Sentiment color gradients using sage green palette
-        self.positive_gradient = ['#F5F7F8', '#495E57', '#3a4a43']
-        self.negative_gradient = ['#F5F7F8', '#F4CE14', '#d4b012']
-        self.neutral_gradient = ['#F5F7F8', '#45474B', '#363a3e']
+        # Sentiment color mapping from theme
+        self.sentiment_colors = dict(SENTIMENT_COLORS)
+        # Sentiment color gradients using theme colors
+        bg = THEME_COLORS['background']
+        self.positive_gradient = [bg, SENTIMENT_COLORS['positive'], '#0d9668']
+        self.negative_gradient = [bg, SENTIMENT_COLORS['negative'], '#c2352a']
+        self.neutral_gradient = [bg, SENTIMENT_COLORS['neutral'], '#475569']
     
     def extract_content_for_wordcloud(self, texts: List[str]) -> Dict[str, Dict]:
         """
@@ -319,7 +316,7 @@ class PhraseWordCloudGenerator:
         wordcloud = WordCloud(
             width=self.width,
             height=self.height,
-            background_color='#F5F7F8',  # Use theme background color
+            background_color=THEME_COLORS['background'],
             max_words=self.max_words,
             relative_scaling=self.relative_scaling,
             min_font_size=self.min_font_size,
@@ -333,13 +330,13 @@ class PhraseWordCloudGenerator:
         ).generate_from_frequencies(display_content)
         
         # Create plot
-        fig, ax = plt.subplots(figsize=(12, 6), facecolor='#F5F7F8')
+        fig, ax = plt.subplots(figsize=(12, 6), facecolor=THEME_COLORS['background'])
         ax.imshow(wordcloud, interpolation='bilinear')
         ax.axis('off')
-        fig.patch.set_facecolor('#F5F7F8')
+        fig.patch.set_facecolor(THEME_COLORS['background'])
         
         if title:
-            ax.set_title(title, fontsize=16, fontweight='bold', pad=20, color='#45474B')
+            ax.set_title(title, fontsize=16, fontweight='bold', pad=20, color=THEME_COLORS['text'])
         
         # Add legend if using sentiment coloring
         if self.sentiment_coloring:
@@ -421,7 +418,7 @@ class PhraseWordCloudGenerator:
                     wordcloud = WordCloud(
                         width=400,
                         height=300,
-                        background_color='#F5F7F8',  # Use theme background color
+                        background_color=THEME_COLORS['background'],
                         max_words=50,  # Fewer words for subplots
                         relative_scaling=self.relative_scaling,
                         min_font_size=8,
@@ -433,7 +430,7 @@ class PhraseWordCloudGenerator:
                     ).generate_from_frequencies(display_content)
                     
                     axes[i].imshow(wordcloud, interpolation='bilinear')
-                    axes[i].set_title(f'{category}', fontsize=12, fontweight='bold', color='#45474B')
+                    axes[i].set_title(f'{category}', fontsize=12, fontweight='bold', color=THEME_COLORS['text'])
                 else:
                     axes[i].text(0.5, 0.5, 'No content', ha='center', va='center', 
                                fontsize=12, color='gray')

@@ -17,6 +17,8 @@ try:
 except ImportError:
     PLOTLY_AVAILABLE = False
 
+from app.styles.theme import THEME_COLORS
+
 
 def create_entity_summary_card(entity_summary: Dict) -> None:
     """
@@ -77,9 +79,9 @@ def create_entity_type_chart(entity_summary: Dict) -> None:
             color_continuous_scale='Viridis'
         )
         fig.update_layout(
-            plot_bgcolor='#F5F7F8',
-            paper_bgcolor='#F5F7F8',
-            font_color='#45474B',
+            plot_bgcolor=THEME_COLORS['background'],
+            paper_bgcolor=THEME_COLORS['background'],
+            font_color=THEME_COLORS['text'],
             height=400,
             showlegend=False
         )
@@ -187,8 +189,8 @@ def create_entity_network_chart(entity_summary: Dict) -> None:
 
     fig.update_layout(
         height=600,
-        paper_bgcolor='#F5F7F8',
-        font_color='#45474B'
+        paper_bgcolor=THEME_COLORS['background'],
+        font_color=THEME_COLORS['text']
     )
 
     st.plotly_chart(fig, use_container_width=True)
@@ -215,17 +217,17 @@ def create_entity_wordcloud(entity_frequencies: Dict[str, int], entity_type: str
         wc = WordCloud(
             width=800,
             height=400,
-            background_color='#F5F7F8',
+            background_color=THEME_COLORS['background'],
             colormap='viridis',
             relative_scaling=0.5,
             min_font_size=10
         ).generate_from_frequencies(entity_frequencies)
 
         # Display
-        fig, ax = plt.subplots(figsize=(12, 6), facecolor='#F5F7F8')
+        fig, ax = plt.subplots(figsize=(12, 6), facecolor=THEME_COLORS['background'])
         ax.imshow(wc, interpolation='bilinear')
         ax.axis('off')
-        fig.patch.set_facecolor('#F5F7F8')
+        fig.patch.set_facecolor(THEME_COLORS['background'])
 
         st.pyplot(fig)
 

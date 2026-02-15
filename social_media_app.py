@@ -99,7 +99,7 @@ from app.viz.dashboards import (
 )
 
 # UI/UX Components
-from app.styles.theme import get_custom_css
+from app.styles.theme import get_custom_css, THEME_COLORS, SENTIMENT_COLORS
 from app.styles.loading import (
     show_spinner,
     show_loading_dots,
@@ -1061,17 +1061,6 @@ def assign_comments_to_posts(posts: List[Dict], comments_data: List[Dict]) -> Li
             post_url_map[post_url] = post
             post['comments_list'] = []  # Initialize empty comments list
 
-    # DEBUG: Show what we're working with
-    st.write(f"🔍 DEBUG: Have {len(post_url_map)} post URLs")
-    st.write(f"🔍 DEBUG: Have {len(comments_data)} comments to assign")
-    if post_url_map:
-        st.write("🔍 DEBUG: Sample post URL:", list(post_url_map.keys())[0][:80])
-    if comments_data:
-        sample_comment = comments_data[0]
-        comment_url = sample_comment.get('url') or sample_comment.get('postUrl') or sample_comment.get('facebookUrl')
-        st.write(f"🔍 DEBUG: Sample comment URL field: {comment_url[:80] if comment_url else 'NONE'}")
-        st.write(f"🔍 DEBUG: Sample comment keys: {list(sample_comment.keys())}")
-
     # Assign comments to posts
     assigned_comments = 0
     unmatched_comments = 0
@@ -1364,13 +1353,13 @@ def create_monthly_overview_charts(df: pd.DataFrame):
     st.subheader("📈 Posts Per Day")
     if PLOTLY_AVAILABLE:
         fig = px.line(posts_per_day, x="date", y="count", markers=True, title="Posts Per Day",
-                     color_discrete_sequence=['#495E57'])
+                     color_discrete_sequence=[THEME_COLORS['primary']])
         fig.update_layout(
-            plot_bgcolor='#F5F7F8',
-            paper_bgcolor='#F5F7F8',
-            font_color='#45474B'
+            plot_bgcolor=THEME_COLORS['background'],
+            paper_bgcolor=THEME_COLORS['background'],
+            font_color=THEME_COLORS['text']
         )
-        st.plotly_chart(fig, width='stretch')
+        st.plotly_chart(fig, use_container_width=True)
     else:
         st.line_chart(posts_per_day.set_index('date'))
 
@@ -1386,13 +1375,13 @@ def create_monthly_overview_charts(df: pd.DataFrame):
     })
     if PLOTLY_AVAILABLE:
         fig = px.bar(engagement_data, x="Metric", y="Count", title="Total Engagement Breakdown",
-                     color_discrete_sequence=['#495E57', '#F4CE14', '#45474B'])
+                     color_discrete_sequence=[THEME_COLORS['primary'], THEME_COLORS['secondary'], THEME_COLORS['tertiary']])
         fig.update_layout(
-            plot_bgcolor='#F5F7F8',
-            paper_bgcolor='#F5F7F8',
-            font_color='#45474B'
+            plot_bgcolor=THEME_COLORS['background'],
+            paper_bgcolor=THEME_COLORS['background'],
+            font_color=THEME_COLORS['text']
         )
-        st.plotly_chart(fig, width='stretch')
+        st.plotly_chart(fig, use_container_width=True)
     else:
         st.bar_chart(engagement_data.set_index('Metric'))
 
@@ -1405,13 +1394,13 @@ def create_monthly_overview_charts(df: pd.DataFrame):
     if PLOTLY_AVAILABLE:
         fig = px.bar(top_posts.reset_index().rename(columns={'text':'Caption'}),
                      x="Caption", y="total_engagement", title="Top 5 Posts by Engagement",
-                     color_discrete_sequence=['#495E57'])
+                     color_discrete_sequence=[THEME_COLORS['primary']])
         fig.update_layout(
-            plot_bgcolor='#F5F7F8',
-            paper_bgcolor='#F5F7F8',
-            font_color='#45474B'
+            plot_bgcolor=THEME_COLORS['background'],
+            paper_bgcolor=THEME_COLORS['background'],
+            font_color=THEME_COLORS['text']
         )
-        st.plotly_chart(fig, width='stretch')
+        st.plotly_chart(fig, use_container_width=True)
     else:
         top_posts = top_posts.set_index('text')
     st.bar_chart(top_posts)
@@ -1517,17 +1506,17 @@ def create_wordcloud(comments: List[str], width: int = 800, height: int = 400, f
     wordcloud = WordCloud(
         width=width,
         height=height,
-        background_color='#F5F7F8',  # Use theme background color
+        background_color=THEME_COLORS['background'],
         colormap='viridis',
         relative_scaling=0.5,
         min_font_size=10
     ).generate_from_frequencies(wc_freqs)
 
     # Display
-    fig, ax = plt.subplots(figsize=figsize, facecolor='#F5F7F8')
+    fig, ax = plt.subplots(figsize=figsize, facecolor=THEME_COLORS['background'])
     ax.imshow(wordcloud, interpolation='bilinear')
     ax.axis('off')
-    fig.patch.set_facecolor('#F5F7F8')
+    fig.patch.set_facecolor(THEME_COLORS['background'])
     st.pyplot(fig)
 
 def create_instagram_monthly_analysis(posts: List[Dict], platform: str):
@@ -1574,19 +1563,6 @@ def create_instagram_monthly_insights(posts: List[Dict], platform: str):
 
     # Use analytics module to aggregate comments
     all_comments = aggregate_all_comments(posts)
-
-    # DEBUG: Show what we got
-    st.write(f"🔍 DEBUG: aggregate_all_comments returned {len(all_comments)} comment texts")
-    if posts:
-        st.write(f"🔍 DEBUG: Total posts: {len(posts)}")
-        posts_with_comments = sum(1 for p in posts if p.get('comments_list'))
-        st.write(f"🔍 DEBUG: Posts with comments_list: {posts_with_comments}")
-        if posts_with_comments > 0:
-            sample_post = next(p for p in posts if p.get('comments_list'))
-            st.write(f"🔍 DEBUG: Sample post has {len(sample_post.get('comments_list', []))} comments")
-            if sample_post.get('comments_list'):
-                st.write(f"🔍 DEBUG: Sample comment structure: {list(sample_post['comments_list'][0].keys())}")
-                st.write(f"🔍 DEBUG: Sample comment text: {sample_post['comments_list'][0].get('text', 'NO TEXT')[:100]}")
 
     if all_comments:
         # Advanced NLP Analysis Dashboard (function adds its own title)
@@ -1738,13 +1714,6 @@ def create_sentiment_pie_chart(sentiment_counts: Dict[str, int]):
         st.info("No sentiment data available")
         return
 
-    # Define colors using sage green palette
-    colors = {
-        'positive': '#495E57',  # Sage green
-        'negative': '#F4CE14',  # Golden yellow
-        'neutral': '#45474B'    # Dark grey
-    }
-
     # Prepare data
     labels = []
     sizes = []
@@ -1754,7 +1723,7 @@ def create_sentiment_pie_chart(sentiment_counts: Dict[str, int]):
         if count > 0:
             labels.append(sentiment.title())
             sizes.append(count)
-            color_list.append(colors.get(sentiment, '#95a5a6'))
+            color_list.append(SENTIMENT_COLORS.get(sentiment, THEME_COLORS['tertiary']))
 
     if not sizes:
         st.info("No sentiment data to display")
@@ -1765,19 +1734,19 @@ def create_sentiment_pie_chart(sentiment_counts: Dict[str, int]):
     percentages = [f"{size/total*100:.1f}%" for size in sizes]
 
     # Create pie chart
-    fig, ax = plt.subplots(figsize=(8, 6), facecolor='#F5F7F8')
+    fig, ax = plt.subplots(figsize=(8, 6), facecolor=THEME_COLORS['background'])
     wedges, texts, autotexts = ax.pie(
         sizes,
         labels=labels,
         colors=color_list,
         autopct='%1.1f%%',
         startangle=90,
-        textprops={'fontsize': 12, 'weight': 'bold', 'color': '#45474B'}
+        textprops={'fontsize': 12, 'weight': 'bold', 'color': THEME_COLORS['text']}
     )
 
     # Customize the chart
-    ax.set_title('Sentiment Distribution', fontsize=16, fontweight='bold', pad=20, color='#45474B')
-    fig.patch.set_facecolor('#F5F7F8')
+    ax.set_title('Sentiment Distribution', fontsize=16, fontweight='bold', pad=20, color=THEME_COLORS['text'])
+    fig.patch.set_facecolor(THEME_COLORS['background'])
 
     # Add count information to legend
     legend_labels = [f"{label}: {size} ({percent})" for label, size, percent in zip(labels, sizes, percentages)]
@@ -1814,12 +1783,9 @@ def main():
         initial_sidebar_state="expanded"
     )
 
-    # Custom theme disabled - using Streamlit's default light theme
-    # if 'theme' not in st.session_state:
-    #     st.session_state.theme = 'light'
-    #
-    # # Inject custom CSS
-    # st.markdown(get_custom_css(st.session_state.theme), unsafe_allow_html=True)
+    if 'theme' not in st.session_state:
+        st.session_state.theme = 'light'
+    st.markdown(get_custom_css(st.session_state.theme), unsafe_allow_html=True)
 
     # App Header
     st.markdown("""
@@ -2137,7 +2103,7 @@ def main():
 
         with col2:
             st.markdown("<br>", unsafe_allow_html=True)
-            analyze_button = st.button("🔍 Analyze", type="primary", width='stretch')
+            analyze_button = st.button("🔍 Analyze", type="primary")
     else:
         # Load from File or Load from Database
         if data_source == "Load from Database":
@@ -2562,19 +2528,6 @@ def main():
 
         # Aggregate all comments for analysis
         all_comments = aggregate_all_comments(posts)
-
-        # DEBUG: Show what we got
-        st.write(f"🔍 DEBUG: aggregate_all_comments returned {len(all_comments)} comment texts")
-        if posts:
-            st.write(f"🔍 DEBUG: Total posts: {len(posts)}")
-            posts_with_comments = sum(1 for p in posts if p.get('comments_list'))
-            st.write(f"🔍 DEBUG: Posts with comments_list: {posts_with_comments}")
-            if posts_with_comments > 0:
-                sample_post = next(p for p in posts if p.get('comments_list'))
-                st.write(f"🔍 DEBUG: Sample post has {len(sample_post.get('comments_list', []))} comments")
-                if sample_post.get('comments_list'):
-                    st.write(f"🔍 DEBUG: Sample comment structure: {list(sample_post['comments_list'][0].keys())}")
-                    st.write(f"🔍 DEBUG: Sample comment text: {sample_post['comments_list'][0].get('text', 'NO TEXT')[:100]}")
 
         if all_comments:
             # Advanced NLP Analysis Dashboard (function adds its own title)

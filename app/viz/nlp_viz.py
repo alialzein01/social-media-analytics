@@ -17,6 +17,10 @@ try:
     PLOTLY_AVAILABLE = True
 except ImportError:
     PLOTLY_AVAILABLE = False
+
+from app.styles.theme import THEME_COLORS
+
+
 def _next_chart_key(prefix: str) -> str:
     """Generate a unique, deterministic key per render for a given prefix."""
     counter_key = f"_chart_counter_{prefix}"
@@ -72,9 +76,9 @@ def create_topic_modeling_view(topics: List[Dict[str, Any]]) -> None:
                     )
                     fig.update_layout(
                         showlegend=False,
-                        plot_bgcolor='#F5F7F8',
-                        paper_bgcolor='#F5F7F8',
-                        font_color='#45474B',
+                        plot_bgcolor=THEME_COLORS['background'],
+                        paper_bgcolor=THEME_COLORS['background'],
+                        font_color=THEME_COLORS['text'],
                         height=400
                     )
                     st.plotly_chart(fig, use_container_width=True, key=_next_chart_key(f"topic-words-{topic_id}"))
@@ -127,9 +131,9 @@ def create_keyword_cloud(keywords: List[Tuple[str, float]], title: str = "Top Ke
         )
         fig.update_layout(
             showlegend=False,
-            plot_bgcolor='#F5F7F8',
-            paper_bgcolor='#F5F7F8',
-            font_color='#45474B',
+            plot_bgcolor=THEME_COLORS['background'],
+            paper_bgcolor=THEME_COLORS['background'],
+            font_color=THEME_COLORS['text'],
             height=500
         )
         st.plotly_chart(fig, use_container_width=True, key=_next_chart_key("keyword-cloud"))
@@ -217,9 +221,9 @@ def create_emoji_sentiment_chart(emoji_analysis: Dict[str, Any]) -> None:
                     title="Emoji Usage & Sentiment",
                     xaxis_title="Count",
                     yaxis_title="Emoji",
-                    plot_bgcolor='#F5F7F8',
-                    paper_bgcolor='#F5F7F8',
-                    font_color='#45474B',
+                    plot_bgcolor=THEME_COLORS['background'],
+                    paper_bgcolor=THEME_COLORS['background'],
+                    font_color=THEME_COLORS['text'],
                     height=400,
                     showlegend=False
                 )
@@ -494,9 +498,9 @@ def create_sentiment_comparison_view(
             title="Sentiment Score Comparison",
             yaxis_title="Sentiment Score",
             yaxis=dict(range=[-1.2, 1.2]),
-            plot_bgcolor='#F5F7F8',
-            paper_bgcolor='#F5F7F8',
-            font_color='#45474B',
+            plot_bgcolor=THEME_COLORS['background'],
+            paper_bgcolor=THEME_COLORS['background'],
+            font_color=THEME_COLORS['text'],
             height=400
         )
         st.plotly_chart(fig, use_container_width=True, key=_next_chart_key("sentiment-comparison"))

@@ -21,27 +21,10 @@ except ImportError:
 
 
 # ============================================================================
-# THEME & STYLING
+# THEME & STYLING (single source: app.styles.theme)
 # ============================================================================
 
-THEME_COLORS = {
-    'primary': '#495E57',
-    'secondary': '#F4CE14',
-    'tertiary': '#45474B',
-    'background': '#F5F7F8',
-    'success': '#43e97b',
-    'warning': '#f5576c',
-    'info': '#4facfe'
-}
-
-GRADIENT_STYLES = {
-    'purple': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    'pink': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-    'blue': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-    'green': 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-    'orange': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-    'teal': 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)'
-}
+from app.styles.theme import THEME_COLORS, GRADIENT_STYLES
 
 
 # ============================================================================

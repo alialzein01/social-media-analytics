@@ -19,6 +19,8 @@ try:
 except ImportError:
     PLOTLY_AVAILABLE = False
 
+from app.styles.theme import THEME_COLORS
+
 
 # ============================================================================
 # ENHANCED POST SELECTOR
@@ -140,7 +142,7 @@ def create_enhanced_post_selector(posts: List[Dict], platform: str) -> Optional[
 
             with col1:
                 # Rank badge
-                rank_color = "#FFD700" if rank == 1 else "#C0C0C0" if rank == 2 else "#CD7F32" if rank == 3 else "#45474B"
+                rank_color = "#FFD700" if rank == 1 else "#C0C0C0" if rank == 2 else "#CD7F32" if rank == 3 else THEME_COLORS['tertiary']
                 st.markdown(
                     f"""
                     <div style="
@@ -472,12 +474,12 @@ def create_comment_analytics(post: Dict, platform: str) -> None:
                     y='Author',
                     orientation='h',
                     title="Most Active Commenters",
-                    color_discrete_sequence=['#495E57']
+                    color_discrete_sequence=[THEME_COLORS['primary']]
                 )
                 fig.update_layout(
-                    plot_bgcolor='#F5F7F8',
-                    paper_bgcolor='#F5F7F8',
-                    font_color='#45474B',
+                    plot_bgcolor=THEME_COLORS['background'],
+                    paper_bgcolor=THEME_COLORS['background'],
+                    font_color=THEME_COLORS['text'],
                     height=400
                 )
                 st.plotly_chart(fig, use_container_width=True)

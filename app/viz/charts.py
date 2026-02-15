@@ -28,22 +28,10 @@ except ImportError:
 
 
 # ============================================================================
-# THEME CONFIGURATION
+# THEME CONFIGURATION (colors from app.styles.theme)
 # ============================================================================
 
-THEME_COLORS = {
-    'primary': '#495E57',      # Sage green
-    'secondary': '#F4CE14',    # Golden yellow
-    'tertiary': '#45474B',     # Dark grey
-    'background': '#F5F7F8',   # Light grey
-    'text': '#45474B'          # Dark grey
-}
-
-SENTIMENT_COLORS = {
-    'positive': '#495E57',     # Sage green
-    'negative': '#F4CE14',     # Golden yellow
-    'neutral': '#45474B'       # Dark grey
-}
+from app.styles.theme import THEME_COLORS, SENTIMENT_COLORS, GRADIENT_STYLES
 
 REACTION_EMOJIS = {
     'like': '👍',
@@ -614,7 +602,7 @@ def create_instagram_metric_cards(posts: List[Dict]) -> None:
             "Total Posts",
             f"{total_posts:,}",
             "📸",
-            "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            GRADIENT_STYLES['purple'],
             "Total number of Instagram posts"
         )
 
@@ -623,7 +611,7 @@ def create_instagram_metric_cards(posts: List[Dict]) -> None:
             "Total Likes",
             f"{total_likes:,}",
             "❤️",
-            "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+            GRADIENT_STYLES['pink'],
             "Total likes across all posts"
         )
 
@@ -632,7 +620,7 @@ def create_instagram_metric_cards(posts: List[Dict]) -> None:
             "Total Comments",
             f"{total_comments:,}",
             "💬",
-            "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+            GRADIENT_STYLES['blue'],
             "Total comments across all posts"
         )
 
@@ -641,7 +629,7 @@ def create_instagram_metric_cards(posts: List[Dict]) -> None:
             "Avg Engagement",
             f"{avg_engagement:.1f}",
             "📊",
-            "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+            GRADIENT_STYLES['green'],
             "Average engagement per post (likes + comments)"
         )
 

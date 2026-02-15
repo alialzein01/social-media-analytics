@@ -3,7 +3,40 @@ Custom CSS Theme for Social Media Analytics Dashboard
 ======================================================
 
 Provides professional styling, color schemes, and UI components.
+Single source of truth for colors, gradients, and chart styling.
 """
+
+# =============================================================================
+# PROGRAMMATIC THEME TOKENS (use in Plotly, metric cards, etc.)
+# Aligned with CSS variables in get_light_theme_css()
+# =============================================================================
+
+THEME_COLORS = {
+    'primary': '#6366f1',
+    'secondary': '#8b5cf6',
+    'tertiary': '#475569',
+    'background': '#f8fafc',
+    'text': '#0f172a',
+    'success': '#10b981',
+    'warning': '#f59e0b',
+    'info': '#3b82f6',
+}
+
+SENTIMENT_COLORS = {
+    'positive': '#10b981',
+    'negative': '#ef4444',
+    'neutral': '#64748b',
+}
+
+GRADIENT_STYLES = {
+    'purple': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    'pink': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+    'blue': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+    'green': 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+    'orange': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+    'teal': 'linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%)',
+}
+
 
 def get_custom_css(theme: str = 'light') -> str:
     """
