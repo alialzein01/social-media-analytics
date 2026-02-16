@@ -2,8 +2,11 @@
 Custom CSS Theme for Social Media Analytics Dashboard
 ======================================================
 
-Provides professional styling, color schemes, and UI components.
-Single source of truth for colors, gradients, and chart styling.
+Design system: single source of truth for colors, typography, and chart styling.
+- THEME_COLORS: primary, success, warning, info (buttons, status, alerts)
+- SENTIMENT_COLORS: positive / negative / neutral (charts, word clouds)
+- GRADIENT_STYLES: chart gradients
+Use get_custom_css() for global styles; keep spacing/breakpoints consistent.
 """
 
 # =============================================================================
@@ -218,6 +221,16 @@ def get_light_theme_css() -> str:
             font-weight: 700;
             color: var(--primary-color);
         }
+
+        /* UI module: page header and KPI cards */
+        .ui-page-header { margin-bottom: 1.5rem; }
+        .ui-kpi-card {
+            transition: box-shadow var(--transition-base);
+        }
+        .ui-kpi-card:hover {
+            box-shadow: var(--shadow-md);
+        }
+        .ui-section-gap { margin-top: 1.5rem; }
 
         /* Info/Warning/Success/Error Boxes */
         .stAlert {

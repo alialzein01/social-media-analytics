@@ -28,6 +28,13 @@ def _next_chart_key(prefix: str) -> str:
     return f"{prefix}-{st.session_state[counter_key]}"
 
 
+@st.cache_data(ttl=600, max_entries=16, show_spinner=False)
+def _cached_analyze_corpus(texts_tuple: tuple) -> Dict[str, Any]:
+    """Cache heavy corpus analysis (topics, TF-IDF, emoji) for 10 min to speed up dashboard."""
+    from app.nlp.advanced_nlp import analyze_corpus_advanced
+    return analyze_corpus_advanced(list(texts_tuple))
+
+
 
 # ============================================================================
 # TOPIC MODELING VISUALIZATION
@@ -338,9 +345,9 @@ def create_advanced_nlp_dashboard(
         SKLEARN_AVAILABLE
     )
 
-    # Run comprehensive analysis
+    # Run comprehensive analysis (cached 10 min for same corpus → faster repeat views)
     with st.spinner("Analyzing text corpus..."):
-        analysis = analyze_corpus_advanced(texts)
+        analysis = _cached_analyze_corpus(tuple(texts))
 
     # Text Statistics
     if show_statistics:

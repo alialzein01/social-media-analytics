@@ -14,6 +14,17 @@ How to run:
 
 This app connects to Apify actors to analyze social media posts from Facebook,
 Instagram, and YouTube for the current month.
+
+Dashboard Improvement Report (insight + UI quality):
+- Dashboard Audit Summary:
+  - Removed: duplicated "Analytics" section and duplicated monthly sentiment/word-cloud views.
+  - Replaced: section flow with Overview -> Trends -> Drivers -> Breakdown -> Details.
+  - Kept: core metric definitions and core charts that answer clear business questions.
+  - Reasoning: increase insight density, reduce clutter, and improve executive scanability.
+- Implementation focus:
+  - KPI structure tightened to high-signal metrics with prior-window deltas where baseline exists.
+  - Layout standardized (global filters -> KPI row -> primary trends -> breakdown -> tables/details).
+  - Visual noise reduced by trimming repeated captions/charts and overuse of expanders.
 """
 
 import os
@@ -29,6 +40,12 @@ from typing import Dict, List, Optional, Any
 import streamlit as st
 import pandas as pd
 from apify_client import ApifyClient
+
+from app.services.apify_client import (
+    create_apify_client,
+    run_actor_and_fetch_dataset,
+    ApifyClientError,
+)
 from wordcloud import WordCloud  # type: ignore
 import matplotlib.pyplot as plt  # type: ignore
 from collections import Counter
@@ -45,8 +62,22 @@ except ImportError:
 # IMPORT NEW MODULAR COMPONENTS
 # ============================================================================
 
-# Config defaults for consistency with settings
-from app.config.settings import DEFAULT_MAX_POSTS, DEFAULT_MAX_COMMENTS
+# Config: single source of truth (no duplicate actor/config in this file)
+from app.config.settings import (
+    DEFAULT_MAX_POSTS,
+    DEFAULT_MAX_COMMENTS,
+    DEFAULT_TIMEOUT,
+    ACTOR_CONFIG,
+    YOUTUBE_COMMENTS_ACTOR_ID,
+    FACEBOOK_COMMENTS_ACTOR_IDS,
+    INSTAGRAM_COMMENTS_ACTOR_IDS,
+    ARABIC_STOPWORDS,
+    URL_PATTERN,
+    MENTION_HASHTAG_PATTERN,
+    TOKEN_RE,
+    ARABIC_DIACRITICS,
+    CACHE_TTL,
+)
 from app.config import URL_PATTERNS
 
 # Platform adapters for data normalization
@@ -106,6 +137,14 @@ from app.viz.dashboards import (
 
 # UI/UX Components
 from app.styles.theme import get_custom_css, THEME_COLORS, SENTIMENT_COLORS
+from app.ui import (
+    page_header,
+    kpi_cards,
+    section,
+    section_divider,
+    empty_state,
+    KPI_COLORS,
+)
 from app.styles.loading import (
     show_spinner,
     show_loading_dots,
@@ -140,73 +179,6 @@ from app.analytics import (
     calculate_total_engagement,
     analyze_hashtags
 )
-
-# ============================================================================
-# CONFIGURATION
-# ============================================================================
-
-# Apify Actor Names - Using full actor names for clarity and reliability
-ACTOR_CONFIG = {
-    # Use the community posts scraper explicitly for Facebook posts
-    # (scraper_one/facebook-posts-scraper). The app will only call this posts actor for Facebook.
-    "Facebook": "scraper_one/facebook-posts-scraper",
-    "Instagram": "apify/instagram-scraper",
-    "YouTube": "streamers/youtube-scraper"
-}
-
-# YouTube Comments Scraper Actor (full name)
-YOUTUBE_COMMENTS_ACTOR_ID = "streamers/youtube-comments-scraper"
-
-# Actor IDs for direct calls (when needed)
-ACTOR_IDS = {
-    # Keep actor name/ID mapping minimal and consistent; Facebook posts use the community posts actor.
-    "Facebook": "scraper_one/facebook-posts-scraper",
-    "Instagram": "shu8hvrXbJbY3Eb9W",
-    "YouTube": "p7UMdpQnjKmmpR21D"
-}
-
-# Facebook Comments Scraper Actor
-# Try different actors if one fails
-FACEBOOK_COMMENTS_ACTOR_IDS = [
-    # Only use the official Apify comments scraper for Facebook comments
-    "apify/facebook-comments-scraper"
-]
-FACEBOOK_COMMENTS_ACTOR_ID = FACEBOOK_COMMENTS_ACTOR_IDS[0]
-
-# Instagram Comments Scraper Actor
-INSTAGRAM_COMMENTS_ACTOR_IDS = [
-    "apify/instagram-comment-scraper",  # Primary Instagram comments scraper
-    "SbK00X0JYCPblD2wp",  # Alternative Instagram comments scraper
-    "instagram-comment-scraper",
-    "apify/instagram-scraper"  # Fallback to main Instagram scraper
-]
-INSTAGRAM_COMMENTS_ACTOR_ID = INSTAGRAM_COMMENTS_ACTOR_IDS[0]  # Start with first one
-
-# Arabic stopwords (basic set - expand as needed)
-ARABIC_STOPWORDS = {
-    'في', 'من', 'إلى', 'على', 'هذا', 'هذه', 'ذلك', 'التي', 'الذي',
-    'أن', 'أو', 'لا', 'نعم', 'كان', 'يكون', 'ما', 'هل', 'قد', 'لقد',
-    'عن', 'مع', 'بعد', 'قبل', 'عند', 'كل', 'بين', 'حتى', 'لكن', 'ثم',
-    'و', 'أو', 'لم', 'لن', 'إن', 'أن', 'كما', 'لماذا', 'كيف', 'أين',
-    'متى', 'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for'
-}
-
-# Arabic text processing constants (pre-compiled for performance)
-ARABIC_LETTERS = r"\u0621-\u064A\u0660-\u0669"
-TOKEN_RE = re.compile(fr"[{ARABIC_LETTERS}A-Za-z0-9]+", re.UNICODE)
-ARABIC_DIACRITICS = re.compile("""
-        ّ    | # Tashdid
-        َ    | # Fatha
-        ً    | # Tanwin Fath
-        ُ    | # Damma
-        ٌ    | # Tanwin Damm
-        ِ    | # Kasra
-        ٍ    | # Tanwin Kasr
-        ْ    | # Sukun
-        ـ     # Tatwil/Kashida
-    """, re.VERBOSE)
-URL_PATTERN = re.compile(r'http\S+|www\S+')
-MENTION_HASHTAG_PATTERN = re.compile(r'[@#]')
 
 # ============================================================================
 # NLP UTILITIES (Arabic-capable, pluggable design)
@@ -505,6 +477,53 @@ def calculate_youtube_metrics(posts: List[Dict]) -> Dict[str, Any]:
         'avg_shares': avg_shares,
         'engagement_rate': engagement_rate
     }
+
+
+def _split_recent_windows(
+    posts: List[Dict], window_days: int = 7
+) -> tuple[List[Dict], List[Dict]]:
+    """Split posts into current and previous rolling windows by publish date."""
+    if not posts:
+        return [], []
+
+    dated_posts = []
+    for post in posts:
+        dt = _to_naive_dt(post.get("published_at"))
+        if dt is not None:
+            dated_posts.append((post, dt))
+
+    if not dated_posts:
+        return [], []
+
+    latest_dt = max(dt for _, dt in dated_posts)
+    current_start = latest_dt - timedelta(days=window_days - 1)
+    previous_end = current_start - timedelta(seconds=1)
+    previous_start = previous_end - timedelta(days=window_days - 1)
+
+    current_posts = [post for post, dt in dated_posts if current_start <= dt <= latest_dt]
+    previous_posts = [post for post, dt in dated_posts if previous_start <= dt <= previous_end]
+    return current_posts, previous_posts
+
+
+def _compute_delta_pct(posts: List[Dict], metric_fn, window_days: int = 7) -> Optional[float]:
+    """Compute percentage delta between current and previous rolling windows."""
+    current_posts, previous_posts = _split_recent_windows(posts, window_days=window_days)
+    if not current_posts or not previous_posts:
+        return None
+
+    current_value = metric_fn(current_posts)
+    previous_value = metric_fn(previous_posts)
+    if previous_value == 0:
+        return None
+
+    return ((current_value - previous_value) / previous_value) * 100
+
+
+def _delta_suffix(delta_pct: Optional[float], window_days: int = 7) -> str:
+    """Render helper-text suffix for KPI delta context."""
+    if delta_pct is None:
+        return f"No prior {window_days}-day baseline in current dataset."
+    return f"{delta_pct:+.1f}% vs previous {window_days}-day window."
 
 @st.cache_data(ttl=3600, max_entries=32, show_spinner=False)
 def fetch_youtube_comments(video_urls: List[str], _apify_token: str, max_comments_per_video: int = 10) -> List[Dict]:
@@ -837,11 +856,10 @@ def fetch_apify_data(platform: str, url: str, _apify_token: str, max_posts: int 
     """
     Fetch data from Apify actor for the given platform and URL.
     Cached for 1 hour per platform+URL combination.
-
-    NOTE: Adjust the 'run_input' based on actual actor requirements.
+    Uses production Apify client (retries, timeout, user-friendly errors).
     """
     try:
-        client = ApifyClient(_apify_token)
+        client = create_apify_client(_apify_token)
         actor_name = ACTOR_CONFIG.get(platform)
 
         if not actor_name:
@@ -850,83 +868,58 @@ def fetch_apify_data(platform: str, url: str, _apify_token: str, max_posts: int 
 
         # Configure input based on platform with documented formats
         if platform == "Instagram":
-            # Instagram scraper input format based on documentation
             run_input = {
                 "directUrls": [url],
                 "resultsType": "posts",
                 "resultsLimit": max_posts,
-                "searchLimit": 10  # Default search limit
+                "searchLimit": 10,
             }
         elif platform == "Facebook":
-            # Facebook posts actor: use the repo-configured actor_name to choose input shape.
-            # The community `scraper_one/facebook-posts-scraper` expects `pageUrls` while
-            # some official variants expect `startUrls`. Use the appropriate key.
-            if actor_name and actor_name.startswith('scraper_one'):
-                run_input = {
-                    "pageUrls": [url],
-                    "resultsLimit": max_posts
-                }
+            if actor_name and actor_name.startswith("scraper_one"):
+                run_input = {"pageUrls": [url], "resultsLimit": max_posts}
             else:
-                # Fallback to legacy startUrls shape for other actors
-                run_input = {
-                    "startUrls": [url],
-                    "resultsLimit": max_posts
-                }
-            # Add date range parameters if specified (ISO format: YYYY-MM-DD or relative like "3 days ago")
+                run_input = {"startUrls": [url], "resultsLimit": max_posts}
             if from_date:
                 run_input["onlyPostsNewerThan"] = from_date
             if to_date:
                 run_input["onlyPostsOlderThan"] = to_date
         elif platform == "YouTube":
-            # streamers/youtube-scraper input format
-            # Use startUrls for direct channel/video URLs, searchQueries for keyword searches
-            if url.startswith('http'):  # Direct URL (channel, video, playlist)
+            if url.startswith("http"):
                 run_input = {
                     "startUrls": [{"url": url}],
                     "maxResults": max_posts,
                     "maxResultsShorts": 0,
                     "maxResultStreams": 0,
                     "subtitlesLanguage": "en",
-                    "subtitlesFormat": "srt"
+                    "subtitlesFormat": "srt",
                 }
-            else:  # Search query (keywords)
+            else:
                 run_input = {
                     "searchQueries": [url],
                     "maxResults": max_posts,
                     "maxResultsShorts": 0,
                     "maxResultStreams": 0,
                     "subtitlesLanguage": "en",
-                    "subtitlesFormat": "srt"
+                    "subtitlesFormat": "srt",
                 }
         else:
             run_input = {"startUrls": [{"url": url}], "maxPosts": max_posts}
 
-        # Run the actor
         st.info(f"Calling Apify actor: {actor_name}")
-        st.info(f"📊 Requesting {max_posts} posts from: {url}")
-        st.info(f"🔧 Actor ID: {actor_name}")  # Debug info
-
-        # Show date range information
+        st.info(f"Requesting {max_posts} posts from: {url}")
         if from_date or to_date:
-            date_info = "Date range: "
-            if from_date:
-                date_info += f"from {from_date} "
-            if to_date:
-                date_info += f"to {to_date}"
-            st.info(f"📅 {date_info}")
+            date_info = "Date range: " + (from_date or "") + " " + (to_date or "")
+            st.info(f"Date range: {date_info.strip()}")
 
-        run = client.actor(actor_name).call(run_input=run_input)
-
-        # Fetch results, respecting requested limit
-        items = []
-        for item in client.dataset(run["defaultDatasetId"]).iterate_items():
-            items.append(item)
-            if len(items) >= max_posts:
-                break
-
-        st.info(f"✅ Received {len(items)} posts from actor (requested {max_posts})")
+        _, items = run_actor_and_fetch_dataset(
+            client, actor_name, run_input, timeout_secs=DEFAULT_TIMEOUT, max_items=max_posts
+        )
+        st.info(f"Received {len(items)} posts from actor (requested {max_posts})")
         return items
 
+    except ApifyClientError as e:
+        st.error(getattr(e, "user_message", str(e)))
+        return None
     except Exception as e:
         st.error(f"Apify API Error: {str(e)}")
         return None
@@ -981,72 +974,73 @@ def fetch_post_comments(post_url: str, _apify_token: str, max_comments: int = DE
     st.error(f"❌ All comment scrapers failed for post: {post_url}")
     return None
 
-def fetch_comments_for_posts_batch(posts: List[Dict], apify_token: str, max_comments_per_post: int = DEFAULT_MAX_COMMENTS) -> List[Dict]:
+
+@st.cache_data(ttl=3600, max_entries=32, show_spinner=False)
+def _fetch_facebook_comments_batch_data(
+    post_urls_tuple: tuple,
+    max_comments_per_post: int,
+    _apify_token: str,
+) -> Optional[List[Dict]]:
     """
-    Fetch detailed comments for all Facebook posts using batch processing with the Comments Scraper actor.
-    This uses the workflow where we extract all post URLs first, then batch process them for comments.
+    Fetch comment items from Facebook Comments Scraper in one batch run.
+    Cached by (sorted URLs, max_comments) to avoid duplicate Apify runs.
+    Returns raw comment dicts or None on failure.
     """
-    if not posts:
-        return posts
-
-    st.info(f"🔄 Starting batch comment extraction for {len(posts)} posts...")
-
-    # Extract all post URLs
-    post_urls = []
-    for post in posts:
-        post_url = post.get('post_url')
-        if post_url and post_url.startswith('http'):
-            post_urls.append({"url": post_url})
-
-    if not post_urls:
-        st.warning("⚠️ No valid post URLs found for comment extraction")
-        return posts
-
-    st.info(f"📋 Found {len(post_urls)} valid post URLs for comment extraction")
-
-    # Prepare input for the comments scraper actor
+    if not post_urls_tuple:
+        return None
+    post_urls = [{"url": u} for u in post_urls_tuple]
     comments_input = {
         "startUrls": post_urls,
         "resultsLimit": max_comments_per_post,
         "includeNestedComments": False,
-        "viewOption": "RANKED_UNFILTERED"
+        "viewOption": "RANKED_UNFILTERED",
     }
-
-    client = ApifyClient(apify_token)
-
-    # Try different actors for comment extraction
-    for i, actor_id in enumerate(FACEBOOK_COMMENTS_ACTOR_IDS):
+    client = ApifyClient(_apify_token)
+    for actor_id in FACEBOOK_COMMENTS_ACTOR_IDS:
         try:
-            st.info(f"🔍 Attempt {i+1}: Using actor '{actor_id}' for batch comment extraction...")
-
-            # Run the actor
             run = client.actor(actor_id).call(run_input=comments_input)
-
-            # Fetch results, cap total to avoid over-reading
-            max_total = len(posts) * max_comments_per_post
+            max_total = len(post_urls_tuple) * max_comments_per_post
             comments_data = []
             for item in client.dataset(run["defaultDatasetId"]).iterate_items():
                 comments_data.append(item)
                 if len(comments_data) >= max_total:
                     break
-
             if comments_data:
-                st.success(f"✅ Successfully fetched {len(comments_data)} comments using {actor_id}")
-
-                # Process and assign comments to posts
-                posts_with_comments = assign_comments_to_posts(posts, comments_data)
-                return posts_with_comments
-            else:
-                st.warning(f"⚠️ No comments found with {actor_id}, trying next actor...")
-
-        except Exception as e:
-            st.warning(f"⚠️ Actor {actor_id} failed: {str(e)}")
-            if i < len(FACEBOOK_COMMENTS_ACTOR_IDS) - 1:
-                st.info("🔄 Trying next actor...")
+                return comments_data
+        except Exception:
             continue
+    return None
 
-    st.error("❌ All comment scrapers failed for batch processing")
-    return posts
+
+def fetch_comments_for_posts_batch(posts: List[Dict], apify_token: str, max_comments_per_post: int = DEFAULT_MAX_COMMENTS) -> List[Dict]:
+    """
+    Fetch detailed comments for all Facebook posts using batch processing with the Comments Scraper actor.
+    This uses the workflow where we extract all post URLs first, then batch process them for comments.
+    Results are cached so the same page + settings do not trigger a new Apify run for 1 hour.
+    """
+    if not posts:
+        return posts
+
+    post_urls = []
+    for post in posts:
+        post_url = post.get('post_url')
+        if post_url and post_url.startswith('http'):
+            post_urls.append(post_url)
+
+    if not post_urls:
+        st.warning("⚠️ No valid post URLs found for comment extraction")
+        return posts
+
+    st.info(f"🔄 Batch comment extraction for {len(post_urls)} posts (cached 1h for same URLs)...")
+    urls_key = tuple(sorted(post_urls))
+    comments_data = _fetch_facebook_comments_batch_data(urls_key, max_comments_per_post, apify_token)
+
+    if not comments_data:
+        st.error("❌ Batch comment scraper failed or returned no comments")
+        return posts
+
+    st.success(f"✅ Fetched {len(comments_data)} comments (from cache or API)")
+    return assign_comments_to_posts(posts, comments_data)
 
 def assign_comments_to_posts(posts: List[Dict], comments_data: List[Dict]) -> List[Dict]:
     """
@@ -1249,7 +1243,7 @@ def _fetch_one_instagram_post_comments(
                 if comments_data:
                     return comments_data
                 # Empty result: try next actor only if there are fallbacks
-                if actor_id == INSTAGRAM_COMMENTS_ACTOR_ID:
+                if actor_id == INSTAGRAM_COMMENTS_ACTOR_IDS[0]:
                     continue
                 return []
         except Exception:
@@ -1334,223 +1328,128 @@ def assign_instagram_comments_to_posts(posts: List[Dict], comments_data: List[Di
 
     return posts
 
-def create_monthly_overview_charts(df: pd.DataFrame):
-    """Create overview charts for monthly data using Streamlit native charts."""
 
-    # Optimized: vectorized datetime operations
-    df_copy = df.copy()
-    if 'published_at' in df_copy.columns:
-        # Vectorized timezone conversion
-        df_copy['published_at'] = pd.to_datetime(df_copy['published_at'], utc=True).dt.tz_localize(None)
-        df_copy['date'] = df_copy['published_at'].dt.date
-    else:
-        df_copy['date'] = pd.to_datetime(df_copy['published_at']).dt.date
-
-    posts_per_day = df_copy.groupby('date').size().reset_index(name='count')
-
-    # Posts per day line chart
-    st.subheader("📈 Posts Per Day")
-    if PLOTLY_AVAILABLE:
-        fig = px.line(posts_per_day, x="date", y="count", markers=True, title="Posts Per Day",
-                     color_discrete_sequence=[THEME_COLORS['primary']])
-        fig.update_layout(
-            plot_bgcolor=THEME_COLORS['background'],
-            paper_bgcolor=THEME_COLORS['background'],
-            font_color=THEME_COLORS['text']
-        )
-        st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.line_chart(posts_per_day.set_index('date'))
-
-    # Engagement comparison
-    st.subheader("📊 Total Engagement Breakdown")
-    engagement_data = pd.DataFrame({
-        'Metric': ['Reactions/Likes', 'Comments', 'Shares'],
-        'Count': [
-            df['likes'].sum(),  # This is actually reactionsCount for Facebook
-            df['comments_count'].sum(),
-            df['shares_count'].sum()
-        ]
-    })
-    if PLOTLY_AVAILABLE:
-        fig = px.bar(engagement_data, x="Metric", y="Count", title="Total Engagement Breakdown",
-                     color_discrete_sequence=[THEME_COLORS['primary'], THEME_COLORS['secondary'], THEME_COLORS['tertiary']])
-        fig.update_layout(
-            plot_bgcolor=THEME_COLORS['background'],
-            paper_bgcolor=THEME_COLORS['background'],
-            font_color=THEME_COLORS['text']
-        )
-        st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.bar_chart(engagement_data.set_index('Metric'))
-
-    # Top posts by engagement - optimized
-    # Note: 'likes' field contains total reactions for Facebook, so no double-counting
-    st.subheader("🏆 Top 5 Posts by Engagement")
-    df['total_engagement'] = df['likes'] + df['comments_count'] + df['shares_count']
-    top_posts = df.nlargest(5, 'total_engagement')[['text', 'total_engagement']].copy()
-    top_posts['text'] = top_posts['text'].str[:50] + '...'
-    if PLOTLY_AVAILABLE:
-        fig = px.bar(top_posts.reset_index().rename(columns={'text':'Caption'}),
-                     x="Caption", y="total_engagement", title="Top 5 Posts by Engagement",
-                     color_discrete_sequence=[THEME_COLORS['primary']])
-        fig.update_layout(
-            plot_bgcolor=THEME_COLORS['background'],
-            paper_bgcolor=THEME_COLORS['background'],
-            font_color=THEME_COLORS['text']
-        )
-        st.plotly_chart(fig, use_container_width=True)
-    else:
-        top_posts = top_posts.set_index('text')
-    st.bar_chart(top_posts)
-
-def create_reaction_pie_chart(reactions: Dict[str, int]):
-    """Create reaction breakdown chart using Streamlit native charts."""
-    # Filter out zero values
-    reactions_filtered = {k: v for k, v in reactions.items() if v > 0}
-
-    if not reactions_filtered:
-        st.info("No reaction data available for this post")
-        return
-
-    # Create a more detailed display
-    st.subheader("😊 Reaction Breakdown")
-
-    # Show individual reaction counts with emojis
-    cols = st.columns(len(reactions_filtered))
-    for i, (reaction, count) in enumerate(reactions_filtered.items()):
-        with cols[i]:
-            # Add emoji for each reaction type
-            emoji_map = {
-                'like': '👍',
-                'love': '❤️',
-                'haha': '😂',
-                'wow': '😮',
-                'sad': '😢',
-                'angry': '😠'
-            }
-            emoji = emoji_map.get(reaction, '👍')
-            st.metric(f"{emoji} {reaction.title()}", count)
-
-    # Create a bar chart for reactions
-    reactions_df = pd.DataFrame(list(reactions_filtered.items()), columns=['Reaction', 'Count'])
-    reactions_df = reactions_df.set_index('Reaction')
-    st.bar_chart(reactions_df)
-
-def create_wordcloud(comments: List[str], width: int = 800, height: int = 400, figsize: tuple = (10, 5)):
-    """Generate and display word cloud from comments with phrase support."""
+def create_wordcloud(
+    comments: List[str],
+    width: int = 800,
+    height: int = 400,
+    figsize: tuple = (10, 5),
+    section_key: str = "main",
+):
+    """Generate and display a premium, insight-focused word cloud."""
     if not comments:
         st.info("No comments available for word cloud")
         return
 
-    # Get user preferences from session state
-    use_phrase_analysis = st.session_state.get('use_phrase_analysis', True)
-    use_sentiment_coloring = st.session_state.get('use_sentiment_coloring', True)
-    use_simple_wordcloud = st.session_state.get('use_simple_wordcloud', False)
+    from app.viz.wordcloud_generator import render_wordcloud
 
-    # Try to use enhanced word cloud generator if available and not using simple mode
-    if not use_simple_wordcloud:
-        try:
-            from app.viz.wordcloud_generator import create_phrase_wordcloud
+    bigram_key = f"wc_bigrams_{section_key}"
+    max_words_key = f"wc_max_words_{section_key}"
+    min_freq_key = f"wc_min_freq_{section_key}"
+    hashtag_key = f"wc_keep_hashtags_{section_key}"
 
-            if use_phrase_analysis:
-                fig, ax = create_phrase_wordcloud(
-                    comments,
-                    title="Comment Analysis - Phrases & Sentiment" if use_sentiment_coloring else "Comment Analysis - Phrases",
-                    use_sentiment_coloring=use_sentiment_coloring,
-                    language='auto'
-                )
+    controls = st.columns([1, 1, 1, 1])
+    with controls[0]:
+        include_bigrams = st.checkbox(
+            "Include bigrams",
+            value=True,
+            key=bigram_key,
+            help="Show two-word themes like 'customer service'.",
+        )
+    with controls[1]:
+        max_words = st.slider("Max words", 30, 180, 90, 10, key=max_words_key)
+    with controls[2]:
+        min_frequency = st.slider("Min frequency", 1, 10, 2, 1, key=min_freq_key)
+    with controls[3]:
+        keep_hashtag_words = st.checkbox(
+            "Keep hashtag words",
+            value=True,
+            key=hashtag_key,
+            help="Convert #launch -> launch instead of dropping hashtag terms.",
+        )
 
-                # Check if the word cloud actually has content
-                # If it shows "No meaningful content found", fall back to simple word cloud
-                if hasattr(ax, 'texts') and any('No meaningful content found' in str(text.get_text()) for text in ax.texts):
-                    st.warning("⚠️ Phrase analysis found no meaningful content. Falling back to simple word cloud.")
-                    # Continue to fallback below
-                else:
-                    st.pyplot(fig)
-                    return
-        except ImportError:
-            # Fallback to original word cloud generation
-            pass
-        except Exception as e:
-            st.warning(f"⚠️ Enhanced word cloud failed: {str(e)}. Using fallback.")
-            # Continue to fallback below
-
-    # Original word cloud generation (fallback)
-    st.info("🔄 Using simple word cloud generation...")
-    keywords = extract_keywords_nlp(comments)
-
-    if not keywords:
-        st.warning("⚠️ No keywords extracted from comments")
-        st.info("💡 **Possible reasons:**")
-        st.info("• Comments are too short or contain only common words")
-        st.info("• Comments are in a language not well supported")
-        st.info("• Comments contain mostly emojis or special characters")
-        st.info("• Comments may be empty or filtered out")
-        st.info("• Try enabling 'Fetch Detailed Comments' to get actual comment text")
-
-        # Show some sample comments for debugging
-        if comments:
-            st.info("📝 **Sample comments found:**")
-            sample_comments = comments[:3]  # Show first 3 comments
-            for i, comment in enumerate(sample_comments, 1):
-                st.text(f"{i}. {comment[:100]}{'...' if len(comment) > 100 else ''}")
-        else:
-            st.info("📝 **No comments found in the data**")
-        return
-
-    # Generate word cloud with optional Arabic shaping
-    wc_freqs = {_reshape_for_wc(k): v for k, v in keywords.items()}
-    # Optionally set font_path if available; otherwise keep as-is
-    wordcloud = WordCloud(
-        width=width,
-        height=height,
-        background_color=THEME_COLORS['background'],
-        colormap='viridis',
-        relative_scaling=0.5,
-        min_font_size=10
-    ).generate_from_frequencies(wc_freqs)
-
-    # Display
-    fig, ax = plt.subplots(figsize=figsize, facecolor=THEME_COLORS['background'])
-    ax.imshow(wordcloud, interpolation='bilinear')
-    ax.axis('off')
-    fig.patch.set_facecolor(THEME_COLORS['background'])
-    st.pyplot(fig)
+    render_wordcloud(
+        comments,
+        {
+            "width": max(width, 1400),
+            "height": max(height, 700),
+            "max_words": max_words,
+            "min_frequency": min_frequency,
+            "include_bigrams": include_bigrams,
+            "keep_hashtag_words": keep_hashtag_words,
+            "background_mode": "theme",
+            "caption": (
+                "Themes extracted after URL/mention cleanup, stopword removal, and "
+                "light lemmatization for clearer topic signal."
+            ),
+            "section_key": section_key,
+        },
+    )
 
 def create_instagram_monthly_analysis(posts: List[Dict], platform: str):
-    """Create comprehensive monthly Instagram analysis using enhanced dashboard components."""
+    """Create focused monthly Instagram analysis with high-signal visuals."""
     if platform != "Instagram":
         return
 
-    st.markdown("### 📸 Monthly Instagram Analysis")
+    total_posts = len(posts)
+    total_likes = sum(post.get("likes", 0) for post in posts)
+    total_comments = sum(post.get("comments_count", 0) for post in posts)
+    avg_engagement = (total_likes + total_comments) / total_posts if total_posts else 0.0
+    window_days = 7
 
-    # Enhanced KPI Dashboard
-    create_kpi_dashboard(posts, platform)
+    post_delta = _compute_delta_pct(posts, lambda items: len(items), window_days)
+    likes_delta = _compute_delta_pct(posts, lambda items: sum(p.get("likes", 0) for p in items), window_days)
+    comments_delta = _compute_delta_pct(posts, lambda items: sum(p.get("comments_count", 0) for p in items), window_days)
+    engagement_delta = _compute_delta_pct(
+        posts,
+        lambda items: (sum(p.get("likes", 0) + p.get("comments_count", 0) for p in items) / len(items)) if items else 0.0,
+        window_days,
+    )
 
-    # Engagement Trends
-    st.markdown("---")
+    kpi_cards(
+        [
+            {
+                "label": "Total Posts",
+                "value": f"{total_posts:,}",
+                "color_key": "default",
+                "help_text": _delta_suffix(post_delta, window_days),
+            },
+            {
+                "label": "Total Likes",
+                "value": f"{total_likes:,}",
+                "color_key": "likes",
+                "help_text": _delta_suffix(likes_delta, window_days),
+            },
+            {
+                "label": "Total Comments",
+                "value": f"{total_comments:,}",
+                "color_key": "comments",
+                "help_text": _delta_suffix(comments_delta, window_days),
+            },
+            {
+                "label": "Avg Engagement",
+                "value": f"{avg_engagement:.1f}",
+                "color_key": "engagement",
+                "help_text": _delta_suffix(engagement_delta, window_days),
+            },
+        ]
+    )
+
+    st.markdown("#### Trend and Drivers")
     create_engagement_trend_chart(posts)
 
-    # Posting Frequency Analysis
     st.markdown("---")
     create_posting_frequency_chart(posts)
 
-    # Top posts with enhanced visualization
     st.markdown("---")
     create_top_posts_chart(posts, top_n=5)
 
-    # Content type analysis
     st.markdown("---")
-    create_content_type_chart(posts)
-
-    # Hashtag analysis
-    st.markdown("---")
-    create_hashtag_chart(posts, top_n=10)
-
-    # Key Insights Summary
-    st.markdown("---")
-    create_insights_summary(posts, platform)
+    col1, col2 = st.columns(2)
+    with col1:
+        create_content_type_chart(posts)
+    with col2:
+        create_hashtag_chart(posts, top_n=10)
 
 def create_instagram_monthly_insights(posts: List[Dict], platform: str):
     """Create monthly Instagram insights using new analytics and viz components."""
@@ -1574,7 +1473,13 @@ def create_instagram_monthly_insights(posts: List[Dict], platform: str):
 
         with col1:
             st.markdown("#### 💬 Monthly Comments Word Cloud")
-            create_wordcloud(all_comments, width=1200, height=600, figsize=(15, 8))
+            create_wordcloud(
+                all_comments,
+                width=1200,
+                height=600,
+                figsize=(15, 8),
+                section_key="ig_monthly_comments",
+            )
 
         with col2:
             st.markdown("#### 😊 Monthly Sentiment Distribution")
@@ -1667,7 +1572,13 @@ def create_instagram_post_analysis(selected_post: Dict, platform: str):
 
             with col1:
                 st.markdown("##### 📊 Comments Word Cloud")
-                create_wordcloud(comment_texts, width=600, height=400, figsize=(10, 6))
+                create_wordcloud(
+                    comment_texts,
+                    width=600,
+                    height=400,
+                    figsize=(10, 6),
+                    section_key="ig_post_comments",
+                )
 
             with col2:
                 st.markdown("##### 😊 Comments Sentiment")
@@ -1732,15 +1643,11 @@ def main():
         st.session_state.theme = 'light'
     st.markdown(get_custom_css(st.session_state.theme), unsafe_allow_html=True)
 
-    # App Header
-    st.markdown("""
-    <div style="text-align: center; padding: 1rem 0 2rem 0;">
-        <h1 style="margin-bottom: 0.5rem;">📊 Social Media Analytics Dashboard</h1>
-        <p style="color: var(--text-secondary); font-size: 1.125rem; font-weight: 500;">
-            Analyze Facebook, Instagram, and YouTube content with AI-powered insights
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+    # App header: compact, premium hierarchy
+    page_header(
+        "Social Media Analytics",
+        subtitle="Analyze Facebook, Instagram & YouTube with AI-powered insights",
+    )
 
     # Theme Toggle disabled - using Streamlit's default light theme
     # st.sidebar.markdown("### ⚙️ Settings")
@@ -1800,227 +1707,184 @@ def main():
         st.session_state.db_service = _db
         st.session_state.db_error = _err
 
+    # ---- Sidebar header ----
+    st.sidebar.markdown("## 📊 Social Analytics")
+    st.sidebar.caption("Analyze Facebook, Instagram & YouTube")
+    st.sidebar.markdown("---")
+
+    # Database status (compact)
     if st.session_state.db_service:
-        st.sidebar.success("🗄️ Database connected")
+        st.sidebar.caption("🗄️ Database connected")
     else:
-        st.sidebar.caption("🗄️ Database not configured (optional)")
+        st.sidebar.caption("🗄️ No database (optional)")
         err = st.session_state.get("db_error")
         if err:
-            st.sidebar.caption(f"ℹ️ {err[:80]}{'…' if len(err) > 80 else ''}")
+            st.sidebar.caption(f"ℹ️ {err[:60]}{'…' if len(err) > 60 else ''}")
+    st.sidebar.markdown("---")
 
-    # Sidebar - Platform Selection
-    st.sidebar.markdown("### 📱 Platform Selection")
+    # Platform & data source
+    st.sidebar.markdown("### 📱 Platform")
     platform = st.sidebar.radio(
-        "Choose a platform:",
+        "Platform",
         ["Facebook", "Instagram", "YouTube"],
-        help="Select the social media platform to analyze"
+        label_visibility="collapsed",
+        help="Select the social media platform to analyze",
     )
 
-    st.sidebar.markdown("---")
-    st.sidebar.markdown(f"### Current Selection\n**{platform}**")
-
-    # Data Source Selection
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("### 📁 Data Source")
+    st.sidebar.markdown("### 📁 Data source")
     data_source_options = ["Fetch from API", "Load from File"]
-    if st.session_state.get('db_service'):
+    if st.session_state.get("db_service"):
         data_source_options = ["Fetch from API", "Load from Database", "Load from File"]
     data_source = st.sidebar.radio(
-        "Choose data source:",
+        "Data source",
         data_source_options,
-        help="Fetch new data, load from MongoDB, or load from saved files"
+        label_visibility="collapsed",
+        help="Fetch new data, load from DB, or load from saved files",
     )
 
-    # Facebook Configuration Options
-    if data_source == "Fetch from API" and platform == "Facebook":
-        st.sidebar.markdown("---")
-        st.sidebar.markdown("### 📊 Facebook Configuration")
+    # ---- Fetch-from-API options (all platforms) ----
+    fetch_detailed_comments = False
+    comment_method = "Batch Processing"
+    max_comments_per_post = DEFAULT_MAX_COMMENTS
+    max_posts = DEFAULT_MAX_POSTS
+    from_date = None
+    to_date = None
 
-        # Number of posts to extract
-        max_posts = st.sidebar.slider(
-            "Number of Posts to Extract",
-            min_value=1,
-            max_value=50,
-            value=10,
-            help="Maximum number of posts to extract from the Facebook page"
-        )
-
-        # Date range selection
-        date_range_option = st.sidebar.radio(
-            "Date Range:",
-            ["All Posts", "Last 30 Days", "Last 7 Days", "Custom Range"],
-            help="Choose the time range for posts to extract"
-        )
-
-        # Calculate date range
-        today = datetime.now()
-
-        if date_range_option == "Last 30 Days":
-            from_date = (today - timedelta(days=30)).strftime("%Y-%m-%d")
-            to_date = None
-        elif date_range_option == "Last 7 Days":
-            from_date = (today - timedelta(days=7)).strftime("%Y-%m-%d")
-            to_date = None
-        elif date_range_option == "Custom Range":
-            from_date = st.sidebar.date_input(
-                "From Date",
-                value=today - timedelta(days=30),
-                help="Start date for posts extraction"
-            ).strftime("%Y-%m-%d")
-            to_date = st.sidebar.date_input(
-                "To Date",
-                value=today,
-                help="End date for posts extraction"
-            ).strftime("%Y-%m-%d")
-        else:  # All Posts
-            from_date = None
-            to_date = None
-
-        # Platform-specific comments section
-        if platform == "Facebook":
-            st.sidebar.markdown("### 💬 Facebook Comments")
-            st.sidebar.info("⚠️ **Note:** Facebook Comments Scraper actors are currently experiencing issues. The app will try multiple actors but may fail.")
-            st.sidebar.info("💡 **Tip:** The Facebook Posts Scraper only provides comment counts. Enable 'Fetch Detailed Comments' to get actual comment text for word clouds and sentiment analysis.")
-
-            # Comment extraction method selection
-            comment_method = st.sidebar.radio(
-                "Comment Extraction Method:",
-                ["Individual Posts", "Batch Processing"],
-                index=1,  # Default to Batch Processing
-                help="Choose how to extract comments: individual posts (slower but more reliable) or batch processing (faster but may have limitations)"
+    if data_source == "Fetch from API":
+        with st.sidebar.expander("⚙️ Fetch settings", expanded=True):
+            max_posts = st.sidebar.slider(
+                "Posts to fetch",
+                min_value=1,
+                max_value=50,
+                value=10,
+                help="Maximum number of posts or videos to fetch in one run. Higher values take longer and use more Apify units.",
             )
+            if platform == "Facebook":
+                date_range_option = st.sidebar.radio(
+                    "Date range",
+                    ["All Posts", "Last 30 Days", "Last 7 Days", "Custom Range"],
+                    help="Time range for posts (Facebook only)",
+                )
+                today = datetime.now()
+                if date_range_option == "Last 30 Days":
+                    from_date = (today - timedelta(days=30)).strftime("%Y-%m-%d")
+                    to_date = None
+                elif date_range_option == "Last 7 Days":
+                    from_date = (today - timedelta(days=7)).strftime("%Y-%m-%d")
+                    to_date = None
+                elif date_range_option == "Custom Range":
+                    from_date = st.sidebar.date_input(
+                        "From",
+                        value=today - timedelta(days=30),
+                        help="Start date",
+                    ).strftime("%Y-%m-%d")
+                    to_date = st.sidebar.date_input(
+                        "To",
+                        value=today,
+                        help="End date",
+                    ).strftime("%Y-%m-%d")
+                else:
+                    from_date = None
+                    to_date = None
 
-            fetch_detailed_comments = st.sidebar.checkbox(
-                "Fetch Detailed Comments",
-                value=False,
-                help="Fetch detailed comments for Facebook posts using the Comments Scraper actor (extra Apify runs; currently having issues - may fail)"
-            )
-
-        elif platform == "Instagram":
-            st.sidebar.markdown("### 💬 Instagram Comments")
-            st.sidebar.info("💡 **Tip:** Instagram Posts Scraper only provides comment counts. Enable 'Fetch Detailed Comments' to get actual comment text for word clouds and sentiment analysis.")
-            st.sidebar.info("💰 **Cost:** Instagram comments cost $2.30 per 1,000 comments. Free plan includes $5 monthly credits (2,100+ comments).")
-
-            fetch_detailed_comments = st.sidebar.checkbox(
-                "Fetch Detailed Comments",
-                value=False,
-                help="Fetch detailed comments for Instagram posts using the Instagram Comments Scraper (pay-per-result pricing; extra Apify runs)"
-            )
-
-            # Instagram uses batch processing by default
-            comment_method = "Batch Processing"
-
-        else:
-            # YouTube or other platforms
-            st.sidebar.markdown("### 💬 Comments")
-            if platform == "YouTube":
-                st.sidebar.info("💡 **YouTube Two-Step Tip:** Step 1: Channel scraper gets videos. Step 2: Comments scraper analyzes comments from those videos. Enable 'Fetch Detailed Comments' for Step 2.")
+        with st.sidebar.expander("💬 Comments (word clouds & sentiment)", expanded=True):
+            if platform == "Facebook":
+                st.sidebar.caption("**Batch** = one Apify run for all posts (recommended). **Individual** = one run per post.")
+                comment_method = st.sidebar.radio(
+                    "Method",
+                    ["Batch Processing", "Individual Posts"],
+                    help="Batch is cheaper and faster. Use Individual only if Batch fails for your page.",
+                    label_visibility="collapsed",
+                )
+                st.sidebar.caption("Facebook Comments Scraper may have limitations on some pages.")
+                fetch_detailed_comments = st.sidebar.checkbox(
+                    "Fetch detailed comments",
+                    value=True,
+                    help="Fetch comment text for word clouds and sentiment. Adds one or more Apify runs.",
+                )
+            elif platform == "Instagram":
+                st.sidebar.caption("~$2.30 per 1,000 comments. Free plan: $5/month.")
+                fetch_detailed_comments = st.sidebar.checkbox(
+                    "Fetch detailed comments",
+                    value=True,
+                    help="Get comment text for word clouds and sentiment",
+                )
             else:
-                st.sidebar.info("💡 **Tip:** Enable 'Fetch Detailed Comments' to get actual comment text for word clouds and sentiment analysis.")
+                st.sidebar.caption("Step 2: fetch comments from videos.")
+                fetch_detailed_comments = st.sidebar.checkbox(
+                    "Fetch detailed comments",
+                    value=True,
+                    help="Get comment text from videos (extra Apify run)",
+                )
 
-            fetch_detailed_comments = st.sidebar.checkbox(
-                "Fetch Detailed Comments",
-                value=False,
-                help="Fetch detailed comments for posts (extra Apify actor runs)"
-            )
+            if fetch_detailed_comments:
+                max_comments_per_post = st.sidebar.slider(
+                    "Max comments per post",
+                    min_value=10,
+                    max_value=100,
+                    value=DEFAULT_MAX_COMMENTS,
+                    help="Maximum comments to fetch per post or video. Lower values are faster and use fewer Apify units.",
+                )
 
-            comment_method = "Batch Processing"
+    # ---- Analysis options (collapsible) ----
+    with st.sidebar.expander("🔧 Analysis options", expanded=False):
+        use_phrase_analysis = st.sidebar.checkbox(
+            "Phrase-based analysis",
+            value=True,
+            help="Extract phrases (e.g. 'thank you') for better sentiment",
+        )
+        use_sentiment_coloring = st.sidebar.checkbox(
+            "Sentiment colors in word cloud",
+            value=True,
+            help="Green=positive, red=negative, gray=neutral",
+        )
+        use_simple_wordcloud = st.sidebar.checkbox(
+            "Simple word cloud (fallback)",
+            value=False,
+            help="Use if phrase analysis shows 'No meaningful content'",
+        )
 
-        # Additional options for batch processing
-        if comment_method == "Batch Processing" and fetch_detailed_comments:
-            max_comments_per_post = st.sidebar.slider(
-                "Max Comments per Post",
-                min_value=10,
-                max_value=100,
-                value=DEFAULT_MAX_COMMENTS,
-                help="Maximum number of comments to extract per post"
-            )
-        else:
-            max_comments_per_post = DEFAULT_MAX_COMMENTS
-    else:
-        fetch_detailed_comments = False
-        comment_method = "Individual Posts"
-        max_comments_per_post = DEFAULT_MAX_COMMENTS
-        max_posts = DEFAULT_MAX_POSTS
-        from_date = None
-        to_date = None
-
-    # Analysis Options
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("### 🔧 Analysis Options")
-    use_phrase_analysis = st.sidebar.checkbox(
-        "Use Phrase-Based Analysis",
-        value=True,
-        help="Extract meaningful phrases (like 'thank you', 'very good') instead of individual words for more accurate sentiment analysis"
-    )
-    use_sentiment_coloring = st.sidebar.checkbox(
-        "Use Sentiment Coloring in Word Clouds",
-        value=True,
-        help="Color words/phrases in word clouds based on their sentiment (green=positive, red=negative, gray=neutral)"
-    )
-
-    use_simple_wordcloud = st.sidebar.checkbox(
-        "Use Simple Word Cloud (Fallback)",
-        value=False,
-        help="Use simple word cloud instead of phrase-based analysis. Try this if you see 'No meaningful content found'."
-    )
-
-    # Entity Extraction (GLiNER) - REMOVED (too slow to build)
-    # use_entity_extraction = st.sidebar.checkbox(
-    #     "Enable Entity Extraction (GLiNER)",
-    #     value=True,
-    #     help="Extract named entities (people, locations, organizations, etc.) from comments using AI. Requires GLiNER library."
-    # )
-
-    # File selector for loading saved data
+    # ---- Load from file ----
     if data_source == "Load from File":
+        st.sidebar.markdown("---")
         saved_files = get_saved_files()
         platform_files = saved_files.get(platform, [])
 
         if platform_files:
-            st.sidebar.markdown("#### Available Files")
+            st.sidebar.markdown("### 📂 Saved files")
             file_options = []
             for file_path in platform_files:
                 filename = os.path.basename(file_path)
-                # Extract timestamp from filename for display
                 try:
-                    timestamp_part = filename.split('_', 1)[1].replace('.json', '').replace('.csv', '')
+                    timestamp_part = filename.split("_", 1)[1].replace(".json", "").replace(".csv", "")
                     display_name = f"{timestamp_part} ({'JSON' if file_path.endswith('.json') else 'CSV'})"
                 except (IndexError, ValueError, AttributeError):
                     display_name = filename
                 file_options.append((display_name, file_path))
 
             selected_file_display = st.sidebar.selectbox(
-                "Select a file:",
+                "File",
                 options=[opt[0] for opt in file_options],
-                help="Choose a previously saved data file to load"
+                label_visibility="collapsed",
+                help="Choose a saved file to load",
             )
+            selected_file_path = next((fp for d, fp in file_options if d == selected_file_display), None)
 
-            # Get the actual file path
-            selected_file_path = None
-            for display_name, file_path in file_options:
-                if display_name == selected_file_display:
-                    selected_file_path = file_path
-                    break
-
-            if selected_file_path and st.sidebar.button("📂 Load Selected File", type="primary"):
-                with st.spinner(f"Loading data from {os.path.basename(selected_file_path)}..."):
+            if selected_file_path and st.sidebar.button("📂 Load file", type="primary"):
+                with st.spinner(f"Loading {os.path.basename(selected_file_path)}..."):
                     loaded_data = load_data_from_file(selected_file_path)
-
                 if loaded_data:
                     st.session_state.posts_data = loaded_data
-                    st.success(f"✅ Successfully loaded {len(loaded_data)} posts from file")
-                    st.info(f"📁 File: {selected_file_path}")
+                    st.success(f"✅ Loaded {len(loaded_data)} posts")
                     st.rerun()
                 else:
-                    st.error("Failed to load data from file")
+                    st.error("Failed to load file")
         else:
-            st.sidebar.info(f"No saved files found for {platform}")
-            st.sidebar.markdown("**Tip:** Fetch data from API first to create saved files")
+            st.sidebar.info(f"No saved files for **{platform}**. Fetch from API first to create files.")
 
-    if data_source == "Load from Database" and st.session_state.get('db_service'):
-        st.sidebar.markdown("#### Database Options")
-        st.sidebar.caption("Configure load range below in the main area.")
+    if data_source == "Load from Database" and st.session_state.get("db_service"):
+        st.sidebar.markdown("---")
+        st.sidebar.caption("Configure date range and limit in the main area.")
 
     # Initialize session state
     if 'posts_data' not in st.session_state:
@@ -2066,21 +1930,6 @@ def main():
             st.header(f"{platform} Analysis - Loaded from File")
             analyze_button = False
             url = ""
-
-    # In-page Table of Contents for expanders
-    toc_items = [
-        "📈 Monthly Overview",
-        "💡 Monthly Insights",
-        "📊 Analytics",
-        "📝 Posts Details"
-    ]
-
-    with st.container():
-        st.markdown("**Sections:**")
-        cols = st.columns(len(toc_items))
-        for i, item in enumerate(toc_items):
-            if cols[i].button(item):
-                st.session_state['selected_toc'] = item
 
     # Refresh button
     if st.session_state.posts_data is not None:
@@ -2220,13 +2069,14 @@ def main():
                 st.success("✅ Data saved successfully!")
                 if save_result.get('job_id'):
                     st.info("🗄️ **Database:** Saved to MongoDB")
-                    col1, col2, col3 = st.columns(3)
-                    with col1:
-                        st.metric("Posts Saved", save_result.get('total_posts', 0))
-                    with col2:
-                        st.metric("Comments Saved", save_result.get('total_comments', 0))
-                    with col3:
-                        st.metric("Job ID", (save_result.get('job_id', '') or '')[:8] + "..." if save_result.get('job_id') else "—")
+                    kpi_cards(
+                        [
+                            {"label": "Posts Saved", "value": str(save_result.get('total_posts', 0)), "color_key": "default"},
+                            {"label": "Comments Saved", "value": str(save_result.get('total_comments', 0)), "color_key": "comments"},
+                            {"label": "Job ID", "value": (save_result.get('job_id', '') or '')[:8] + "…" if save_result.get('job_id') else "—", "color_key": "default"},
+                        ],
+                        columns=3,
+                    )
                 if save_result.get('json_path'):
                     st.info(f"📄 Raw JSON: `{save_result.get('json_path')}`")
                     st.info(f"📊 Processed CSV: `{save_result.get('csv_path')}`")
@@ -2244,11 +2094,14 @@ def main():
             else:
                 st.warning("⚠️ Failed to save data to files")
 
-        # Option to show all posts or filter by current month
+        # Data range filter
+        st.caption("Data range")
         filter_option = st.radio(
             "Choose data range:",
             ["Show All Posts", "Current Month Only"],
-            help="Select whether to show all posts or filter to current month only"
+            help="Show all fetched posts or limit to current month only",
+            label_visibility="collapsed",
+            key="filter_data_range",
         )
 
         if filter_option == "Current Month Only":
@@ -2277,6 +2130,7 @@ def main():
 
     # Display results
     if st.session_state.posts_data:
+        section_divider()
         posts = st.session_state.posts_data
         df = pd.DataFrame(posts)
 
@@ -2288,266 +2142,202 @@ def main():
         # ═══════════════════════════════════════════════════════════
         # INSTAGRAM WORKFLOW - STEP 3: SHOW MONTHLY OVERVIEW
         # ═══════════════════════════════════════════════════════════
-        # Enhanced KPI Cards for Facebook Data (wrapped in expander)
-        title_section = "📈 Monthly Overview"
-        expanded = st.session_state.get('selected_toc') == title_section
-        with st.expander(title_section, expanded=expanded):
-            # Analysis Period Display
-            now = datetime.now()
-            month_year = now.strftime("%B %Y")
-            st.markdown(f"**Analysis Period:** {month_year}")
-            st.markdown("---")
+        st.markdown("### 📈 Monthly Overview")
+        now = datetime.now()
+        month_year = now.strftime("%B %Y")
+        st.caption(f"Analysis period: {month_year}")
+        st.markdown("---")
 
-            # Platform-specific analysis
-            if platform == "Instagram":
-                # Show monthly Instagram analysis first
-                create_instagram_monthly_analysis(posts, platform)
-                # Show monthly insights with word cloud and sentiment
-                create_instagram_monthly_insights(posts, platform)
-            elif platform == "YouTube":
-                # YouTube Two-Step Analysis: Channel Scraper + Comments Scraper
-                youtube_metrics = calculate_youtube_metrics(posts)
+        # Platform-specific analysis
+        if platform == "Instagram":
+            # Single insight path for Instagram: avoid duplicated monthly-insight sections.
+            create_instagram_monthly_analysis(posts, platform)
+        elif platform == "YouTube":
+            # YouTube Two-Step Analysis: Channel Scraper + Comments Scraper
+            youtube_metrics = calculate_youtube_metrics(posts)
+            window_days = 7
+            views_delta = _compute_delta_pct(posts, lambda items: sum(p.get('views', 0) for p in items), window_days)
+            likes_delta = _compute_delta_pct(posts, lambda items: sum(p.get('likes', 0) for p in items), window_days)
+            comments_delta = _compute_delta_pct(posts, lambda items: sum(p.get('comments_count', 0) for p in items), window_days)
+            engagement_delta = _compute_delta_pct(
+                posts,
+                lambda items: calculate_youtube_metrics(items).get('engagement_rate', 0.0),
+                window_days,
+            )
 
-                # Display YouTube video metrics
-                col1, col2, col3, col4 = st.columns(4)
-                with col1:
-                    st.metric("Total Views", f"{youtube_metrics.get('total_views', 0):,}")
-                with col2:
-                    st.metric("Total Likes", f"{youtube_metrics.get('total_likes', 0):,}")
-                with col3:
-                    st.metric("Total Comments", f"{youtube_metrics.get('total_comments', 0):,}")
-                with col4:
-                    st.metric("Engagement Rate", f"{youtube_metrics.get('engagement_rate', 0):.2f}%")
+            # Keep high-signal KPI set for faster executive scanning.
+            kpi_cards(
+                [
+                    {
+                        "label": "Total Views",
+                        "value": f"{youtube_metrics.get('total_views', 0):,}",
+                        "color_key": "views",
+                        "help_text": _delta_suffix(views_delta, window_days),
+                    },
+                    {
+                        "label": "Total Likes",
+                        "value": f"{youtube_metrics.get('total_likes', 0):,}",
+                        "color_key": "likes",
+                        "help_text": _delta_suffix(likes_delta, window_days),
+                    },
+                    {
+                        "label": "Total Comments",
+                        "value": f"{youtube_metrics.get('total_comments', 0):,}",
+                        "color_key": "comments",
+                        "help_text": _delta_suffix(comments_delta, window_days),
+                    },
+                    {
+                        "label": "Engagement Rate",
+                        "value": f"{youtube_metrics.get('engagement_rate', 0):.2f}%",
+                        "color_key": "engagement",
+                        "help_text": _delta_suffix(engagement_delta, window_days),
+                    },
+                ]
+            )
 
-                # Additional YouTube metrics
-                col1, col2, col3, col4 = st.columns(4)
-                with col1:
-                    st.metric("Avg Views", f"{youtube_metrics.get('avg_views', 0):,.0f}")
-                with col2:
-                    st.metric("Avg Likes", f"{youtube_metrics.get('avg_likes', 0):,.0f}")
-                with col3:
-                    st.metric("Avg Comments", f"{youtube_metrics.get('avg_comments', 0):,.0f}")
-                with col4:
-                    st.metric("Total Shares", f"{youtube_metrics.get('total_shares', 0):,}")
+            # Step 2: Extract comments from videos if enabled
+            if fetch_detailed_comments:
+                st.markdown("#### 💬 Comments Analysis")
+                st.info("🔄 **Step 2:** Extracting comments from videos...")
 
-                # Step 2: Extract comments from videos if enabled
-                if fetch_detailed_comments:
-                    st.markdown("#### 💬 Comments Analysis")
-                    st.info("🔄 **Step 2:** Extracting comments from videos...")
+                # Extract video URLs from posts
+                video_urls = [post.get('url') for post in posts if post.get('url')]
+                video_urls = [url for url in video_urls if url]  # Remove empty URLs
 
-                    # Extract video URLs from posts
-                    video_urls = [post.get('url') for post in posts if post.get('url')]
-                    video_urls = [url for url in video_urls if url]  # Remove empty URLs
+                if video_urls:
+                    st.write(f"Found {len(video_urls)} videos to analyze for comments")
 
-                    if video_urls:
-                        st.write(f"Found {len(video_urls)} videos to analyze for comments")
+                    # Fetch comments from all videos
+                    with st.spinner("Fetching comments from videos..."):
+                        all_comments = fetch_youtube_comments(video_urls, apify_token, max_posts)
 
-                        # Fetch comments from all videos
-                        with st.spinner("Fetching comments from videos..."):
-                            all_comments = fetch_youtube_comments(video_urls, apify_token, max_posts)
+                    if all_comments:
+                        st.success(f"✅ Successfully fetched {len(all_comments)} comments")
 
-                        if all_comments:
-                            st.success(f"✅ Successfully fetched {len(all_comments)} comments")
+                        # Display comment metrics
+                        total_comment_likes = sum(comment.get('voteCount', 0) for comment in all_comments)
+                        unique_comment_authors = len(set(comment.get('author', '') for comment in all_comments if comment.get('author')))
 
-                            # Display comment metrics
-                            total_comment_likes = sum(comment.get('voteCount', 0) for comment in all_comments)
-                            unique_comment_authors = len(set(comment.get('author', '') for comment in all_comments if comment.get('author')))
+                        kpi_cards(
+                            [
+                                {"label": "Total Comments", "value": f"{len(all_comments):,}", "color_key": "comments"},
+                                {"label": "Comment Likes", "value": f"{total_comment_likes:,}", "color_key": "likes"},
+                                {"label": "Unique Authors", "value": f"{unique_comment_authors:,}", "color_key": "default"},
+                                {"label": "Avg Likes/Comment", "value": f"{total_comment_likes / len(all_comments):.1f}" if all_comments else "0", "color_key": "engagement"},
+                            ]
+                        )
 
-                            col1, col2, col3, col4 = st.columns(4)
-                            with col1:
-                                st.metric("Total Comments", f"{len(all_comments):,}")
-                            with col2:
-                                st.metric("Comment Likes", f"{total_comment_likes:,}")
-                            with col3:
-                                st.metric("Unique Authors", f"{unique_comment_authors:,}")
-                            with col4:
-                                st.metric("Avg Likes/Comment", f"{total_comment_likes / len(all_comments):.1f}" if all_comments else "0")
-
-                            # Comments word cloud
-                            st.markdown("#### 📊 Comments Word Cloud")
-                            comment_texts = [comment.get('comment', '') for comment in all_comments if comment.get('comment')]
-                            if comment_texts:
-                                st.write(f"Analyzing {len(comment_texts)} comments...")
-                                create_wordcloud(comment_texts)
-                            else:
-                                st.info("No comment text available for word cloud.")
+                        # Comments word cloud
+                        st.markdown("#### 📊 Comments Word Cloud")
+                        comment_texts = [comment.get('comment', '') for comment in all_comments if comment.get('comment')]
+                        if comment_texts:
+                            st.write(f"Analyzing {len(comment_texts)} comments...")
+                            create_wordcloud(comment_texts, section_key="yt_video_comments")
                         else:
-                            st.warning("No comments found for the videos.")
+                            st.info("No comment text available for word cloud.")
                     else:
-                        st.warning("No video URLs found to extract comments from.")
+                        st.warning("No comments found for the videos.")
                 else:
-                    st.info("💡 **Tip:** Enable 'Fetch Detailed Comments' to analyze comments from the videos.")
+                    st.warning("No video URLs found to extract comments from.")
             else:
-                # Facebook analysis (existing code)
-                # Calculate metrics
-                total_reactions = calculate_total_reactions(posts)
-                total_comments = df['comments_count'].sum()
-                total_shares = df['shares_count'].sum()
-                avg_engagement = calculate_average_engagement(posts)
+                st.info("💡 **Tip:** Enable 'Fetch Detailed Comments' to analyze comments from the videos.")
+        else:
+            # Facebook analysis
+            total_reactions = calculate_total_reactions(posts)
+            total_comments = df['comments_count'].sum()
+            total_shares = df['shares_count'].sum()
+            avg_engagement = calculate_average_engagement(posts)
+            window_days = 7
+            reactions_delta = _compute_delta_pct(posts, calculate_total_reactions, window_days)
+            comments_delta = _compute_delta_pct(posts, lambda items: sum(p.get('comments_count', 0) for p in items), window_days)
+            shares_delta = _compute_delta_pct(posts, lambda items: sum(p.get('shares_count', 0) for p in items), window_days)
+            engagement_delta = _compute_delta_pct(posts, calculate_average_engagement, window_days)
 
-                # Calculate detailed reactions breakdown
-                reactions_breakdown = {}
-                for post in posts:
-                    reactions = post.get('reactions', {})
-                    if isinstance(reactions, dict):
-                        for reaction_type, count in reactions.items():
-                            reactions_breakdown[reaction_type] = reactions_breakdown.get(reaction_type, 0) + count
+            # Calculate detailed reactions breakdown
+            reactions_breakdown = {}
+            for post in posts:
+                reactions = post.get('reactions', {})
+                if isinstance(reactions, dict):
+                    for reaction_type, count in reactions.items():
+                        reactions_breakdown[reaction_type] = reactions_breakdown.get(reaction_type, 0) + count
 
-                # Create 4-column card layout
-                col1, col2, col3, col4 = st.columns(4)
+            # KPI row: consistent cards (reactions, comments, shares, engagement)
+            kpi_cards(
+                [
+                    {
+                        "label": "Total Reactions",
+                        "value": f"{total_reactions:,}",
+                        "help_text": f"Sum of all reaction types. {_delta_suffix(reactions_delta, window_days)}",
+                        "color_key": "reactions",
+                    },
+                    {
+                        "label": "Total Comments",
+                        "value": f"{total_comments:,}",
+                        "help_text": f"Total comments across all posts. {_delta_suffix(comments_delta, window_days)}",
+                        "color_key": "comments",
+                    },
+                    {
+                        "label": "Total Shares",
+                        "value": f"{total_shares:,}",
+                        "help_text": f"Total shares across all posts. {_delta_suffix(shares_delta, window_days)}",
+                        "color_key": "shares",
+                    },
+                    {
+                        "label": "Avg Engagement",
+                        "value": f"{avg_engagement:.1f}",
+                        "help_text": f"Average engagement per post. {_delta_suffix(engagement_delta, window_days)}",
+                        "color_key": "engagement",
+                    },
+                ]
+            )
 
-                with col1:
-                    st.markdown("""
-                    <div style="
-                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                        padding: 1rem;
-                        border-radius: 10px;
-                        text-align: center;
-                        color: white;
-                        margin-bottom: 1rem;
-                    ">
-                        <h3 style="margin: 0; font-size: 2rem;">😊</h3>
-                        <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Total Reactions</h2>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    st.metric("Total Reactions", f"{total_reactions:,}", help="Sum of all reaction types (like, love, wow, etc.)", label_visibility="collapsed")
+            # Show reactions breakdown if available (not for Instagram)
+            if reactions_breakdown and platform != "Instagram":
+                st.markdown("---")
+                st.markdown("### 😊 Reactions Breakdown")
+                create_reaction_pie_chart(reactions_breakdown)
 
-                with col2:
-                    st.markdown("""
-                    <div style="
-                        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-                        padding: 1rem;
-                        border-radius: 10px;
-                        text-align: center;
-                        color: white;
-                        margin-bottom: 1rem;
-                    ">
-                        <h3 style="margin: 0; font-size: 2rem;">💬</h3>
-                        <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Total Comments</h2>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    st.metric("Total Comments", f"{total_comments:,}", help="Total number of comments across all posts", label_visibility="collapsed")
-
-                with col3:
-                    st.markdown("""
-                    <div style="
-                        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-                        padding: 1rem;
-                        border-radius: 10px;
-                        text-align: center;
-                        color: white;
-                        margin-bottom: 1rem;
-                    ">
-                        <h3 style="margin: 0; font-size: 2rem;">📤</h3>
-                        <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Total Shares</h2>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    st.metric("Total Shares", f"{total_shares:,}", help="Total number of shares across all posts", label_visibility="collapsed")
-
-                with col4:
-                    st.markdown("""
-                    <div style="
-                        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-                        padding: 1rem;
-                        border-radius: 10px;
-                        text-align: center;
-                        color: white;
-                        margin-bottom: 1rem;
-                    ">
-                        <h3 style="margin: 0; font-size: 2rem;">📊</h3>
-                        <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">Avg Engagement</h2>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    st.metric("Avg Engagement", f"{avg_engagement:.1f}", help="Average engagement per post (likes + comments + shares + reactions)", label_visibility="collapsed")
-
-                # Show reactions breakdown if available (not for Instagram)
-                if reactions_breakdown and platform != "Instagram":
-                    st.markdown("---")
-                    st.markdown("### 😊 Reactions Breakdown")
-                    create_reaction_pie_chart(reactions_breakdown)
-
-                # Facebook: point users to Monthly Insights for word cloud & sentiment
-                if platform == "Facebook":
-                    st.markdown("---")
-                    st.info("💡 **Word cloud and sentiment analysis** are in the **💡 Monthly Insights** section below. Enable **Fetch Detailed Comments** in the sidebar if you don't see them.")
+            # Facebook comment drivers are shown in Monthly Insights below.
 
         st.markdown("---")
 
-        # Monthly Insights Section
-        st.markdown("### 💡 Monthly Insights")
+        st.markdown("### 📈 Trends")
+        st.caption("Volume and engagement direction over time.")
+        create_monthly_overview_charts(df)
 
-        # Aggregate all comments for analysis
+        st.markdown("---")
+
+        # Monthly Insights Section (comment-driven NLP; avoid duplicated charts)
+        st.markdown("### 💡 Audience Breakdown")
+
         all_comments = aggregate_all_comments(posts)
 
         if all_comments:
-            # Advanced NLP Analysis Dashboard (function adds its own title)
+            st.caption("Topic, keyword, and sentiment drivers from collected comment text.")
             create_advanced_nlp_dashboard(all_comments)
-
             st.markdown("---")
-
-            # Create two columns for traditional insights
-            col1, col2 = st.columns(2)
-
-            with col1:
-                st.markdown("#### 💬 Most Discussed Topics This Month")
-                # Create larger word cloud for monthly insights
-                create_wordcloud(all_comments, width=1200, height=600, figsize=(15, 8))
-
-            with col2:
-                st.markdown("#### 😊 Sentiment Distribution")
-                # Analyze sentiment for all comments
-                sentiment_counts = analyze_all_sentiments(all_comments)
-                create_sentiment_pie_chart(sentiment_counts)
-
-                # Display summary statistics
-                total_comments = sum(sentiment_counts.values())
-                if total_comments > 0:
-                    st.markdown("**Summary:**")
-                    st.markdown(f"- **Total Comments Analyzed:** {total_comments:,}")
-                    st.markdown(f"- **Positive:** {sentiment_counts['positive']:,} ({sentiment_counts['positive']/total_comments*100:.1f}%)")
-                    st.markdown(f"- **Negative:** {sentiment_counts['negative']:,} ({sentiment_counts['negative']/total_comments*100:.1f}%)")
-                    st.markdown(f"- **Neutral:** {sentiment_counts['neutral']:,} ({sentiment_counts['neutral']/total_comments*100:.1f}%)")
-
-            # Sentiment Comparison View (Emoji analysis already included in Advanced NLP Dashboard above)
-            # Only show comparison if we have enough data
-            try:
-                from app.nlp.advanced_nlp import analyze_text_emojis, analyze_text_with_emoji_sentiment
-                from app.nlp.sentiment_analyzer import analyze_corpus_sentiment_phrases
-
-                monthly_agg_text = " ".join([t for t in all_comments if isinstance(t, str)])
-                monthly_emoji = analyze_text_emojis(monthly_agg_text)
-                monthly_text_sent = analyze_corpus_sentiment_phrases(all_comments)
-                monthly_combined = analyze_text_with_emoji_sentiment(monthly_agg_text)
-
-                # Only show sentiment comparison if we have meaningful data
-                if monthly_emoji.get('emoji_count', 0) > 0:
-                    st.markdown("---")
-                    st.markdown("#### 📊 Sentiment Comparison")
-                    create_sentiment_comparison_view(monthly_text_sent, monthly_emoji, monthly_combined)
-            except Exception as e:
-                # Silently skip if sentiment comparison fails (emoji analysis already shown in dashboard)
-                pass
+            st.markdown("#### 🧭 Top Themes in Content")
+            create_wordcloud(
+                all_comments,
+                width=1200,
+                height=600,
+                figsize=(15, 8),
+                section_key="audience_breakdown",
+            )
         else:
-            st.info("📊 No comment text available for monthly insights analysis")
-            st.warning("💡 **To analyze comments:** Enable 'Fetch Detailed Comments' in the sidebar and re-analyze the page.")
-            st.info("This will extract actual comment text for word clouds and sentiment analysis.")
-
-            # Show some debugging info
-            total_posts = len(posts)
             posts_with_comments = sum(1 for post in posts if post.get('comments_count', 0) > 0)
-            st.info(f"📈 **Data Summary:** {total_posts} posts found, {posts_with_comments} posts have comments")
-
-            if posts_with_comments > 0:
-                st.info("💡 Comments are available but not being processed. Check the comment extraction logic.")
+            st.info(
+                "No detailed comment text is available for audience breakdown. "
+                "Enable 'Fetch Detailed Comments' to unlock topic and sentiment drivers."
+            )
+            if posts_with_comments:
+                st.caption(f"{posts_with_comments:,} posts contain comments but no comment-text payload.")
 
         st.markdown("---")
 
         # ═══════════════════════════════════════════════════════════
         # CROSS-PLATFORM COMPARISON (if data available)
         # ═══════════════════════════════════════════════════════════
-        comparison_title = "🔄 Cross-Platform Comparison"
-        expanded_comparison = st.session_state.get('selected_toc') == comparison_title
-
         # Check if we have saved data from other platforms
         saved_files = get_saved_files()
         all_platforms_data = {}
@@ -2571,28 +2361,19 @@ def main():
 
         # Show comparison if we have data from multiple platforms
         if len(all_platforms_data) > 1:
-            with st.expander(comparison_title, expanded=expanded_comparison):
-                st.markdown("### 🔄 Multi-Platform Performance Analysis")
-                st.info(f"Comparing data across {len(all_platforms_data)} platforms")
-
-                create_performance_comparison(
-                    facebook_posts=all_platforms_data.get("Facebook"),
-                    instagram_posts=all_platforms_data.get("Instagram"),
-                    youtube_posts=all_platforms_data.get("YouTube")
-                )
-
-        st.markdown("---")
-
-        # Analytics charts (expander)
-        analytics_title = "📊 Analytics"
-        expanded_analytics = st.session_state.get('selected_toc') == analytics_title
-        with st.expander(analytics_title, expanded=expanded_analytics):
-            create_monthly_overview_charts(df)
+            st.markdown("### 🔄 Cross-Platform Comparison")
+            st.caption(f"Benchmarking performance across {len(all_platforms_data)} available platforms.")
+            create_performance_comparison(
+                facebook_posts=all_platforms_data.get("Facebook"),
+                instagram_posts=all_platforms_data.get("Instagram"),
+                youtube_posts=all_platforms_data.get("YouTube")
+            )
 
         st.markdown("---")
 
         # Posts table
         st.markdown("### 📝 Posts Details")
+        st.caption("Click a row to explore; use the selector below for full post analysis.")
         display_df = df[['published_at', 'text', 'likes', 'comments_count', 'shares_count']].copy()
         display_df['text'] = display_df['text'].str[:100] + '...'
 

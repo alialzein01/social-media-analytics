@@ -26,6 +26,8 @@ except ImportError:
 
 from app.styles.theme import THEME_COLORS, GRADIENT_STYLES
 
+CHART_HEIGHT = 340
+
 
 # ============================================================================
 # KPI DASHBOARD
@@ -266,17 +268,12 @@ def create_engagement_trend_chart(posts: List[Dict]) -> None:
             title="Daily Engagement Breakdown",
             xaxis_title="Date",
             yaxis_title="Count",
-            hovermode='x unified',
+            hovermode="x unified",
             plot_bgcolor=THEME_COLORS['background'],
             paper_bgcolor=THEME_COLORS['background'],
             font=dict(color=THEME_COLORS['tertiary']),
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="right",
-                x=1
-            )
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            height=CHART_HEIGHT,
         )
 
         st.plotly_chart(fig, use_container_width=True)
@@ -301,7 +298,8 @@ def create_engagement_trend_chart(posts: List[Dict]) -> None:
             hovermode='x',
             plot_bgcolor=THEME_COLORS['background'],
             paper_bgcolor=THEME_COLORS['background'],
-            font=dict(color=THEME_COLORS['tertiary'])
+            font=dict(color=THEME_COLORS['tertiary']),
+            height=CHART_HEIGHT,
         )
 
         st.plotly_chart(fig2, use_container_width=True)
@@ -346,7 +344,8 @@ def create_posting_frequency_chart(posts: List[Dict]) -> None:
             fig.update_layout(
                 plot_bgcolor=THEME_COLORS['background'],
                 paper_bgcolor=THEME_COLORS['background'],
-                font=dict(color=THEME_COLORS['tertiary'])
+                font=dict(color=THEME_COLORS['tertiary']),
+                height=CHART_HEIGHT,
             )
             st.plotly_chart(fig, use_container_width=True)
         else:
@@ -370,7 +369,8 @@ def create_posting_frequency_chart(posts: List[Dict]) -> None:
             fig.update_layout(
                 plot_bgcolor=THEME_COLORS['background'],
                 paper_bgcolor=THEME_COLORS['background'],
-                font=dict(color=THEME_COLORS['tertiary'])
+                font=dict(color=THEME_COLORS['tertiary']),
+                height=CHART_HEIGHT,
             )
             st.plotly_chart(fig, use_container_width=True)
         else:
@@ -459,7 +459,8 @@ def create_performance_comparison(
                 plot_bgcolor=THEME_COLORS['background'],
                 paper_bgcolor=THEME_COLORS['background'],
                 font=dict(color=THEME_COLORS['tertiary']),
-                showlegend=False
+                showlegend=False,
+                height=CHART_HEIGHT,
             )
             st.plotly_chart(fig, use_container_width=True)
 
@@ -476,7 +477,8 @@ def create_performance_comparison(
                 plot_bgcolor=THEME_COLORS['background'],
                 paper_bgcolor=THEME_COLORS['background'],
                 font=dict(color=THEME_COLORS['tertiary']),
-                showlegend=False
+                showlegend=False,
+                height=CHART_HEIGHT,
             )
             st.plotly_chart(fig, use_container_width=True)
 
@@ -509,7 +511,8 @@ def create_performance_comparison(
             barmode='group',
             plot_bgcolor=THEME_COLORS['background'],
             paper_bgcolor=THEME_COLORS['background'],
-            font=dict(color=THEME_COLORS['tertiary'])
+            font=dict(color=THEME_COLORS['tertiary']),
+            height=CHART_HEIGHT,
         )
 
         st.plotly_chart(fig, use_container_width=True)

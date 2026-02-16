@@ -434,7 +434,13 @@ def create_comment_analytics(post: Dict, platform: str) -> None:
         st.markdown("#### 📊 Comment Word Cloud")
         # Import word cloud function from main app
         from social_media_app import create_wordcloud
-        create_wordcloud(comment_texts, width=600, height=400, figsize=(10, 6))
+        create_wordcloud(
+            comment_texts,
+            width=600,
+            height=400,
+            figsize=(10, 6),
+            section_key="post_details_comments",
+        )
 
     with col2:
         st.markdown("#### 😊 Sentiment Distribution")

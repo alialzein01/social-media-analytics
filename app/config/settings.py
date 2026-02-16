@@ -11,23 +11,22 @@ import re
 # APIFY ACTOR CONFIGURATIONS
 # ============================================================================
 
-# Apify Actor Names/IDs - Main actors for fetching posts
+# Apify Actor names (use names for clarity; client accepts name or ID)
+# Single source of truth for all Apify actor identifiers.
 ACTOR_CONFIG = {
-    # Use the community posts scraper explicitly for Facebook posts
-    # (scraper_one/facebook-posts-scraper) — this repo only runs this posts actor.
     "Facebook": "scraper_one/facebook-posts-scraper",
     "Instagram": "apify/instagram-scraper",
-    "YouTube": "h7sDV53CddomktSi5"  # streamers~youtube-scraper
+    "YouTube": "streamers/youtube-scraper",
 }
 
-# YouTube Comments Scraper Actor ID (for second step)
-YOUTUBE_COMMENTS_ACTOR_ID = "p7UMdpQnjKmmpR21D"
+# YouTube Comments Scraper (second step after posts)
+YOUTUBE_COMMENTS_ACTOR_ID = "streamers/youtube-comments-scraper"
 
-# Actor IDs for direct calls (when needed)
+# Legacy alias for code that expects ACTOR_IDS (same as ACTOR_CONFIG)
 ACTOR_IDS = {
     "Facebook": "scraper_one/facebook-posts-scraper",
-    "Instagram": "shu8hvrXbJbY3Eb9W",
-    "YouTube": "p7UMdpQnjKmmpR21D"
+    "Instagram": "apify/instagram-scraper",
+    "YouTube": "streamers/youtube-scraper",
 }
 
 # Facebook Comments Scraper Actors (tried in order)
@@ -53,7 +52,7 @@ ARABIC_STOPWORDS = {
     'في', 'من', 'إلى', 'على', 'هذا', 'هذه', 'ذلك', 'التي', 'الذي',
     'أن', 'أو', 'لا', 'نعم', 'كان', 'يكون', 'ما', 'هل', 'قد', 'لقد',
     'عن', 'مع', 'بعد', 'قبل', 'عند', 'كل', 'بين', 'حتى', 'لكن', 'ثم',
-    'و', 'أو', 'لم', 'لن', 'إن', 'أن', 'كما', 'لماذا', 'كيف', 'أين',
+    'و', 'لم', 'لن', 'إن', 'كما', 'لماذا', 'كيف', 'أين',
     'متى', 'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for'
 }
 

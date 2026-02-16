@@ -4,10 +4,25 @@ Data Fetching Service
 
 Handles all Apify API interactions for fetching posts and comments
 from social media platforms.
+
+Production Apify client (retries, timeouts, validation) lives in
+app.services.apify_client; use create_apify_client() and run_actor_*
+from there when adding new integrations.
 """
 
 from typing import List, Dict, Optional, Any
 from apify_client import ApifyClient
+
+from app.services.apify_client import (
+    create_apify_client,
+    run_actor,
+    get_run_status,
+    get_dataset_items,
+    run_actor_and_fetch_dataset,
+    ApifyClientError,
+    ApifyRunError,
+    ApifyAuthError,
+)
 import streamlit as st
 from datetime import datetime
 

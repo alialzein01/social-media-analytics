@@ -107,6 +107,18 @@ Follow these steps in order so the app and optional database are configured.
 
 **Summary:** Set `APIFY_TOKEN` in `.streamlit/secrets.toml` (required for fetch). Optionally set `MONGODB_URI` and `MONGODB_DATABASE` and have MongoDB running for "Load from Database".
 
+### Environment variables (reference)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `APIFY_TOKEN` | Yes (for Fetch from API) | Apify API token. Set in env or `.streamlit/secrets.toml`. Never expose in frontend. |
+| `MONGODB_URI` | No | MongoDB connection string for "Load from Database". |
+| `MONGODB_DATABASE` | No | Database name (default: `social_media_analytics`). |
+| `DATA_RAW_DIR` | No | Override raw data directory (default: `data/raw`). |
+| `DATA_PROCESSED_DIR` | No | Override processed data directory (default: `data/processed`). |
+
+For production deployment (e.g. Streamlit Cloud, Docker), set `APIFY_TOKEN` as a secret in the host environment so it is never committed. See [docs/ERROR_CATALOG.md](docs/ERROR_CATALOG.md) for common Apify errors and user-facing messages.
+
 ## 🔄 Facebook Comments Workflow
 
 The app now features a sophisticated two-phase workflow for Facebook analysis:
@@ -147,21 +159,24 @@ For detailed documentation, see [FACEBOOK_COMMENTS_WORKFLOW.md](FACEBOOK_COMMENT
 
 ## 🛠️ Configuration
 
-### Apify Actors
+### Apify actors (single source of truth)
 
-The app uses the following Apify actors:
+All actor IDs and app constants live in **`app/config/settings.py`**:
 
-- **Facebook**: `zanTWNqB3Poz44qdY` (scraper_one/facebook-posts-scraper)
+- **Facebook posts**: `scraper_one/facebook-posts-scraper`
+- **Facebook comments**: `apify/facebook-comments-scraper`
 - **Instagram**: `apify/instagram-scraper`
-- **YouTube**: `streamers/youtube-comments-scraper`
+- **Instagram comments**: `apify/instagram-comment-scraper` (with fallbacks)
+- **YouTube**: `streamers/youtube-scraper`
+- **YouTube comments**: `streamers/youtube-comments-scraper`
+
+The production Apify client (`app/services/apify_client.py`) adds retries, timeouts, and user-friendly error messages. See **`docs/ERROR_CATALOG.md`** for common errors and messages.
 
 ### Customization
 
-You can modify the following in `social_media_app.py`:
-
-- **Results Limit**: Change `resultsLimit` and `maxComments` for different data volumes
-- **Date Filtering**: Modify `filter_current_month()` for different time ranges
-- **NLP Models**: Replace placeholder sentiment analysis with advanced models
+- **Results limit**: Adjust `DEFAULT_MAX_POSTS` and `DEFAULT_MAX_COMMENTS` in `app/config/settings.py`, or use the sidebar sliders.
+- **Date filtering**: Use the sidebar "Date range" (Facebook) or adjust actor input in the fetch flow.
+- **NLP**: Replace placeholder sentiment in `social_media_app.py` with advanced models (e.g. AraBERT).
 
 ## 📊 Analytics Features
 
@@ -202,14 +217,30 @@ The app includes basic Arabic NLP capabilities:
 
 ```
 social-media-analytics/
-├── social_media_app.py      # Main application
-├── requirements.txt         # Python dependencies
-├── test_facebook.py        # Facebook scraper test
-├── test_instagram.py       # Instagram scraper test
-├── test_youtube.py         # YouTube scraper test
-├── README.md               # This file
-└── .gitignore             # Git ignore rules
+├── social_media_app.py       # Main Streamlit app
+├── app/
+│   ├── config/settings.py    # Single source of truth: actors, defaults, URLs
+│   ├── services/
+│   │   ├── apify_client.py   # Production Apify client (retries, timeout, errors)
+│   │   ├── comment_service.py
+│   │   └── __init__.py       # DataFetchingService, ApifyService
+│   ├── adapters/             # Platform-specific normalization
+│   ├── viz/                  # Charts, dashboards, NLP viz
+│   ├── styles/               # Theme, loading, errors
+│   └── ...
+├── tests/                    # pytest (test_apify_client, adapters, etc.)
+├── docs/ERROR_CATALOG.md     # Apify error messages and actions
+├── requirements.txt
+├── pyproject.toml            # Ruff lint/format, pytest options
+└── README.md
 ```
+
+### Development
+
+- **Lint**: `ruff check .`
+- **Format**: `ruff format .` (or `ruff format --check .` in CI)
+- **Tests**: `pytest tests/ -q`
+- **Run app**: `streamlit run social_media_app.py`
 
 ## 🤝 Contributing
 

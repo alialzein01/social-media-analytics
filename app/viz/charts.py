@@ -47,29 +47,26 @@ REACTION_EMOJIS = {
 # MONTHLY OVERVIEW CHARTS
 # ============================================================================
 
+# Standard chart height for consistent layout
+CHART_HEIGHT = 340
+
+
 def create_monthly_overview_charts(df: pd.DataFrame) -> None:
     """
-    Create comprehensive monthly overview charts.
+    Create monthly overview charts: posting trend and top performers.
 
-    Args:
-        df: DataFrame with posts data
-
-    Charts created:
-        - Posts per day (line chart)
-        - Total engagement breakdown (bar chart)
-        - Top 5 posts by engagement (bar chart)
+    Charts: Posts per day (line), Top 5 posts by engagement (bar).
+    Engagement breakdown is shown in Overview KPIs only to avoid redundancy.
     """
-    # Prepare data
     df_copy = df.copy()
 
-    # Handle datetime conversion
     if 'published_at' in df_copy.columns:
         df_copy['published_at'] = pd.to_datetime(df_copy['published_at'], utc=True).dt.tz_localize(None)
         df_copy['date'] = df_copy['published_at'].dt.date
     else:
         df_copy['date'] = pd.to_datetime(df_copy['published_at']).dt.date
 
-    # ========== Posts Per Day ==========
+    # Posts per day — when did we post?
     st.subheader("📈 Posts Per Day")
     posts_per_day = df_copy.groupby('date').size().reset_index(name='count')
 
@@ -85,48 +82,18 @@ def create_monthly_overview_charts(df: pd.DataFrame) -> None:
         fig.update_layout(
             plot_bgcolor=THEME_COLORS['background'],
             paper_bgcolor=THEME_COLORS['background'],
-            font_color=THEME_COLORS['text']
+            font_color=THEME_COLORS['text'],
+            height=CHART_HEIGHT,
         )
         st.plotly_chart(fig, use_container_width=True)
     else:
         st.line_chart(posts_per_day.set_index('date'))
 
-    # ========== Engagement Breakdown ==========
-    st.subheader("📊 Total Engagement Breakdown")
-    engagement_data = pd.DataFrame({
-        'Metric': ['Reactions/Likes', 'Comments', 'Shares'],
-        'Count': [
-            df['likes'].sum(),
-            df['comments_count'].sum(),
-            df['shares_count'].sum()
-        ]
-    })
-
-    if PLOTLY_AVAILABLE:
-        fig = px.bar(
-            engagement_data,
-            x="Metric",
-            y="Count",
-            title="Total Engagement Breakdown",
-            color_discrete_sequence=[
-                THEME_COLORS['primary'],
-                THEME_COLORS['secondary'],
-                THEME_COLORS['tertiary']
-            ]
-        )
-        fig.update_layout(
-            plot_bgcolor=THEME_COLORS['background'],
-            paper_bgcolor=THEME_COLORS['background'],
-            font_color=THEME_COLORS['text']
-        )
-        st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.bar_chart(engagement_data.set_index('Metric'))
-
-    # ========== Top Posts ==========
+    # Top posts — which content performed best?
     st.subheader("🏆 Top 5 Posts by Engagement")
-    df['total_engagement'] = df['likes'] + df['comments_count'] + df['shares_count']
-    top_posts = df.nlargest(5, 'total_engagement')[['text', 'total_engagement']].copy()
+    df_work = df.copy()
+    df_work['total_engagement'] = df_work['likes'] + df_work['comments_count'] + df_work['shares_count']
+    top_posts = df_work.nlargest(5, 'total_engagement')[['text', 'total_engagement']].copy()
     top_posts['text'] = top_posts['text'].str[:50] + '...'
 
     if PLOTLY_AVAILABLE:
@@ -140,7 +107,8 @@ def create_monthly_overview_charts(df: pd.DataFrame) -> None:
         fig.update_layout(
             plot_bgcolor=THEME_COLORS['background'],
             paper_bgcolor=THEME_COLORS['background'],
-            font_color=THEME_COLORS['text']
+            font_color=THEME_COLORS['text'],
+            height=CHART_HEIGHT,
         )
         st.plotly_chart(fig, use_container_width=True)
     else:
@@ -153,12 +121,8 @@ def create_monthly_overview_charts(df: pd.DataFrame) -> None:
 
 def create_reaction_pie_chart(reactions: Dict[str, int]) -> None:
     """
-    Create reaction breakdown visualization with emojis.
-
-    Args:
-        reactions: Dictionary of reaction type -> count
+    Create reaction breakdown: single bar chart (avoids duplicating metrics).
     """
-    # Filter out zero values
     reactions_filtered = {k: v for k, v in reactions.items() if v > 0}
 
     if not reactions_filtered:
@@ -166,18 +130,13 @@ def create_reaction_pie_chart(reactions: Dict[str, int]) -> None:
         return
 
     st.subheader("😊 Reaction Breakdown")
-
-    # ========== Reaction Metrics with Emojis ==========
-    cols = st.columns(len(reactions_filtered))
-    for i, (reaction, count) in enumerate(reactions_filtered.items()):
-        with cols[i]:
-            emoji = REACTION_EMOJIS.get(reaction, '👍')
-            st.metric(f"{emoji} {reaction.title()}", f"{count:,}")
-
-    # ========== Reaction Bar Chart ==========
     reactions_df = pd.DataFrame(
         list(reactions_filtered.items()),
         columns=['Reaction', 'Count']
+    )
+    # Use emoji in labels for clarity
+    reactions_df['Reaction'] = reactions_df['Reaction'].apply(
+        lambda r: f"{REACTION_EMOJIS.get(r, '👍')} {str(r).title()}"
     )
     reactions_df = reactions_df.set_index('Reaction')
     st.bar_chart(reactions_df)

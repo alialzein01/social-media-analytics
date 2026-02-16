@@ -15,12 +15,15 @@ Features:
 """
 
 import re
-from typing import Dict, List, Tuple, Optional, Union
+import io
+from dataclasses import dataclass
+from typing import Any, Dict, List, Tuple, Optional, Union
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from wordcloud import WordCloud
 from collections import Counter
 import numpy as np
+import streamlit as st
 
 # Import our phrase and sentiment modules
 from ..nlp.phrase_extractor import PhraseExtractor, extract_phrases_simple
@@ -47,6 +50,301 @@ except ImportError:
     def reshape_arabic_text(text: str) -> str:
         """Fallback for Arabic text when shaping libraries are not available."""
         return text
+
+DEFAULT_STOPWORDS = {
+    "the", "and", "for", "with", "that", "this", "you", "your", "our", "from", "are",
+    "was", "were", "have", "has", "had", "will", "can", "just", "about", "they", "them",
+    "but", "not", "all", "out", "new", "more", "some", "when", "what", "who", "how",
+    "http", "https", "www", "com", "amp", "rt", "u", "im", "dont", "didnt", "ive",
+    "post", "posts", "video", "videos", "reel", "reels", "shorts", "content", "channel",
+    "page", "profile", "follow", "followers", "following", "like", "likes", "comment",
+    "comments", "share", "shares", "subscribe", "subscribers", "instagram", "facebook",
+    "youtube", "tiktok", "social", "media", "link", "bio", "today", "tomorrow",
+}
+
+# Keep this list small and high-signal: remove platform boilerplate so thematic terms dominate.
+DOMAIN_STOPWORDS = {
+    "watch", "watched", "watching", "click", "clicked", "check", "checkout", "join",
+    "support", "official", "account", "story", "stories", "caption", "captions",
+}
+
+EMOJI_RE = re.compile(
+    "["
+    "\U0001F600-\U0001F64F"
+    "\U0001F300-\U0001F5FF"
+    "\U0001F680-\U0001F6FF"
+    "\U0001F700-\U0001F77F"
+    "\U0001F780-\U0001F7FF"
+    "\U0001F800-\U0001F8FF"
+    "\U0001F900-\U0001F9FF"
+    "\U0001FA00-\U0001FA6F"
+    "\U0001FA70-\U0001FAFF"
+    "]+",
+    flags=re.UNICODE,
+)
+
+URL_RE = re.compile(r"https?://\S+|www\.\S+", flags=re.IGNORECASE)
+MENTION_RE = re.compile(r"@\w+")
+HASHTAG_RE = re.compile(r"#(\w+)")
+NON_WORD_RE = re.compile(r"[^\w\s]", flags=re.UNICODE)
+DIGIT_RE = re.compile(r"\d+")
+
+
+@dataclass
+class WordCloudConfig:
+    max_words: int = 90
+    min_frequency: int = 2
+    include_bigrams: bool = True
+    keep_hashtag_words: bool = True
+    remove_emojis: bool = True
+    lemmatize: bool = True
+    width: int = 1800
+    height: int = 900
+    scale: float = 2.0
+    background_mode: str = "theme"  # theme | transparent
+    random_state: int = 42
+    max_font_size: int = 170
+    min_font_size: int = 12
+    prefer_horizontal: float = 0.9
+    contour_width: int = 0
+    caption: str = "Top Themes in Content"
+    section_key: str = "default_wordcloud"
+    platform_filter: Optional[str] = None
+    date_from: Optional[str] = None
+    date_to: Optional[str] = None
+
+
+def _apply_optional_filters(
+    text_series: List[Any],
+    platform_filter: Optional[str],
+    date_from: Optional[str],
+    date_to: Optional[str],
+) -> List[str]:
+    """
+    Optionally filter when items are dict-like records with text/platform/date fields.
+    Accepts plain string lists unchanged.
+    """
+    if not text_series:
+        return []
+    if not isinstance(text_series[0], dict):
+        return [str(t) for t in text_series if str(t or "").strip()]
+
+    start = None
+    end = None
+    try:
+        start = np.datetime64(date_from) if date_from else None
+        end = np.datetime64(date_to) if date_to else None
+    except Exception:
+        start = None
+        end = None
+
+    filtered: List[str] = []
+    for row in text_series:
+        text = row.get("text") or row.get("caption") or row.get("comment") or row.get("message")
+        if not text:
+            continue
+        if platform_filter and str(row.get("platform", "")).lower() != platform_filter.lower():
+            continue
+        if start is not None or end is not None:
+            raw_date = row.get("published_at") or row.get("date")
+            try:
+                dt = np.datetime64(str(raw_date))
+                if start is not None and dt < start:
+                    continue
+                if end is not None and dt > end:
+                    continue
+            except Exception:
+                continue
+        filtered.append(str(text))
+    return filtered
+
+
+def _safe_wordnet_lemmatizer():
+    """Try to load NLTK lemmatizer; silently fall back if unavailable."""
+    try:
+        from nltk.stem import WordNetLemmatizer  # type: ignore
+        return WordNetLemmatizer()
+    except Exception:
+        return None
+
+
+def _lemmatize_token(token: str, lemmatizer: Any) -> str:
+    if not token:
+        return token
+    if lemmatizer is not None:
+        try:
+            return lemmatizer.lemmatize(token)
+        except Exception:
+            pass
+
+    # Lightweight fallback for common English endings
+    if token.endswith("ies") and len(token) > 4:
+        return token[:-3] + "y"
+    if token.endswith("ing") and len(token) > 5:
+        return token[:-3]
+    if token.endswith("ed") and len(token) > 4:
+        return token[:-2]
+    if token.endswith("s") and len(token) > 3 and not token.endswith("ss"):
+        return token[:-1]
+    return token
+
+
+def _prepare_text(text: str, cfg: WordCloudConfig) -> str:
+    text = str(text or "").lower()
+    text = URL_RE.sub(" ", text)
+    text = MENTION_RE.sub(" ", text)
+    if cfg.keep_hashtag_words:
+        text = HASHTAG_RE.sub(r" \1 ", text)
+    else:
+        text = HASHTAG_RE.sub(" ", text)
+    if cfg.remove_emojis:
+        text = EMOJI_RE.sub(" ", text)
+    text = NON_WORD_RE.sub(" ", text)
+    text = DIGIT_RE.sub(" ", text)
+    text = re.sub(r"_+", " ", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def _extract_frequencies(text_series: List[str], cfg: WordCloudConfig) -> Dict[str, int]:
+    if not text_series:
+        return {}
+
+    stopwords = DEFAULT_STOPWORDS | DOMAIN_STOPWORDS
+    lemmatizer = _safe_wordnet_lemmatizer() if cfg.lemmatize else None
+    token_counter: Counter = Counter()
+    bigram_counter: Counter = Counter()
+
+    for raw in text_series:
+        cleaned = _prepare_text(raw, cfg)
+        if not cleaned:
+            continue
+        tokens = []
+        for t in cleaned.split():
+            if len(t) < 3 or t in stopwords:
+                continue
+            lemma = _lemmatize_token(t, lemmatizer)
+            if lemma and lemma not in stopwords and len(lemma) >= 3:
+                tokens.append(lemma)
+
+        token_counter.update(tokens)
+        if cfg.include_bigrams and len(tokens) >= 2:
+            pairs = [f"{tokens[i]} {tokens[i + 1]}" for i in range(len(tokens) - 1)]
+            bigram_counter.update(pairs)
+
+    freq: Dict[str, int] = {
+        token: count for token, count in token_counter.items() if count >= cfg.min_frequency
+    }
+    if cfg.include_bigrams:
+        for phrase, count in bigram_counter.items():
+            # Slightly stricter threshold for bigrams to reduce visual clutter.
+            if count >= max(cfg.min_frequency, 2):
+                freq[phrase] = count
+
+    return dict(sorted(freq.items(), key=lambda x: x[1], reverse=True)[: cfg.max_words])
+
+
+def _make_theme_color_func():
+    palette = [
+        THEME_COLORS["primary"],
+        THEME_COLORS["secondary"],
+        THEME_COLORS["info"],
+        THEME_COLORS["success"],
+        "#a78bfa",
+    ]
+
+    def color_func(word, font_size, position, orientation, random_state=None, **kwargs):
+        idx = abs(hash(word)) % len(palette)
+        return palette[idx]
+
+    return color_func
+
+
+def _generate_wordcloud_image(frequencies: Dict[str, int], cfg: WordCloudConfig) -> Optional[np.ndarray]:
+    if not frequencies:
+        return None
+
+    wc = WordCloud(
+        width=cfg.width,
+        height=cfg.height,
+        max_words=cfg.max_words,
+        min_font_size=cfg.min_font_size,
+        max_font_size=cfg.max_font_size,
+        prefer_horizontal=cfg.prefer_horizontal,
+        random_state=cfg.random_state,
+        scale=cfg.scale,
+        relative_scaling=0.45,
+        background_color=None if cfg.background_mode == "transparent" else THEME_COLORS["background"],
+        mode="RGBA" if cfg.background_mode == "transparent" else "RGB",
+        collocations=False,
+        color_func=_make_theme_color_func(),
+        contour_width=cfg.contour_width,
+    ).generate_from_frequencies(frequencies)
+
+    return wc.to_array()
+
+
+def _image_to_png_bytes(image_array: np.ndarray, cfg: WordCloudConfig) -> bytes:
+    fig = plt.figure(figsize=(cfg.width / 180, cfg.height / 180), dpi=180)
+    ax = fig.add_axes([0, 0, 1, 1])
+    ax.imshow(image_array, interpolation="bilinear")
+    ax.axis("off")
+    fig.patch.set_alpha(0 if cfg.background_mode == "transparent" else 1)
+    if cfg.background_mode != "transparent":
+        fig.patch.set_facecolor(THEME_COLORS["background"])
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", dpi=180, transparent=(cfg.background_mode == "transparent"), bbox_inches="tight", pad_inches=0)
+    plt.close(fig)
+    buf.seek(0)
+    return buf.getvalue()
+
+
+def render_wordcloud(text_series: List[str], config_options: Optional[Dict[str, Any]] = None) -> None:
+    """
+    Render a polished, insight-focused word cloud in Streamlit.
+
+    Args:
+        text_series: List/series of text values (captions/comments/posts).
+        config_options: Optional dictionary for WordCloudConfig overrides.
+    """
+    cfg = WordCloudConfig(**(config_options or {}))
+    raw_items: List[Any] = list(text_series or [])
+    texts = _apply_optional_filters(
+        raw_items,
+        platform_filter=cfg.platform_filter,
+        date_from=cfg.date_from,
+        date_to=cfg.date_to,
+    )
+
+    st.markdown("#### 🧭 Top Themes in Content")
+    st.caption(cfg.caption)
+
+    if not texts:
+        st.info("No text data available for theme extraction.")
+        return
+
+    frequencies = _extract_frequencies(texts, cfg)
+    if not frequencies:
+        st.info("No meaningful terms found after cleaning and stopword filtering.")
+        return
+
+    image = _generate_wordcloud_image(frequencies, cfg)
+    if image is None:
+        st.info("Word cloud generation returned no output.")
+        return
+
+    st.image(image, use_container_width=True)
+
+    top_terms = list(frequencies.items())[:8]
+    st.caption("Top terms: " + ", ".join([f"{term} ({count})" for term, count in top_terms]))
+
+    png_bytes = _image_to_png_bytes(image, cfg)
+    st.download_button(
+        "Download Word Cloud PNG",
+        data=png_bytes,
+        file_name="top_themes_wordcloud.png",
+        mime="image/png",
+        key=f"download_wordcloud_{cfg.section_key}",
+    )
 
 class PhraseWordCloudGenerator:
     """
