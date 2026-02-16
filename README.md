@@ -306,4 +306,4 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 
 ---
 
-**Made with ❤️ by [Ali Alzein](https://github.com/alialzein01)**
+**Made by [Ali Alzein](https://github.com/alialzein01)**
