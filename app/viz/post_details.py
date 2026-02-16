@@ -20,6 +20,7 @@ except ImportError:
     PLOTLY_AVAILABLE = False
 
 from app.styles.theme import THEME_COLORS
+from app.analytics import get_post_engagement
 
 
 # ============================================================================
@@ -43,10 +44,10 @@ def create_enhanced_post_selector(posts: List[Dict], platform: str) -> Optional[
         st.warning("No posts available for analysis")
         return None
 
-    # Calculate engagement scores for sorting
+    # Calculate engagement scores for sorting (platform-aware: Facebook = sum reactions)
     posts_with_scores = []
     for i, post in enumerate(posts):
-        engagement = post.get('likes', 0) + post.get('comments_count', 0) + post.get('shares_count', 0)
+        engagement = get_post_engagement(post, platform)
         if platform == "YouTube":
             engagement += post.get('views', 0) * 0.01  # Weight views lower
 

@@ -22,8 +22,10 @@ import matplotlib.pyplot as plt
 # Optional Plotly for interactive charts
 try:
     import plotly.express as px
+    import plotly.graph_objects as go
     PLOTLY_AVAILABLE = True
 except ImportError:
+    go = None
     PLOTLY_AVAILABLE = False
 
 
@@ -89,10 +91,13 @@ def create_monthly_overview_charts(df: pd.DataFrame) -> None:
     else:
         st.line_chart(posts_per_day.set_index('date'))
 
-    # Top posts — which content performed best?
+    # Top posts — which content performed best? Use precomputed engagement if present (e.g. Facebook reactions).
     st.subheader("🏆 Top 5 Posts by Engagement")
     df_work = df.copy()
-    df_work['total_engagement'] = df_work['likes'] + df_work['comments_count'] + df_work['shares_count']
+    if 'engagement' in df_work.columns:
+        df_work['total_engagement'] = df_work['engagement']
+    else:
+        df_work['total_engagement'] = df_work['likes'] + df_work['comments_count'] + df_work['shares_count']
     top_posts = df_work.nlargest(5, 'total_engagement')[['text', 'total_engagement']].copy()
     top_posts['text'] = top_posts['text'].str[:50] + '...'
 
@@ -115,13 +120,101 @@ def create_monthly_overview_charts(df: pd.DataFrame) -> None:
         st.bar_chart(top_posts.set_index('text'))
 
 
+def create_engagement_over_time_chart(df: pd.DataFrame) -> None:
+    """
+    Line chart: total engagement per day over the report period.
+    Uses 'engagement' column if present (platform-aware), else likes + comments + shares.
+    """
+    df_copy = df.copy()
+    if 'published_at' in df_copy.columns:
+        df_copy['published_at'] = pd.to_datetime(df_copy['published_at'], utc=True).dt.tz_localize(None)
+        df_copy['date'] = df_copy['published_at'].dt.date
+    else:
+        df_copy['date'] = pd.to_datetime(df_copy['published_at']).dt.date
+
+    if 'engagement' not in df_copy.columns:
+        df_copy['engagement'] = df_copy['likes'] + df_copy['comments_count'] + df_copy['shares_count']
+
+    daily = df_copy.groupby('date')['engagement'].sum().reset_index(name='engagement')
+
+    if daily.empty or daily['engagement'].sum() == 0:
+        st.caption("No engagement data to show over time.")
+        return
+
+    st.subheader("📈 Engagement Over Time")
+    if PLOTLY_AVAILABLE:
+        fig = px.line(
+            daily,
+            x="date",
+            y="engagement",
+            markers=True,
+            title="Daily total engagement",
+            color_discrete_sequence=[THEME_COLORS['primary']],
+        )
+        fig.update_layout(
+            plot_bgcolor=THEME_COLORS['background'],
+            paper_bgcolor=THEME_COLORS['background'],
+            font_color=THEME_COLORS['text'],
+            height=CHART_HEIGHT,
+        )
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.line_chart(daily.set_index('date'))
+
+
 # ============================================================================
 # REACTION CHARTS
 # ============================================================================
 
+def create_reaction_donut_with_summary(reactions: Dict[str, int]) -> None:
+    """
+    Donut chart for reaction breakdown with a one-line summary (e.g. 'Love is the top reaction (42%)').
+    """
+    reactions_filtered = {k: v for k, v in reactions.items() if v > 0}
+    if not reactions_filtered:
+        st.info("No reaction data available")
+        return
+
+    total = sum(reactions_filtered.values())
+    top_type = max(reactions_filtered.items(), key=lambda x: x[1])
+    pct = round(100 * top_type[1] / total) if total else 0
+    label = str(top_type[0]).title()
+    emoji = REACTION_EMOJIS.get(top_type[0], "👍")
+    st.caption(f"**{emoji} {label}** is the top reaction ({pct}%).")
+
+    if PLOTLY_AVAILABLE and go is not None:
+        reactions_df = pd.DataFrame(
+            list(reactions_filtered.items()),
+            columns=['Reaction', 'Count'],
+        )
+        reactions_df['Label'] = reactions_df['Reaction'].apply(
+            lambda r: f"{REACTION_EMOJIS.get(r, '👍')} {str(r).title()}"
+        )
+        fig = go.Figure(
+            data=[go.Pie(
+                labels=reactions_df['Label'],
+                values=reactions_df['Count'],
+                hole=0.5,
+                marker_colors=[THEME_COLORS['primary'], THEME_COLORS['secondary'], THEME_COLORS['tertiary'], '#667eea', '#f093fb', '#4facfe'],
+            )]
+        )
+        fig.update_layout(
+            showlegend=True,
+            legend=dict(orientation="h", yanchor="bottom", y=-0.2),
+            plot_bgcolor=THEME_COLORS['background'],
+            paper_bgcolor=THEME_COLORS['background'],
+            font_color=THEME_COLORS['text'],
+            height=CHART_HEIGHT,
+            margin=dict(t=40, b=80),
+        )
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        create_reaction_pie_chart(reactions)
+
+
 def create_reaction_pie_chart(reactions: Dict[str, int]) -> None:
     """
-    Create reaction breakdown: single bar chart (avoids duplicating metrics).
+    Create reaction breakdown: bar chart (fallback). For donut + summary use create_reaction_donut_with_summary.
     """
     reactions_filtered = {k: v for k, v in reactions.items() if v > 0}
 
@@ -134,7 +227,6 @@ def create_reaction_pie_chart(reactions: Dict[str, int]) -> None:
         list(reactions_filtered.items()),
         columns=['Reaction', 'Count']
     )
-    # Use emoji in labels for clarity
     reactions_df['Reaction'] = reactions_df['Reaction'].apply(
         lambda r: f"{REACTION_EMOJIS.get(r, '👍')} {str(r).title()}"
     )

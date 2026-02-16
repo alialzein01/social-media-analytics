@@ -425,6 +425,63 @@ def create_advanced_nlp_dashboard(
 
 
 # ============================================================================
+# SENTIMENT THEMES VIEW (Positive vs Negative)
+# ============================================================================
+
+def create_sentiment_themes_view(texts: List[str], top_n: int = 15) -> None:
+    """
+    Show positive vs negative themes from comment text: two columns with top phrases by sentiment.
+    """
+    if not texts or not isinstance(texts, list):
+        return
+    texts = [str(t).strip() for t in texts if t and str(t).strip()]
+    if not texts:
+        return
+
+    try:
+        from app.nlp.phrase_extractor import extract_phrases_simple
+        from app.utils.phrase_dictionaries import get_phrase_sentiment_score
+    except Exception:
+        return
+
+    phrases = extract_phrases_simple(texts, top_n=top_n * 3)
+    if not phrases:
+        return
+
+    positive = []
+    negative = []
+    for phrase, count in phrases.items():
+        score = get_phrase_sentiment_score(phrase)
+        if score is not None:
+            if score > 0.2:
+                positive.append((phrase, count, score))
+            elif score < -0.2:
+                negative.append((phrase, count, score))
+
+    positive.sort(key=lambda x: (x[1], x[2]), reverse=True)
+    negative.sort(key=lambda x: (x[1], -x[2]), reverse=True)
+    positive = positive[:top_n]
+    negative = negative[:top_n]
+
+    st.markdown("#### 🧭 Sentiment view: Positive vs negative themes")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("**🟢 Positive themes**")
+        if positive:
+            for phrase, count, score in positive:
+                st.caption(f"• **{phrase}** ({count})")
+        else:
+            st.caption("No positive phrases detected.")
+    with col2:
+        st.markdown("**🔴 Negative themes**")
+        if negative:
+            for phrase, count, score in negative:
+                st.caption(f"• **{phrase}** ({count})")
+        else:
+            st.caption("No negative phrases detected.")
+
+
+# ============================================================================
 # SENTIMENT COMPARISON VIEW
 # ============================================================================
 

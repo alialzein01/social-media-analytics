@@ -1,272 +1,308 @@
 # 📊 Social Media Analytics Dashboard
 
-A powerful Streamlit application that analyzes social media content from Facebook, Instagram, and YouTube using Apify web scraping actors. The app provides comprehensive analytics including engagement metrics, sentiment analysis, and interactive visualizations.
+A Streamlit application that analyzes Facebook, Instagram, and YouTube content using Apify actors. It provides KPIs, trend charts, audience insights (NLP, sentiment, word clouds), post-level analysis, PDF reports, and run comparison—with optional MongoDB persistence.
+
+---
+
+## Table of contents
+
+- [Features](#-features)
+- [Quick start](#-quick-start)
+- [Data sources](#-data-sources)
+- [Report dashboard (tabs)](#-report-dashboard-tabs)
+- [Export & PDF report](#-export--pdf-report)
+- [Compare runs & insights](#-compare-runs--insights)
+- [Rebranding (white-label)](#-rebranding-white-label)
+- [Configuration](#-configuration)
+- [Facebook workflow](#-facebook-comments-workflow)
+- [Supported URLs](#-supported-url-formats)
+- [Project structure](#-project-structure)
+- [Development](#-development)
+- [Environment variables](#-environment-variables-reference)
+- [Support](#-support)
+
+---
 
 ## ✨ Features
 
-- **Multi-Platform Support**: Analyze content from Facebook, Instagram, and YouTube
-- **Real-time Data**: Fetch live data using Apify web scraping actors
-- **Two-Phase Facebook Workflow**: 
-  - Phase 1: Extract posts from Facebook pages
-  - Phase 2: Extract comments from all posts using batch processing
-- **Interactive Analytics**: 
-  - Posts per day trends
-  - Engagement breakdown (likes, comments, shares)
-  - Top performing posts
-  - Reaction analysis
-- **AI-Powered Insights**:
-  - Word cloud generation from comments
-  - Sentiment analysis (Arabic and English support)
-  - Keyword extraction
-  - Phrase-based analysis for better accuracy
-- **Modern UI**: Clean, responsive interface built with Streamlit
-- **Flexible Date Filtering**: View all posts or filter by current month
-- **Batch Comment Processing**: Efficient extraction of comments from multiple posts
-- **Optional MongoDB**: Save scraped data to MongoDB and load it later via "Load from Database" (when `MONGODB_URI` is configured)
+### Platforms & data
 
-## 🚀 Quick Start
+- **Multi-platform**: Facebook, Instagram, YouTube
+- **Three data sources**: Fetch from API (Apify), Load from File (saved JSON/CSV), Load from Database (MongoDB)
+- **Normalized data**: Single post schema; load-from-file and DB are normalized so older saves work
+- **Date range**: Data range (e.g. “Posts from 2024-01-05 to 2024-02-10”) shown at the top of the report
+
+### Fetch & analysis
+
+- **Fetch from API**: Live data via Apify actors (posts + optional comments)
+- **Facebook**: Two-phase workflow — posts first, then comments (batch or per-post)
+- **Presets**: Quick (10), Standard (25), Full (50), or Custom slider for max posts; session-persisted
+- **Facebook date range**: All posts, Last 30 days, Last 7 days, or custom From/To
+- **Comments**: Optional “Fetch detailed comments” for word clouds and sentiment (platform-specific actors)
+
+### Report dashboard (tabbed)
+
+- **Overview**: Reactions breakdown (Facebook donut + top reaction summary), Cross-platform comparison (when multiple platforms loaded), Compare with previous run (same platform, saved file)
+- **Trends**: Posts per day, Top 5 posts by engagement, Engagement over time (daily total)
+- **Audience**: Advanced NLP (topics, keywords, emoji sentiment), “Top themes” word cloud, **Sentiment view** (positive vs negative themes from phrases)
+- **Posts**: Table with Date, Rank, Engagement, Caption, Likes, Comments, Shares (sorted by engagement); post selector; full post details (metrics, performance, comments, platform-specific blocks)
+- **Export**: PDF report download, Posts CSV/JSON, Comments CSV/JSON, Summary statistics CSV
+
+### Metrics & engagement
+
+- **Facebook**: Total reactions (sum of reaction types, with likes fallback), comments, shares, avg engagement; platform-aware so “engagement” = reactions + comments + shares
+- **Insights block**: Short alerts (e.g. “Reactions down X% vs previous 7 days”, “Last 2+ posts have no comments”, “Reactions mostly positive (Like + Love > 80%)”)
+- **Posts table**: Engagement column and rank; meaningful caption and default sort by engagement
+
+### Export & PDF
+
+- **PDF report**: One-click download (KPIs, data range, top 5 posts). Requires `reportlab`. See [Export & PDF report](#-export--pdf-report).
+- **CSV/JSON**: Posts, comments, and summary stats with timestamped filenames
+
+### Rebranding
+
+- **White-label**: Report title and footer configurable in `app/config/settings.py` (used in app header and PDF). See [Rebranding](#-rebranding-white-label).
+
+### Technical
+
+- **Arabic-capable NLP**: Phrase-based sentiment, stopwords, word clouds; optional arabic-reshaper/python-bidi
+- **Optional MongoDB**: Save/load jobs; “Load from Database” when `MONGODB_URI` is set
+- **Apify**: Retries, timeouts, user-friendly errors via `app/services/apify_client.py`
+
+---
+
+## 🚀 Quick start
 
 ### Prerequisites
 
-- Python 3.8 or higher
-- Apify API token
+- Python 3.8+
+- [Apify](https://apify.com) API token (for “Fetch from API”)
 
 ### Installation
 
-1. **Clone the repository**
+1. **Clone and enter the project**
    ```bash
    git clone https://github.com/alialzein01/social-media-analytics.git
    cd social-media-analytics
    ```
 
-2. **Create and activate virtual environment**
+2. **Create virtual environment and install dependencies**
    ```bash
    python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. **Install dependencies**
-   ```bash
+   source venv/bin/activate   # Windows: venv\Scripts\activate
    pip install -r requirements.txt
    ```
 
-4. **Set up Apify API token**
-   ```bash
-   export APIFY_TOKEN=your_apify_token_here
-   ```
-   Or add to `.streamlit/secrets.toml`: `APIFY_TOKEN = "your_token"`
-
-5. **(Optional) Set up MongoDB for "Load from Database"**
-   To enable saving and loading data from MongoDB:
-   - Set `MONGODB_URI` (e.g. `mongodb://localhost:27017/` or your Atlas URI)
-   - Set `MONGODB_DATABASE` (default: `social_media_analytics`)
-   - In `.streamlit/secrets.toml`: `MONGODB_URI = "..."` and `MONGODB_DATABASE = "social_media_analytics"`
-   - Or use environment variables. If not set, the app runs without database (file-only save/load).
-
-6. **Run the application**
-   ```bash
-   streamlit run social_media_app.py
-   ```
-
-## ✅ Set everything (full setup)
-
-Follow these steps in order so the app and optional database are configured.
-
-1. **Install Python deps**
-   ```bash
-   cd social-media-analytics   # or your project folder
-   pip install -r requirements.txt
-   ```
-   This installs Streamlit, Apify client, pymongo, etc.
-
-2. **Create Streamlit secrets**
-   Create `.streamlit/secrets.toml` in the project root (create the `.streamlit` folder if needed):
-
-   ```toml
-   # Required for "Fetch from API"
-   APIFY_TOKEN = "your_apify_token_here"
-
-   # Optional: for "Load from Database"
-   MONGODB_URI = "mongodb://localhost:27017/"
-   MONGODB_DATABASE = "social_media_analytics"
-   ```
-
-   - Replace `your_apify_token_here` with your real [Apify](https://apify.com) API token.
-   - For **MongoDB**: use `mongodb://localhost:27017/` if MongoDB runs on your machine, or a [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) URI like `mongodb+srv://USER:PASSWORD@cluster.xxxxx.mongodb.net/`.
-
-3. **Optional: MongoDB**
-   - **Local:** Install and start MongoDB (e.g. [community server](https://www.mongodb.com/try/download/community)) so it listens on `localhost:27017`. Then the app will show "Database connected" and you can use "Load from Database".
-   - **Atlas:** Create a free cluster, get the connection string, put it in `MONGODB_URI` in `secrets.toml`. No local install needed.
-   - If you skip MongoDB, the app still runs; you can only "Fetch from API" and "Load from File".
+3. **Set Apify token**  
+   Either:
+   - `export APIFY_TOKEN=your_apify_token_here`
+   - Or in `.streamlit/secrets.toml`: `APIFY_TOKEN = "your_apify_token_here"`
 
 4. **Run the app**
    ```bash
    streamlit run social_media_app.py
    ```
-   Open the URL shown (e.g. http://localhost:8501). Choose platform, data source (Fetch from API / Load from Database / Load from File), and analyze.
+   Open the URL (e.g. http://localhost:8501).
 
-**Summary:** Set `APIFY_TOKEN` in `.streamlit/secrets.toml` (required for fetch). Optionally set `MONGODB_URI` and `MONGODB_DATABASE` and have MongoDB running for "Load from Database".
+### Optional: MongoDB (for “Load from Database”)
 
-### Environment variables (reference)
+- Create `.streamlit/secrets.toml` and add:
+  ```toml
+  APIFY_TOKEN = "your_apify_token_here"
+  MONGODB_URI = "mongodb://localhost:27017/"
+  MONGODB_DATABASE = "social_media_analytics"
+  ```
+- Use a local MongoDB or [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) URI. If not set, the app runs without DB (Fetch from API + Load from File only).
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `APIFY_TOKEN` | Yes (for Fetch from API) | Apify API token. Set in env or `.streamlit/secrets.toml`. Never expose in frontend. |
-| `MONGODB_URI` | No | MongoDB connection string for "Load from Database". |
-| `MONGODB_DATABASE` | No | Database name (default: `social_media_analytics`). |
-| `DATA_RAW_DIR` | No | Override raw data directory (default: `data/raw`). |
-| `DATA_PROCESSED_DIR` | No | Override processed data directory (default: `data/processed`). |
+---
 
-For production deployment (e.g. Streamlit Cloud, Docker), set `APIFY_TOKEN` as a secret in the host environment so it is never committed. See [docs/ERROR_CATALOG.md](docs/ERROR_CATALOG.md) for common Apify errors and user-facing messages.
+## 📥 Data sources
 
-## 🔄 Facebook Comments Workflow
+| Source | Description |
+|--------|-------------|
+| **Fetch from API** | Fetches posts (and optionally comments) from Apify actors. Requires `APIFY_TOKEN`. |
+| **Load from File** | Loads a previously saved run from `data/processed/` or `data/raw/` (JSON/CSV). Data is normalized on load. |
+| **Load from Database** | Loads posts from MongoDB (when `MONGODB_URI` is set). Use sliders for “Days of history” and “Maximum posts to load”. |
 
-The app now features a sophisticated two-phase workflow for Facebook analysis:
+After a fetch, you can save to MongoDB (if connected) and/or to files; then use “Load from File” or “Load from Database” to revisit or compare runs.
 
-### Phase 1: Posts Extraction
-- Extracts posts from any Facebook page
-- Captures post URLs, text, engagement metrics
-- Uses `zanTWNqB3Poz44qdY` (scraper_one/facebook-posts-scraper) actor
+---
 
-### Phase 2: Comments Extraction
-- Takes all post URLs from Phase 1
-- Extracts comments using batch processing
-- Uses `us5srxAYnsrkgUv2v` (apify-facebook-comments-scraper) actor
-- Supports both batch and individual processing methods
+## 📊 Report dashboard (tabs)
 
-### How to Use
-1. Select "Facebook" as platform
-2. Choose "Fetch from API" as data source
-3. Select "Batch Processing" for comment extraction method
-4. Enable "Fetch Detailed Comments"
-5. Enter Facebook page URL and click "Analyze"
+Once data is loaded, the report is organized into **five tabs** below the KPI row and insights.
 
-For detailed documentation, see [FACEBOOK_COMMENTS_WORKFLOW.md](FACEBOOK_COMMENTS_WORKFLOW.md)
+| Tab | Contents |
+|-----|----------|
+| **📊 Overview** | Reactions breakdown (Facebook: donut + “Top reaction” summary). Cross-platform comparison when multiple platforms are loaded. **Compare with previous run**: choose a saved file for the same platform to see Current vs Previous metrics and % change. |
+| **📈 Trends** | Posts per day (line), Top 5 posts by engagement (bar), Engagement over time (daily total, line). |
+| **💡 Audience** | Advanced NLP dashboard (topics, keywords, emoji sentiment). “Top themes” word cloud. **Sentiment view**: positive vs negative themes (phrase-based). If no comment text: clear CTA to enable “Fetch detailed comments” and re-run. |
+| **📝 Posts** | Table: Date, Rank, Engagement, Caption, Likes, Comments, Shares (sorted by engagement). Post selector (sort/filter) and full post details (metrics, performance, comments, platform-specific section). |
+| **📤 Export** | PDF report button, then Posts CSV/JSON, Comments CSV/JSON, Summary CSV. See below. |
 
-## 📱 Usage
+The **data range** (e.g. “Posts from 2024-01-05 to 2024-02-10”) is shown at the top of the report when dates are available.
 
-1. **Select Platform**: Choose between Facebook, Instagram, or YouTube
-2. **Enter URL**: Paste the URL of the page/profile/channel you want to analyze
-3. **Choose Data Range**: Select "Show All Posts" or "Current Month Only"
-4. **Analyze**: Click "Analyze" to fetch and process the data
-5. **Explore**: View analytics, select individual posts for detailed analysis
+---
 
-### Supported URL Formats
+## 📄 Export & PDF report
 
-- **Facebook**: `https://www.facebook.com/NASA/`
-- **Instagram**: `https://www.instagram.com/nasa/`
-- **YouTube**: `https://www.youtube.com/@NASA`
+- **Where**: **Export** tab → expand **“📥 Export Data”** → first section **“📄 Report (PDF)”**.
+- **What it includes**: Report title (from config), platform, generated date, data range, KPI table (reactions/comments/shares/avg engagement for Facebook; platform-appropriate for Instagram/YouTube), top 5 posts by engagement, footer (from config).
+- **Requirement**: `reportlab` is in `requirements.txt`; if it’s installed, the **“📥 Download report (PDF)”** button appears. If not, install with `pip install reportlab`.
+
+Other exports in the same expander: **Posts CSV/JSON**, **Comments CSV/JSON**, **Summary statistics CSV** (with timestamped filenames).
+
+---
+
+## 📊 Compare runs & insights
+
+- **Compare with previous run**: In the **Overview** tab, under “Compare with previous run”, select a saved file from the dropdown. The app loads that run and shows a table: **Metric | Current | Previous | Change** (Total Reactions, Total Comments, Total Shares, Avg Engagement) with % change. Use this to compare the current in-memory run with any saved run for the same platform.
+- **Insights block**: Shown under the KPI row when applicable. Examples:
+  - “Total reactions are down X% vs previous 7 days” (Facebook, when delta &lt; -15%).
+  - “Engagement is up X% vs previous 7 days” (Facebook, when delta &gt; 20%).
+  - “Last 2+ posts have no comments.”
+  - “Reactions are mostly positive (Like + Love > 80%).” (Facebook.)
+
+---
+
+## 🏷️ Rebranding (white-label)
+
+In **`app/config/settings.py`** you can set:
+
+| Setting | Default | Description |
+|--------|--------|-------------|
+| `REPORT_TITLE` | `"Social Media Analytics Report"` | Main app header title and PDF report title. |
+| `REPORT_FOOTER` | `"Generated by Social Media Analytics"` | Footer text in the PDF. |
+| `REPORT_LOGO_PATH` | `""` | Reserved for a logo image path (not yet rendered in PDF). |
+
+Change these to your product or client name for a white-label look in both the app and the PDF.
+
+---
 
 ## 🛠️ Configuration
 
-### Apify actors (single source of truth)
+### Single source of truth: `app/config/settings.py`
 
-All actor IDs and app constants live in **`app/config/settings.py`**:
+- **Apify actors**: `ACTOR_CONFIG` (Facebook/Instagram/YouTube posts), `FACEBOOK_COMMENTS_ACTOR_IDS`, `INSTAGRAM_COMMENTS_ACTOR_IDS`, `YOUTUBE_COMMENTS_ACTOR_ID`.
+- **Defaults**: `DEFAULT_MAX_POSTS`, `DEFAULT_MAX_COMMENTS`, `DEFAULT_TIMEOUT`, `CACHE_TTL`, `WORDCLOUD_*`, `DATA_RAW_DIR`, `DATA_PROCESSED_DIR`.
+- **Rebranding**: `REPORT_TITLE`, `REPORT_FOOTER`, `REPORT_LOGO_PATH`.
+- **NLP / URLs**: `ARABIC_STOPWORDS`, `URL_PATTERNS`, etc.
 
-- **Facebook posts**: `scraper_one/facebook-posts-scraper`
-- **Facebook comments**: `apify/facebook-comments-scraper`
-- **Instagram**: `apify/instagram-scraper`
-- **Instagram comments**: `apify/instagram-comment-scraper` (with fallbacks)
-- **YouTube**: `streamers/youtube-scraper`
-- **YouTube comments**: `streamers/youtube-comments-scraper`
+The production Apify client in **`app/services/apify_client.py`** handles retries, timeouts, and user-facing errors. See **`docs/ERROR_CATALOG.md`** for common Apify errors and messages.
 
-The production Apify client (`app/services/apify_client.py`) adds retries, timeouts, and user-friendly error messages. See **`docs/ERROR_CATALOG.md`** for common errors and messages.
+### Sidebar (at runtime)
 
-### Customization
+- **Preset**: Quick (10) / Standard (25) / Full (50) / Custom (slider). Session-persisted.
+- **Facebook**: Date range (All, Last 30/7 days, Custom), Comment method (Batch / Individual), “Fetch detailed comments”, Max comments per post.
+- **Analysis options**: Phrase-based analysis, Sentiment colors in word cloud, Simple word cloud (fallback).
 
-- **Results limit**: Adjust `DEFAULT_MAX_POSTS` and `DEFAULT_MAX_COMMENTS` in `app/config/settings.py`, or use the sidebar sliders.
-- **Date filtering**: Use the sidebar "Date range" (Facebook) or adjust actor input in the fetch flow.
-- **NLP**: Replace placeholder sentiment in `social_media_app.py` with advanced models (e.g. AraBERT).
+---
 
-## 📊 Analytics Features
+## 🔄 Facebook Comments Workflow
 
-### Overview Metrics
-- Total posts count
-- Total likes, comments, and shares
-- Engagement trends over time
+1. **Phase 1 – Posts**: Fetches posts from the Facebook page using `scraper_one/facebook-posts-scraper` (page URL, results limit, optional date range).
+2. **Phase 2 – Comments** (optional): If “Fetch detailed comments” is enabled, uses `apify/facebook-comments-scraper` to get comment text—either **Batch** (one run for all post URLs) or **Individual** (one run per post). Batch is faster and cheaper; use Individual if Batch fails for your page.
 
-### Individual Post Analysis
-- Detailed post information
-- Reaction breakdown
-- Comment sentiment analysis
-- Word cloud from comments
+Then the report uses that comment text for Audience (NLP, word clouds, sentiment view). If comments are not fetched, the Audience tab shows a CTA to enable “Fetch detailed comments” and re-run.
 
-### Visualizations
-- Line charts for time-series data
-- Bar charts for categorical data
-- Interactive data tables
+For more detail, see [FACEBOOK_COMMENTS_WORKFLOW.md](FACEBOOK_COMMENTS_WORKFLOW.md) if present.
 
-## 🌍 Multi-Language Support
+---
 
-The app includes basic Arabic NLP capabilities:
+## 🔗 Supported URL formats
 
-- Arabic text cleaning and tokenization
-- Arabic stopwords filtering
-- Extensible for advanced Arabic NLP models (AraBERT, CAMeL Tools)
+- **Facebook**: `https://www.facebook.com/PageName/`, `https://facebook.com/PageName`
+- **Instagram**: `https://www.instagram.com/username/`
+- **YouTube**: `https://www.youtube.com/@Channel`, `https://www.youtube.com/channel/...`, `https://www.youtube.com/c/...`, `https://youtube.com/watch?v=...`
 
-## 🔧 Technical Stack
+---
 
-- **Frontend**: Streamlit
-- **Data Processing**: Pandas
-- **Web Scraping**: Apify Client
-- **Visualization**: Streamlit Native Charts
-- **NLP**: Custom Arabic/English text processing
-- **Word Clouds**: WordCloud library
-
-## 📁 Project Structure
+## 📁 Project structure
 
 ```
 social-media-analytics/
-├── social_media_app.py       # Main Streamlit app
-├── app/
-│   ├── config/settings.py    # Single source of truth: actors, defaults, URLs
-│   ├── services/
-│   │   ├── apify_client.py   # Production Apify client (retries, timeout, errors)
-│   │   ├── comment_service.py
-│   │   └── __init__.py       # DataFetchingService, ApifyService
-│   ├── adapters/             # Platform-specific normalization
-│   ├── viz/                  # Charts, dashboards, NLP viz
-│   ├── styles/               # Theme, loading, errors
-│   └── ...
-├── tests/                    # pytest (test_apify_client, adapters, etc.)
-├── docs/ERROR_CATALOG.md     # Apify error messages and actions
+├── social_media_app.py          # Main Streamlit app
 ├── requirements.txt
-├── pyproject.toml            # Ruff lint/format, pytest options
-└── README.md
+├── pyproject.toml               # Ruff, pytest
+├── README.md
+├── .streamlit/
+│   └── secrets.toml             # APIFY_TOKEN, MONGODB_URI, MONGODB_DATABASE
+├── app/
+│   ├── config/
+│   │   └── settings.py          # Actors, defaults, REPORT_TITLE/FOOTER
+│   ├── types/
+│   │   ├── post_schema.py       # Normalized post schema, normalize_posts_to_schema
+│   │   └── __init__.py
+│   ├── adapters/                # Facebook, Instagram, YouTube normalization
+│   ├── analytics/               # metrics.py (engagement, reactions, etc.)
+│   ├── services/
+│   │   ├── apify_client.py      # Production Apify client
+│   │   ├── __init__.py          # DataFetchingService
+│   │   ├── persistence.py       # Save/load files
+│   │   └── mongodb_service.py   # Optional DB
+│   ├── viz/
+│   │   ├── charts.py            # Overview charts, engagement over time, reaction donut
+│   │   ├── dashboards.py        # KPI dashboard, performance comparison
+│   │   ├── nlp_viz.py           # NLP dashboard, sentiment themes view
+│   │   ├── post_details.py      # Post selector, performance, comments
+│   │   └── wordcloud_generator.py
+│   ├── utils/
+│   │   ├── export.py            # CSV/JSON/PDF export section
+│   │   └── pdf_report.py        # PDF report builder (reportlab)
+│   ├── nlp/                     # Sentiment, phrases, advanced_nlp
+│   ├── styles/                  # Theme, loading, errors
+│   ├── ui/                      # page_header, kpi_cards, section
+│   └── db/                      # MongoDB repositories (optional)
+├── data/
+│   ├── raw/                     # Saved JSON
+│   └── processed/              # Saved CSV
+├── docs/
+│   └── ERROR_CATALOG.md        # Apify errors and user messages
+└── tests/                       # pytest
 ```
 
-### Development
+---
+
+## 🔧 Development
 
 - **Lint**: `ruff check .`
 - **Format**: `ruff format .` (or `ruff format --check .` in CI)
 - **Tests**: `pytest tests/ -q`
 - **Run app**: `streamlit run social_media_app.py`
 
-## 🤝 Contributing
+---
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+## Environment variables (reference)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `APIFY_TOKEN` | Yes (for Fetch from API) | Apify API token. Set in env or `.streamlit/secrets.toml`. Do not expose in frontend. |
+| `MONGODB_URI` | No | MongoDB connection string for “Load from Database”. |
+| `MONGODB_DATABASE` | No | Database name (default: `social_media_analytics`). |
+| `DATA_RAW_DIR` | No | Override raw data directory (default: `data/raw`). |
+| `DATA_PROCESSED_DIR` | No | Override processed data directory (default: `data/processed`). |
+
+For production (e.g. Streamlit Cloud, Docker), set `APIFY_TOKEN` as a secret in the host environment.
+
+---
+
+## 📞 Support
+
+- Check [Issues](https://github.com/alialzein01/social-media-analytics/issues).
+- Open a new issue with details.
+- Contact: [@alialzein01](https://github.com/alialzein01).
+
+---
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
 - [Apify](https://apify.com/) for web scraping infrastructure
 - [Streamlit](https://streamlit.io/) for the web framework
 - [Pandas](https://pandas.pydata.org/) for data processing
-
-## 📞 Support
-
-If you encounter any issues or have questions:
-
-1. Check the [Issues](https://github.com/alialzein01/social-media-analytics/issues) page
-2. Create a new issue with detailed information
-3. Contact: [@alialzein01](https://github.com/alialzein01)
 
 ---
 

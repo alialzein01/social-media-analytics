@@ -13,6 +13,8 @@ from .metrics import (
     calculate_total_engagement,
     calculate_average_engagement,
     get_top_posts_by_metric,
+    get_post_reactions_count,
+    get_post_engagement,
 
     # Content analysis
     analyze_posting_frequency,
@@ -43,6 +45,8 @@ __all__ = [
     'calculate_total_engagement',
     'calculate_average_engagement',
     'get_top_posts_by_metric',
+    'get_post_reactions_count',
+    'get_post_engagement',
     'analyze_posting_frequency',
     'analyze_content_types',
     'analyze_hashtags',

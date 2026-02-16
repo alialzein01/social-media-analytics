@@ -374,6 +374,28 @@ def calculate_video_metrics(posts: List[Dict]) -> Dict[str, Any]:
 # REACTION ANALYSIS (Facebook)
 # ============================================================================
 
+def get_post_reactions_count(post: Dict) -> int:
+    """
+    Total reactions for one post. Uses reactions dict if present and non-empty,
+    otherwise falls back to likes (so Total Reactions KPI is never broken).
+    """
+    reactions = post.get("reactions", {})
+    if isinstance(reactions, dict) and reactions:
+        return sum(v for v in reactions.values() if isinstance(v, (int, float)))
+    return int(post.get("likes", 0) or 0)
+
+
+def get_post_engagement(post: Dict, platform: Optional[str] = None) -> int:
+    """
+    Engagement for one post: reactions (or likes) + comments + shares.
+    For Facebook, uses sum(reactions) with fallback to likes when no reactions dict.
+    """
+    reactions_count = get_post_reactions_count(post)
+    comments = int(post.get("comments_count", 0) or 0)
+    shares = int(post.get("shares_count", 0) or 0)
+    return reactions_count + comments + shares
+
+
 def analyze_reactions(posts: List[Dict]) -> Dict[str, int]:
     """
     Analyze reaction breakdown across all posts.

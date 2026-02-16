@@ -101,7 +101,8 @@ from app.viz.nlp_viz import (
     create_topic_modeling_view,
     create_keyword_cloud,
     create_emoji_sentiment_chart,
-    create_sentiment_comparison_view
+    create_sentiment_comparison_view,
+    create_sentiment_themes_view,
 )
 from app.services.persistence import DataPersistenceService
 
@@ -116,6 +117,8 @@ except Exception:
 from app.viz.charts import (
     create_monthly_overview_charts,
     create_reaction_pie_chart,
+    create_reaction_donut_with_summary,
+    create_engagement_over_time_chart,
     create_sentiment_pie_chart,
     create_instagram_metric_cards,
     create_top_posts_chart,
@@ -177,8 +180,11 @@ from app.analytics import (
     aggregate_all_comments,
     analyze_emojis_in_comments,
     calculate_total_engagement,
+    get_post_reactions_count,
+    get_post_engagement,
     analyze_hashtags
 )
+from app.types import normalize_posts_to_schema
 
 # ============================================================================
 # NLP UTILITIES (Arabic-capable, pluggable design)
@@ -342,6 +348,20 @@ def _to_naive_dt(x):
         return None
     return ts.tz_convert(None)
 
+
+def _get_posts_date_range_str(posts: List[Dict]) -> Optional[str]:
+    """Return a string like '2024-01-05 to 2024-02-10' from posts' published_at, or None if no valid dates."""
+    dates = []
+    for p in posts:
+        dt = _to_naive_dt(p.get("published_at"))
+        if dt is not None:
+            dates.append(dt)
+    if not dates:
+        return None
+    min_d, max_d = min(dates), max(dates)
+    return f"{min_d.strftime('%Y-%m-%d')} to {max_d.strftime('%Y-%m-%d')}"
+
+
 def normalize_post_data(raw_data: List[Dict], platform: str, apify_token: str = None) -> List[Dict]:
     """
     Normalize actor response using new platform adapters.
@@ -396,55 +416,15 @@ def filter_current_month(posts: List[Dict]) -> List[Dict]:
     return out
 
 def calculate_total_reactions(posts: List[Dict]) -> int:
-    """Calculate total reactions across all posts."""
-    # Optimized: use generator expression and sum()
-    return sum(
-        sum(reactions.values()) if isinstance(reactions, dict)
-        else reactions if isinstance(reactions, int)
-        else 0
-        for post in posts
-        for reactions in [post.get('reactions', {})]
-    )
+    """Total reactions across all posts. Uses reactions dict with fallback to likes per post."""
+    return sum(get_post_reactions_count(p) for p in posts)
 
-def calculate_average_engagement(posts: List[Dict]) -> float:
-    """Calculate average engagement per post (reactions/likes + comments + shares).
-
-    NOTE: reactions and likes are NOT double-counted:
-    - If reactions dict exists, use that (it includes all reaction types)
-    - Otherwise, fall back to likes field
-    """
+def calculate_average_engagement(posts: List[Dict], platform: Optional[str] = None) -> float:
+    """Average engagement per post (reactions/likes + comments + shares). Platform-aware for Facebook (sum reactions)."""
     if not posts:
         return 0.0
-
-    # Optimized: use generator expression with helper function
-    def get_numeric_value(value, default=0):
-        if isinstance(value, list):
-            return len(value)
-        elif isinstance(value, (int, float)):
-            return value
-        elif isinstance(value, dict):
-            return sum(value.values())
-        return default
-
-    total_engagement = 0
-    for post in posts:
-        # Get reactions OR likes (not both to avoid double-counting)
-        reactions_data = post.get('reactions', {})
-        if isinstance(reactions_data, dict) and reactions_data:
-            # Use detailed reactions breakdown if available
-            reactions_count = sum(reactions_data.values())
-        else:
-            # Fall back to likes field if no reactions breakdown
-            reactions_count = get_numeric_value(post.get('likes', 0))
-
-        # Add engagement components (reactions already includes likes)
-        total_engagement += (
-            reactions_count +
-            get_numeric_value(post.get('comments_count', 0)) +
-            get_numeric_value(post.get('shares_count', 0))
-        )
-
-    return total_engagement / len(posts)
+    total = sum(get_post_engagement(p, platform) for p in posts)
+    return total / len(posts)
 
 def calculate_youtube_metrics(posts: List[Dict]) -> Dict[str, Any]:
     """Calculate YouTube-specific metrics."""
@@ -524,6 +504,48 @@ def _delta_suffix(delta_pct: Optional[float], window_days: int = 7) -> str:
     if delta_pct is None:
         return f"No prior {window_days}-day baseline in current dataset."
     return f"{delta_pct:+.1f}% vs previous {window_days}-day window."
+
+
+def _compute_insights(
+    posts: List[Dict],
+    platform: str,
+    reactions_breakdown: Optional[Dict[str, int]] = None,
+) -> List[str]:
+    """Return a short list of insight strings (alerts / highlights) from the current run."""
+    out: List[str] = []
+    if not posts:
+        return out
+    window_days = 7
+    # 1) Reactions/engagement down vs prior 7 days (Facebook)
+    if platform == "Facebook":
+        reactions_delta = _compute_delta_pct(posts, calculate_total_reactions, window_days)
+        if reactions_delta is not None and reactions_delta < -15:
+            out.append(f"⚠️ Total reactions are down {abs(reactions_delta):.0f}% vs previous {window_days} days.")
+        engagement_delta = _compute_delta_pct(
+            posts, lambda items: calculate_average_engagement(items, platform) if items else 0.0, window_days
+        )
+        if engagement_delta is not None and engagement_delta > 20:
+            out.append(f"✅ Engagement is up {engagement_delta:.0f}% vs previous {window_days} days.")
+    # 2) Last N posts with no comments
+    try:
+        sorted_by_date = sorted(
+            posts,
+            key=lambda p: pd.to_datetime(p.get("published_at"), errors="coerce") or pd.Timestamp.min,
+            reverse=True,
+        )
+        last_3 = sorted_by_date[:3]
+        if len(last_3) >= 2 and all((p.get("comments_count") or 0) == 0 for p in last_3):
+            out.append("ℹ️ Last 2+ posts have no comments.")
+    except Exception:
+        pass
+    # 3) Facebook: reactions mostly positive (Like + Love > 80%)
+    if reactions_breakdown and platform == "Facebook":
+        total = sum(reactions_breakdown.values())
+        if total:
+            like_love = reactions_breakdown.get("like", 0) + reactions_breakdown.get("love", 0)
+            if like_love / total > 0.8:
+                out.append("✅ Reactions are mostly positive (Like + Love > 80%).")
+    return out
 
 @st.cache_data(ttl=3600, max_entries=32, show_spinner=False)
 def fetch_youtube_comments(video_urls: List[str], _apify_token: str, max_comments_per_video: int = 10) -> List[Dict]:
@@ -626,13 +648,12 @@ def save_data_to_files(raw_data: List[Dict], normalized_data: List[Dict], platfo
 def load_data_from_file(file_path: str) -> Optional[List[Dict]]:
     """
     Load data from a saved file (JSON or CSV) using DataPersistenceService.
-    Returns normalized data in the same format as from API.
+    Returns normalized data in the same schema (missing keys filled) so it matches API output.
     """
     try:
-        # Use the new DataPersistenceService
         persistence = DataPersistenceService()
-        normalized_data = persistence.load_dataset(file_path)
-        return normalized_data
+        data = persistence.load_dataset(file_path)
+        return normalize_posts_to_schema(data) if data else None
     except Exception as e:
         st.error(f"Error loading file: {str(e)}")
         return None
@@ -1643,9 +1664,14 @@ def main():
         st.session_state.theme = 'light'
     st.markdown(get_custom_css(st.session_state.theme), unsafe_allow_html=True)
 
-    # App header: compact, premium hierarchy
+    # App header: compact, premium hierarchy (title from config for rebranding)
+    try:
+        from app.config.settings import REPORT_TITLE
+        header_title = REPORT_TITLE or "Social Media Analytics"
+    except Exception:
+        header_title = "Social Media Analytics"
     page_header(
-        "Social Media Analytics",
+        header_title,
         subtitle="Analyze Facebook, Instagram & YouTube with AI-powered insights",
     )
 
@@ -1752,13 +1778,32 @@ def main():
 
     if data_source == "Fetch from API":
         with st.sidebar.expander("⚙️ Fetch settings", expanded=True):
-            max_posts = st.sidebar.slider(
-                "Posts to fetch",
-                min_value=1,
-                max_value=50,
-                value=10,
-                help="Maximum number of posts or videos to fetch in one run. Higher values take longer and use more Apify units.",
+            # Persist max_posts in session for better UX
+            if "max_posts" not in st.session_state:
+                st.session_state.max_posts = 10
+            preset = st.sidebar.radio(
+                "Preset",
+                ["Quick (10)", "Standard (25)", "Full (50)", "Custom"],
+                help="Quick = faster run. Higher = more data and Apify usage.",
+                horizontal=True,
             )
+            if preset == "Quick (10)":
+                max_posts = 10
+            elif preset == "Standard (25)":
+                max_posts = 25
+            elif preset == "Full (50)":
+                max_posts = 50
+            else:
+                max_posts = st.sidebar.slider(
+                    "Posts to fetch",
+                    min_value=5,
+                    max_value=100,
+                    value=st.session_state.max_posts,
+                    help="Maximum posts per run. Higher values take longer and use more Apify units.",
+                )
+                st.session_state.max_posts = max_posts
+            if preset != "Custom":
+                st.session_state.max_posts = max_posts
             if platform == "Facebook":
                 date_range_option = st.sidebar.radio(
                     "Date range",
@@ -1922,7 +1967,7 @@ def main():
             if st.session_state.get('db_service') and st.button("📊 Load from Database", type="primary"):
                 posts_data = load_data_from_database(platform, days_back=days_back, limit=max_posts_db)
                 if posts_data:
-                    st.session_state.posts_data = posts_data
+                    st.session_state.posts_data = normalize_posts_to_schema(posts_data)
                     st.rerun()
             analyze_button = False
             url = ""
@@ -2138,6 +2183,13 @@ def main():
         numeric_cols = ['likes', 'comments_count', 'shares_count']
         df[numeric_cols] = df[numeric_cols].apply(pd.to_numeric, errors='coerce').fillna(0).astype(int)
         df['text'] = df['text'].fillna("").astype(str)
+        # Platform-aware engagement (Facebook = sum reactions + comments + shares)
+        df['engagement'] = [get_post_engagement(p, platform) for p in posts]
+
+        # Date range from actual data (show "Posts from X to Y")
+        date_range_str = _get_posts_date_range_str(posts)
+        if date_range_str:
+            st.caption(f"📅 **Data range:** {date_range_str}")
 
         # ═══════════════════════════════════════════════════════════
         # INSTAGRAM WORKFLOW - STEP 3: SHOW MONTHLY OVERVIEW
@@ -2148,7 +2200,8 @@ def main():
         st.caption(f"Analysis period: {month_year}")
         st.markdown("---")
 
-        # Platform-specific analysis
+        # Platform-specific analysis (reactions_breakdown used in Overview tab)
+        reactions_breakdown = {}
         if platform == "Instagram":
             # Single insight path for Instagram: avoid duplicated monthly-insight sections.
             create_instagram_monthly_analysis(posts, platform)
@@ -2246,12 +2299,12 @@ def main():
             total_reactions = calculate_total_reactions(posts)
             total_comments = df['comments_count'].sum()
             total_shares = df['shares_count'].sum()
-            avg_engagement = calculate_average_engagement(posts)
+            avg_engagement = calculate_average_engagement(posts, platform)
             window_days = 7
             reactions_delta = _compute_delta_pct(posts, calculate_total_reactions, window_days)
             comments_delta = _compute_delta_pct(posts, lambda items: sum(p.get('comments_count', 0) for p in items), window_days)
             shares_delta = _compute_delta_pct(posts, lambda items: sum(p.get('shares_count', 0) for p in items), window_days)
-            engagement_delta = _compute_delta_pct(posts, calculate_average_engagement, window_days)
+            engagement_delta = _compute_delta_pct(posts, lambda items: calculate_average_engagement(items, platform) if items else 0.0, window_days)
 
             # Calculate detailed reactions breakdown
             reactions_breakdown = {}
@@ -2291,114 +2344,141 @@ def main():
                 ]
             )
 
-            # Show reactions breakdown if available (not for Instagram)
-            if reactions_breakdown and platform != "Instagram":
-                st.markdown("---")
-                st.markdown("### 😊 Reactions Breakdown")
-                create_reaction_pie_chart(reactions_breakdown)
+            # Reactions breakdown moved to Overview tab
 
-            # Facebook comment drivers are shown in Monthly Insights below.
-
-        st.markdown("---")
-
-        st.markdown("### 📈 Trends")
-        st.caption("Volume and engagement direction over time.")
-        create_monthly_overview_charts(df)
+        insights_list = _compute_insights(posts, platform, reactions_breakdown)
+        if insights_list:
+            st.markdown("### 💡 Insights")
+            for msg in insights_list:
+                st.markdown(f"- {msg}")
 
         st.markdown("---")
 
-        # Monthly Insights Section (comment-driven NLP; avoid duplicated charts)
-        st.markdown("### 💡 Audience Breakdown")
-
-        all_comments = aggregate_all_comments(posts)
-
-        if all_comments:
-            st.caption("Topic, keyword, and sentiment drivers from collected comment text.")
-            create_advanced_nlp_dashboard(all_comments)
-            st.markdown("---")
-            st.markdown("#### 🧭 Top Themes in Content")
-            create_wordcloud(
-                all_comments,
-                width=1200,
-                height=600,
-                figsize=(15, 8),
-                section_key="audience_breakdown",
-            )
-        else:
-            posts_with_comments = sum(1 for post in posts if post.get('comments_count', 0) > 0)
-            st.info(
-                "No detailed comment text is available for audience breakdown. "
-                "Enable 'Fetch Detailed Comments' to unlock topic and sentiment drivers."
-            )
-            if posts_with_comments:
-                st.caption(f"{posts_with_comments:,} posts contain comments but no comment-text payload.")
-
-        st.markdown("---")
-
-        # ═══════════════════════════════════════════════════════════
-        # CROSS-PLATFORM COMPARISON (if data available)
-        # ═══════════════════════════════════════════════════════════
-        # Check if we have saved data from other platforms
+        # Cross-platform data for Overview tab (and comparison)
         saved_files = get_saved_files()
-        all_platforms_data = {}
-
-        # Add current platform data
-        all_platforms_data[platform] = posts
-
-        # Try to load recent data from other platforms
+        all_platforms_data = {platform: posts}
         for other_platform in ["Facebook", "Instagram", "YouTube"]:
             if other_platform != platform and other_platform in saved_files:
                 platform_files = saved_files[other_platform]
                 if platform_files:
-                    # Load the most recent file
-                    latest_file = platform_files[0]
                     try:
-                        loaded_data = load_data_from_file(latest_file)
+                        loaded_data = load_data_from_file(platform_files[0])
                         if loaded_data:
                             all_platforms_data[other_platform] = loaded_data
                     except Exception:
-                        pass  # Skip if loading fails
+                        pass
 
-        # Show comparison if we have data from multiple platforms
-        if len(all_platforms_data) > 1:
-            st.markdown("### 🔄 Cross-Platform Comparison")
-            st.caption(f"Benchmarking performance across {len(all_platforms_data)} available platforms.")
-            create_performance_comparison(
-                facebook_posts=all_platforms_data.get("Facebook"),
-                instagram_posts=all_platforms_data.get("Instagram"),
-                youtube_posts=all_platforms_data.get("YouTube")
-            )
+        all_comments = aggregate_all_comments(posts)
 
-        st.markdown("---")
+        tab_overview, tab_trends, tab_audience, tab_posts, tab_export = st.tabs(
+            ["📊 Overview", "📈 Trends", "💡 Audience", "📝 Posts", "📤 Export"]
+        )
 
-        # Posts table
-        st.markdown("### 📝 Posts Details")
-        st.caption("Click a row to explore; use the selector below for full post analysis.")
-        display_df = df[['published_at', 'text', 'likes', 'comments_count', 'shares_count']].copy()
-        display_df['text'] = display_df['text'].str[:100] + '...'
+        with tab_overview:
+            if reactions_breakdown and platform != "Instagram":
+                st.markdown("### 😊 Reactions Breakdown")
+                create_reaction_donut_with_summary(reactions_breakdown)
+            # Compare with previous run (same platform, saved file)
+            platform_files = saved_files.get(platform, [])
+            if platform_files:
+                st.markdown("### 📊 Compare with previous run")
+                compare_options = ["(none)"] + [os.path.basename(f) for f in platform_files[:5]]
+                compare_choice = st.selectbox(
+                    "Load a saved run to compare",
+                    compare_options,
+                    help="Select a previously saved file to compare metrics with this run.",
+                )
+                if compare_choice and compare_choice != "(none)":
+                    compare_path = next((f for f in platform_files if os.path.basename(f) == compare_choice), None)
+                    if compare_path:
+                        prev_posts = load_data_from_file(compare_path)
+                        if prev_posts:
+                            cur_r = calculate_total_reactions(posts)
+                            prev_r = calculate_total_reactions(prev_posts)
+                            cur_c = sum(p.get("comments_count", 0) for p in posts)
+                            prev_c = sum(p.get("comments_count", 0) for p in prev_posts)
+                            cur_s = sum(p.get("shares_count", 0) for p in posts)
+                            prev_s = sum(p.get("shares_count", 0) for p in prev_posts)
+                            cur_eng = calculate_average_engagement(posts, platform)
+                            prev_eng = calculate_average_engagement(prev_posts, platform)
+                            def _pct(a: float, b: float) -> str:
+                                if not b: return "—"
+                                return f"{((a - b) / b) * 100:+.1f}%"
+                            st.caption("Current run vs selected saved run.")
+                            comp_df = pd.DataFrame({
+                                "Metric": ["Total Reactions", "Total Comments", "Total Shares", "Avg Engagement"],
+                                "Current": [cur_r, cur_c, cur_s, f"{cur_eng:.1f}"],
+                                "Previous": [prev_r, prev_c, prev_s, f"{prev_eng:.1f}"],
+                                "Change": [_pct(cur_r, prev_r), _pct(cur_c, prev_c), _pct(cur_s, prev_s), _pct(cur_eng, prev_eng)],
+                            })
+                            st.dataframe(comp_df, use_container_width=True, hide_index=True)
+                        else:
+                            st.warning("Could not load the selected file.")
+            if len(all_platforms_data) > 1:
+                st.markdown("### 🔄 Cross-Platform Comparison")
+                st.caption(f"Benchmarking across {len(all_platforms_data)} platforms.")
+                create_performance_comparison(
+                    facebook_posts=all_platforms_data.get("Facebook"),
+                    instagram_posts=all_platforms_data.get("Instagram"),
+                    youtube_posts=all_platforms_data.get("YouTube"),
+                )
+            if not reactions_breakdown and len(all_platforms_data) <= 1 and not platform_files:
+                st.caption("KPIs and reactions are above. Add more platform data or save runs to see comparison here.")
 
-        # Normalize timestamps (APIs often return ms; pandas default is ns → wrong date)
-        def _safe_published_at(val):
-            if isinstance(val, (int, float)) and val != 0:
-                return parse_published_at(val)
-            return val
-        display_df['published_at'] = display_df['published_at'].apply(_safe_published_at)
-        display_df['published_at'] = pd.to_datetime(display_df['published_at'], utc=True).dt.tz_localize(None)
-        display_df['published_at'] = display_df['published_at'].dt.strftime('%Y-%m-%d %H:%M').fillna('Unknown')
-        display_df.columns = ['Date', 'Caption', 'Likes', 'Comments', 'Shares']
+        with tab_trends:
+            st.markdown("### 📈 Trends")
+            st.caption("Volume and engagement over time.")
+            create_monthly_overview_charts(df)
+            create_engagement_over_time_chart(df)
 
-        st.dataframe(display_df, use_container_width=True, height=300)
+        with tab_audience:
+            st.markdown("### 💡 Audience Breakdown")
+            if all_comments:
+                st.caption("Topic, keyword, and sentiment drivers from comment text.")
+                create_advanced_nlp_dashboard(all_comments)
+                st.markdown("---")
+                st.markdown("#### 🧭 Top Themes in Content")
+                create_wordcloud(
+                    all_comments,
+                    width=1200,
+                    height=600,
+                    figsize=(15, 8),
+                    section_key="audience_breakdown",
+                )
+                st.markdown("---")
+                create_sentiment_themes_view(all_comments, top_n=15)
+            else:
+                posts_with_comments = sum(1 for post in posts if post.get('comments_count', 0) > 0)
+                st.info(
+                    "**No comment text available for audience insights.** "
+                    "To see topics, keywords, and sentiment: enable **Fetch detailed comments** in the sidebar and run the analysis again."
+                )
+                if posts_with_comments:
+                    st.caption(f"{posts_with_comments:,} posts have comment counts but no comment text was fetched.")
 
-        st.markdown("---")
+        with tab_posts:
+            st.caption("Sorted by engagement so you can spot top posts. Click a row to explore; use the selector below for full post analysis.")
+            engagement_list = [get_post_engagement(p, platform) for p in posts]
+            display_df = df[['published_at', 'text', 'likes', 'comments_count', 'shares_count']].copy()
+            display_df['engagement'] = engagement_list
+            display_df['rank'] = pd.Series(engagement_list).rank(method="min", ascending=False).astype(int)
+            display_df['text'] = display_df['text'].str[:100] + '...'
 
-        # Comprehensive Export Section
-        create_comprehensive_export_section(posts, platform)
+            def _safe_published_at(val):
+                if isinstance(val, (int, float)) and val != 0:
+                    return parse_published_at(val)
+                return val
+            display_df['published_at'] = display_df['published_at'].apply(_safe_published_at)
+            display_df['published_at'] = pd.to_datetime(display_df['published_at'], utc=True).dt.tz_localize(None)
+            display_df['published_at'] = display_df['published_at'].dt.strftime('%Y-%m-%d %H:%M').fillna('Unknown')
+            display_df = display_df.sort_values('engagement', ascending=False)[['published_at', 'rank', 'engagement', 'text', 'likes', 'comments_count', 'shares_count']]
+            display_df.columns = ['Date', 'Rank', 'Engagement', 'Caption', 'Likes', 'Comments', 'Shares']
+            st.dataframe(display_df, use_container_width=True, height=300)
+            st.markdown("---")
+            selected_post = create_enhanced_post_selector(posts, platform)
 
-        # ═══════════════════════════════════════════════════════════
-        # ENHANCED POST DETAIL ANALYSIS - STEP 4
-        # ═══════════════════════════════════════════════════════════
-        # Use new enhanced post selector
-        selected_post = create_enhanced_post_selector(posts, platform)
+        with tab_export:
+            create_comprehensive_export_section(posts, platform, date_range_str=date_range_str)
 
         if selected_post:
             st.markdown("---")

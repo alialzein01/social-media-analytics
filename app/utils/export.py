@@ -292,7 +292,8 @@ def create_analytics_export(
 
 def create_comprehensive_export_section(
     posts_data: List[Dict[str, Any]],
-    platform: str
+    platform: str,
+    date_range_str: Optional[str] = None,
 ):
     """
     Create comprehensive export section with all options.
@@ -300,6 +301,7 @@ def create_comprehensive_export_section(
     Args:
         posts_data: List of posts
         platform: Platform name
+        date_range_str: Optional "YYYY-MM-DD to YYYY-MM-DD" for PDF report
     """
     with st.expander("📥 Export Data", expanded=False):
         if not posts_data:
@@ -308,6 +310,26 @@ def create_comprehensive_export_section(
 
         st.markdown(f"### Export {platform} Data")
         st.markdown("Choose from various export formats below:")
+
+        # PDF report (when reportlab available)
+        try:
+            from app.utils.pdf_report import build_pdf_report, REPORTLAB_AVAILABLE
+            if REPORTLAB_AVAILABLE:
+                st.markdown("#### 📄 Report (PDF)")
+                pdf_bytes = build_pdf_report(posts_data, platform, date_range_str)
+                if pdf_bytes:
+                    st.download_button(
+                        label="📥 Download report (PDF)",
+                        data=pdf_bytes,
+                        file_name=f"{platform.lower()}_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                        mime="application/pdf",
+                        help="Summary report with KPIs and top posts",
+                    )
+                else:
+                    st.caption("PDF report unavailable (no data or reportlab error).")
+                st.markdown("---")
+        except Exception:
+            pass
 
         # Posts export
         st.markdown("#### 📊 Posts Data")
