@@ -23,9 +23,9 @@ class InstagramAdapter(PlatformAdapter):
     def get_actor_id(self) -> str:
         """
         Return the Apify actor ID for Instagram scraping.
-        Using the community actor for profile posts.
+        Uses apify/instagram-scraper (single source of truth with app.config.settings.ACTOR_CONFIG).
         """
-        return "apify/instagram-profile-scraper"
+        return "apify/instagram-scraper"
 
     def validate_url(self, url: str) -> bool:
         """
@@ -52,16 +52,17 @@ class InstagramAdapter(PlatformAdapter):
         """
         Build Instagram actor input configuration.
 
-        Returns input dict for apify/instagram-profile-scraper.
+        Returns input dict for apify/instagram-scraper (profile/post URLs).
         """
         actor_input = {
             "directUrls": [url],
+            "resultsType": "posts",
             "resultsLimit": max_posts,
-            "searchLimit": 1,
-            "searchType": "hashtag",
-            "addParentData": False,
+            "searchLimit": 10,
         }
-
+        # apify/instagram-scraper supports onlyPostsNewerThan (YYYY-MM-DD or relative e.g. "30 days")
+        if from_date:
+            actor_input["onlyPostsNewerThan"] = from_date
         return actor_input
 
     def normalize_post(self, raw_post: Dict) -> Dict:

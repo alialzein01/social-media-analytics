@@ -218,10 +218,10 @@ class CommentFetchingService:
 
         st.info(f"📋 Found {len(post_urls)} valid post URLs for comment extraction")
 
-        # Prepare input for the comments scraper actor
+        # Prepare input for the comments scraper actor (resultsLimit = total across all posts)
         comments_input = {
             "startUrls": post_urls,
-            "resultsLimit": max_comments_per_post,
+            "resultsLimit": len(post_urls) * max_comments_per_post,
             "includeNestedComments": False,
             "viewOption": "RANKED_UNFILTERED",
         }

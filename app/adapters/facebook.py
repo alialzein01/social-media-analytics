@@ -51,21 +51,13 @@ class FacebookAdapter(PlatformAdapter):
     ) -> Dict[str, Any]:
         """
         Build Facebook actor input configuration.
-        Build input compatible with `scraper_one/facebook-posts-scraper`.
-        This actor expects `pageUrls` (list) and `resultsLimit` (int).
-        Date filtering is not universally supported by that actor; if
-        `from_date`/`to_date` are provided they will be included where
-        supported as `onlyPostsNewerThan` / `onlyPostsOlderThan`.
+        Input compatible with `scraper_one/facebook-posts-scraper`.
+        That actor only supports: pageUrls (required), resultsLimit (optional, 1–100).
+        It does NOT support date parameters; date filtering is applied client-side
+        after fetch (see social_media_app flow).
         """
-        actor_input = {"pageUrls": [url], "resultsLimit": max_posts}
-
-        # Add date filters if provided (ISO format: YYYY-MM-DD or relative like "3 days ago")
-        if from_date:
-            actor_input["onlyPostsNewerThan"] = from_date
-        if to_date:
-            actor_input["onlyPostsOlderThan"] = to_date
-
-        return actor_input
+        # Actor schema: https://apify.com/scraper_one/facebook-posts-scraper/input
+        return {"pageUrls": [url], "resultsLimit": max_posts}
 
     def normalize_post(self, raw_post: Dict) -> Dict:
         """

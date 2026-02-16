@@ -39,8 +39,6 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
 import streamlit as st
 import pandas as pd
-from apify_client import ApifyClient
-
 from app.services.apify_client import (
     create_apify_client,
     run_actor_and_fetch_dataset,
@@ -68,7 +66,6 @@ from app.config.settings import (
     DEFAULT_MAX_POSTS,
     DEFAULT_MAX_COMMENTS,
     DEFAULT_TIMEOUT,
-    ACTOR_CONFIG,
     YOUTUBE_COMMENTS_ACTOR_ID,
     FACEBOOK_COMMENTS_ACTOR_IDS,
     INSTAGRAM_COMMENTS_ACTOR_IDS,
@@ -529,6 +526,40 @@ def _get_posts_date_range_str(posts: List[Dict]) -> Optional[str]:
     return f"{min_d.strftime('%Y-%m-%d')} to {max_d.strftime('%Y-%m-%d')}"
 
 
+def filter_posts_by_date_range(
+    posts: List[Dict],
+    from_date: Optional[str],
+    to_date: Optional[str],
+) -> List[Dict]:
+    """
+    Filter normalized posts to those within from_date..to_date (inclusive).
+    Dates are YYYY-MM-DD; times are treated as start-of-day and end-of-day.
+    """
+    if not posts or (not from_date and not to_date):
+        return posts
+    try:
+        start = datetime.strptime(from_date, "%Y-%m-%d") if from_date else None
+        end = datetime.strptime(to_date, "%Y-%m-%d") if to_date else None
+        if end:
+            end = end.replace(hour=23, minute=59, second=59, microsecond=999999)
+    except ValueError:
+        return posts
+    out = []
+    for p in posts:
+        pub = p.get("published_at")
+        if pub is None:
+            continue
+        dt = pd.to_datetime(pub, errors="coerce")
+        if pd.isna(dt):
+            continue
+        if start is not None and dt < start:
+            continue
+        if end is not None and dt > end:
+            continue
+        out.append(p)
+    return out
+
+
 def normalize_post_data(raw_data: List[Dict], platform: str, apify_token: str = None) -> List[Dict]:
     """
     Normalize actor response using new platform adapters.
@@ -732,14 +763,14 @@ def fetch_youtube_comments(
     """
     Fetch comments from YouTube videos using the YouTube Comments Scraper.
     Tries one batched run with all URLs when supported; falls back to per-video runs on failure.
-    Cached for 1 hour per video URL combination.
+    Cached for 1 hour per video URL combination. Uses production Apify client (retries, timeout).
     """
     if not video_urls:
         return []
 
     try:
-        client = ApifyClient(_apify_token)
-        all_comments = []
+        client = create_apify_client(_apify_token)
+        cap = len(video_urls) * max_comments_per_video
 
         # Try batched run: single actor call with all video URLs
         batch_input = {
@@ -749,18 +780,16 @@ def fetch_youtube_comments(
         }
         try:
             st.info(f"Fetching comments from {len(video_urls)} video(s) in one batch...")
-            run = client.actor(YOUTUBE_COMMENTS_ACTOR_ID).call(run_input=batch_input)
-            cap = len(video_urls) * max_comments_per_video
-            for item in client.dataset(run["defaultDatasetId"]).iterate_items():
-                all_comments.append(item)
-                if len(all_comments) >= cap:
-                    break
+            _, all_comments = run_actor_and_fetch_dataset(
+                client, YOUTUBE_COMMENTS_ACTOR_ID, batch_input, timeout_secs=180, max_items=cap
+            )
             if all_comments:
                 return all_comments
-        except Exception:
-            all_comments = []
+        except ApifyClientError:
+            pass
 
         # Fallback: per-video runs
+        all_comments = []
         for video_url in video_urls:
             st.info(f"Fetching comments from: {video_url}")
             run_input = {
@@ -768,16 +797,23 @@ def fetch_youtube_comments(
                 "maxComments": max_comments_per_video,
                 "commentsSortBy": "1",
             }
-            run = client.actor(YOUTUBE_COMMENTS_ACTOR_ID).call(run_input=run_input)
-            n = 0
-            for item in client.dataset(run["defaultDatasetId"]).iterate_items():
-                all_comments.append(item)
-                n += 1
-                if n >= max_comments_per_video:
-                    break
+            try:
+                _, items = run_actor_and_fetch_dataset(
+                    client,
+                    YOUTUBE_COMMENTS_ACTOR_ID,
+                    run_input,
+                    timeout_secs=180,
+                    max_items=max_comments_per_video,
+                )
+                all_comments.extend(items)
+            except ApifyClientError:
+                continue
 
         return all_comments
 
+    except ApifyClientError as e:
+        st.error(getattr(e, "user_message", str(e)))
+        return []
     except Exception as e:
         st.error(f"Error fetching YouTube comments: {str(e)}")
         return []
@@ -1063,6 +1099,17 @@ def extract_main_titles_from_source(file_path: str) -> List[str]:
 # ============================================================================
 
 
+def _get_adapter(platform: str, token: str):
+    """Return the platform adapter for unified actor ID and input (single source of truth)."""
+    if platform == "Facebook":
+        return FacebookAdapter(token)
+    if platform == "Instagram":
+        return InstagramAdapter(token)
+    if platform == "YouTube":
+        return YouTubeAdapter(token)
+    return None
+
+
 @st.cache_data(ttl=3600, max_entries=64, show_spinner=False)
 def fetch_apify_data(
     platform: str,
@@ -1075,57 +1122,22 @@ def fetch_apify_data(
     """
     Fetch data from Apify actor for the given platform and URL.
     Cached for 1 hour per platform+URL combination.
-    Uses production Apify client (retries, timeout, user-friendly errors).
+    Uses production Apify client and platform adapters for actor ID and input (single source of truth).
     """
     try:
-        client = create_apify_client(_apify_token)
-        actor_name = ACTOR_CONFIG.get(platform)
-
-        if not actor_name:
-            st.error(f"No actor configured for {platform}")
+        adapter = _get_adapter(platform, _apify_token)
+        if not adapter:
+            st.error(f"No adapter for platform: {platform}")
             return None
 
-        # Configure input based on platform with documented formats
-        if platform == "Instagram":
-            run_input = {
-                "directUrls": [url],
-                "resultsType": "posts",
-                "resultsLimit": max_posts,
-                "searchLimit": 10,
-            }
-        elif platform == "Facebook":
-            if actor_name and actor_name.startswith("scraper_one"):
-                run_input = {"pageUrls": [url], "resultsLimit": max_posts}
-            else:
-                run_input = {"startUrls": [url], "resultsLimit": max_posts}
-            if from_date:
-                run_input["onlyPostsNewerThan"] = from_date
-            if to_date:
-                run_input["onlyPostsOlderThan"] = to_date
-        elif platform == "YouTube":
-            if url.startswith("http"):
-                run_input = {
-                    "startUrls": [{"url": url}],
-                    "maxResults": max_posts,
-                    "maxResultsShorts": 0,
-                    "maxResultStreams": 0,
-                    "subtitlesLanguage": "en",
-                    "subtitlesFormat": "srt",
-                }
-            else:
-                run_input = {
-                    "searchQueries": [url],
-                    "maxResults": max_posts,
-                    "maxResultsShorts": 0,
-                    "maxResultStreams": 0,
-                    "subtitlesLanguage": "en",
-                    "subtitlesFormat": "srt",
-                }
-        else:
-            run_input = {"startUrls": [{"url": url}], "maxPosts": max_posts}
+        client = create_apify_client(_apify_token)
+        actor_name = adapter.get_actor_id()
+        run_input = adapter.build_actor_input(
+            url=url, max_posts=max_posts, from_date=from_date, to_date=to_date
+        )
 
         st.info(f"Calling Apify actor: {actor_name}")
-        st.info(f"Requesting {max_posts} posts from: {url}")
+        st.info(f"Requesting up to {max_posts} posts from: {url}")
         if from_date or to_date:
             date_info = "Date range: " + (from_date or "") + " " + (to_date or "")
             st.info(f"Date range: {date_info.strip()}")
@@ -1133,7 +1145,12 @@ def fetch_apify_data(
         _, items = run_actor_and_fetch_dataset(
             client, actor_name, run_input, timeout_secs=DEFAULT_TIMEOUT, max_items=max_posts
         )
-        st.info(f"Received {len(items)} posts from actor (requested {max_posts})")
+        st.info(f"Received {len(items)} posts from actor (requested up to {max_posts})")
+        if len(items) < max_posts and (from_date or to_date):
+            st.caption(
+                f"Found **{len(items)}** posts in the selected date range (requested up to {max_posts}). "
+                "The page or profile may have fewer posts in this period. Try **All Posts** to get the most recent posts regardless of date."
+            )
         return items
 
     except ApifyClientError as e:
@@ -1151,53 +1168,33 @@ def fetch_post_comments(
     """
     Fetch detailed comments for a specific Facebook post using the Comments Scraper actor.
     Tries different actors and input formats if one fails.
-    Cached for 1 hour per post URL + max_comments.
+    Cached for 1 hour per post URL + max_comments. Uses production Apify client (retries, timeout).
     """
     # Validate URL format
     if not post_url or not post_url.startswith("http"):
         st.error(f"❌ Invalid URL format: {post_url}")
         return None
 
-    client = ApifyClient(_apify_token)
+    client = create_apify_client(_apify_token)
+    run_input = {
+        "startUrls": [{"url": post_url}],
+        "maxComments": max_comments,
+        "includeNestedComments": False,
+    }
 
-    # Try different actors with unified input format
-    # Only attempt the official Apify Facebook comments scraper.
-    actor_configs = [
-        {
-            "actor_id": "apify/facebook-comments-scraper",
-            "input": {
-                "startUrls": [{"url": post_url}],
-                "maxComments": max_comments,
-                "includeNestedComments": False,
-            },
-        }
-    ]
-
-    for i, config in enumerate(actor_configs):
+    for i, actor_id in enumerate(FACEBOOK_COMMENTS_ACTOR_IDS):
         try:
-            st.info(f"🔍 Attempt {i + 1}: Using actor '{config['actor_id']}' for: {post_url}")
-
-            # Run the actor
-            run = client.actor(config["actor_id"]).call(run_input=config["input"])
-
-            # Fetch results, respecting requested limit
-            comments = []
-            for item in client.dataset(run["defaultDatasetId"]).iterate_items():
-                comments.append(item)
-                if len(comments) >= max_comments:
-                    break
-
+            st.info(f"🔍 Attempt {i + 1}: Using actor '{actor_id}' for: {post_url}")
+            _, comments = run_actor_and_fetch_dataset(
+                client, actor_id, run_input, timeout_secs=180, max_items=max_comments
+            )
             if comments:
-                st.success(
-                    f"✅ Successfully fetched {len(comments)} comments using {config['actor_id']}"
-                )
+                st.success(f"✅ Successfully fetched {len(comments)} comments using {actor_id}")
                 return comments
-            else:
-                st.warning(f"⚠️ No comments found with {config['actor_id']}, trying next actor...")
-
-        except Exception as e:
-            st.warning(f"⚠️ Actor {config['actor_id']} failed: {str(e)}")
-            if i < len(actor_configs) - 1:
+            st.warning(f"⚠️ No comments found with {actor_id}, trying next actor...")
+        except ApifyClientError as e:
+            st.warning(f"⚠️ Actor {actor_id} failed: {getattr(e, 'user_message', str(e))}")
+            if i < len(FACEBOOK_COMMENTS_ACTOR_IDS) - 1:
                 st.info("🔄 Trying next actor...")
             continue
 
@@ -1219,25 +1216,26 @@ def _fetch_facebook_comments_batch_data(
     if not post_urls_tuple:
         return None
     post_urls = [{"url": u} for u in post_urls_tuple]
+    total_comments_limit = len(post_urls_tuple) * max_comments_per_post
     comments_input = {
         "startUrls": post_urls,
-        "resultsLimit": max_comments_per_post,
+        "resultsLimit": total_comments_limit,
         "includeNestedComments": False,
         "viewOption": "RANKED_UNFILTERED",
     }
-    client = ApifyClient(_apify_token)
+    client = create_apify_client(_apify_token)
     for actor_id in FACEBOOK_COMMENTS_ACTOR_IDS:
         try:
-            run = client.actor(actor_id).call(run_input=comments_input)
-            max_total = len(post_urls_tuple) * max_comments_per_post
-            comments_data = []
-            for item in client.dataset(run["defaultDatasetId"]).iterate_items():
-                comments_data.append(item)
-                if len(comments_data) >= max_total:
-                    break
+            _, comments_data = run_actor_and_fetch_dataset(
+                client,
+                actor_id,
+                comments_input,
+                timeout_secs=180,
+                max_items=total_comments_limit,
+            )
             if comments_data:
                 return comments_data
-        except Exception:
+        except ApifyClientError:
             continue
     return None
 
@@ -1475,37 +1473,35 @@ def normalize_comment_data(raw_comment: Dict) -> Dict:
 
 def _fetch_one_instagram_post_comments(
     post_url: str,
-    client: ApifyClient,
+    _apify_token: str,
     max_comments_per_post: int,
 ) -> List[Dict]:
     """
     Fetch comments for a single Instagram post. Tries primary actor first, then fallbacks on failure.
-    Safe to call from a thread (no st.* calls).
+    Safe to call from a thread (no st.* calls). Uses production Apify client (retries, timeout).
     """
+    client = create_apify_client(_apify_token)
     run_input = {
         "directUrls": [post_url],
         "resultsLimit": max_comments_per_post,
         "includeNestedComments": True,
         "isNewestComments": False,
     }
-    # Primary actor first
     for actor_id in INSTAGRAM_COMMENTS_ACTOR_IDS:
         try:
-            run = client.actor(actor_id).call(run_input=run_input)
-            if run and run.get("status") == "SUCCEEDED":
-                dataset = client.dataset(run["defaultDatasetId"])
-                comments_data = []
-                for item in dataset.iterate_items():
-                    comments_data.append(item)
-                    if len(comments_data) >= max_comments_per_post:
-                        break
-                if comments_data:
-                    return comments_data
-                # Empty result: try next actor only if there are fallbacks
-                if actor_id == INSTAGRAM_COMMENTS_ACTOR_IDS[0]:
-                    continue
-                return []
-        except Exception:
+            _, comments_data = run_actor_and_fetch_dataset(
+                client,
+                actor_id,
+                run_input,
+                timeout_secs=180,
+                max_items=max_comments_per_post,
+            )
+            if comments_data:
+                return comments_data
+            if actor_id != INSTAGRAM_COMMENTS_ACTOR_IDS[-1]:
+                continue
+            return []
+        except ApifyClientError:
             continue
     return []
 
@@ -1517,7 +1513,6 @@ def scrape_instagram_comments_batch(
     if not post_urls:
         return []
 
-    client = ApifyClient(apify_token)
     all_comments = []
     max_workers = 3
 
@@ -1530,7 +1525,7 @@ def scrape_instagram_comments_batch(
             executor.submit(
                 _fetch_one_instagram_post_comments,
                 post_url,
-                client,
+                apify_token,
                 max_comments_per_post,
             ): post_url
             for post_url in post_urls
@@ -1919,8 +1914,10 @@ def create_instagram_post_analysis(selected_post: Dict, platform: str):
 
 def validate_url(url: str, platform: str) -> bool:
     """Tighten platform URL validation with pre-compiled regex patterns."""
+    if not url or not isinstance(url, str):
+        return False
     pattern = URL_PATTERNS.get(platform)
-    return bool(pattern.match(url)) if pattern else False
+    return bool(pattern and pattern.match(url))
 
 
 # ============================================================================
@@ -2109,6 +2106,11 @@ def main():
                 else:
                     from_date = None
                     to_date = None
+                if from_date or to_date:
+                    st.sidebar.caption(
+                        "Date filter is applied in the app (Facebook actor has no date params). "
+                        "We fetch more posts, then filter by your range. Narrow ranges may return fewer posts."
+                    )
 
         with st.sidebar.expander("💬 Comments (word clouds & sentiment)", expanded=True):
             if platform == "Facebook":
@@ -2150,6 +2152,9 @@ def main():
                     value=DEFAULT_MAX_COMMENTS,
                     help="Maximum comments to fetch per post or video. Lower values are faster and use fewer Apify units.",
                 )
+            st.sidebar.caption(
+                "For a quick demo: leave 'Fetch detailed comments' unchecked or use Batch + low comment limit."
+            )
 
     # ---- Analysis options (collapsible) ----
     with st.sidebar.expander("🔧 Analysis options", expanded=False):
@@ -2303,7 +2308,15 @@ def main():
             with data_placeholder.container():
                 show_loading_dots(f"Fetching data from {platform}...")
 
-            raw_data = fetch_apify_data(platform, url, apify_token, max_posts, from_date, to_date)
+            # When a date range is set, request more posts so client-side filtering can still reach max_posts
+            # (Facebook actor does not support date params; Instagram only supports onlyPostsNewerThan.)
+            request_limit = max_posts
+            if from_date or to_date:
+                request_limit = min(100, max(25, max_posts * 4))
+
+            raw_data = fetch_apify_data(
+                platform, url, apify_token, request_limit, from_date, to_date
+            )
 
             if not raw_data:
                 data_placeholder.empty()
@@ -2324,6 +2337,12 @@ def main():
 
             # Phase 1: Normalize posts (without comment fetching)
             normalized_data = normalize_post_data(raw_data, platform)
+
+            # Apply date range filter client-side (actors may not support or may limit date filtering)
+            if (from_date or to_date) and normalized_data:
+                normalized_data = filter_posts_by_date_range(
+                    normalized_data, from_date, to_date
+                )[:max_posts]
 
             # Clear loading indicators
             data_placeholder.empty()
@@ -2599,11 +2618,32 @@ def main():
                 if video_urls:
                     st.write(f"Found {len(video_urls)} videos to analyze for comments")
 
-                    # Fetch comments from all videos
+                    # Fetch comments from all videos (use max_comments_per_post from sidebar)
                     with st.spinner("Fetching comments from videos..."):
-                        all_comments = fetch_youtube_comments(video_urls, apify_token, max_posts)
+                        all_comments = fetch_youtube_comments(
+                            video_urls, apify_token, max_comments_per_post
+                        )
 
                     if all_comments:
+                        # Attach comments to posts so NLP, post details, and Compare runs see them
+                        try:
+                            yt_adapter = YouTubeAdapter(apify_token)
+                            comments_by_video_id = {}
+                            for c in all_comments:
+                                vid = c.get("videoId") or (c.get("url") or "").split("v=")[-1].split("&")[0]
+                                if vid:
+                                    comments_by_video_id.setdefault(vid, []).append(
+                                        yt_adapter.normalize_comment(c)
+                                    )
+                            for post in posts:
+                                post_url = post.get("url") or ""
+                                vid = post_url.split("v=")[-1].split("&")[0] if "v=" in post_url else (post.get("video_id") or post.get("post_id") or "")
+                                if vid and vid in comments_by_video_id:
+                                    post["comments_list"] = comments_by_video_id[vid]
+                                    post["comments_count"] = len(post["comments_list"])
+                        except Exception:
+                            pass
+
                         st.success(f"✅ Successfully fetched {len(all_comments)} comments")
 
                         # Display comment metrics

@@ -204,9 +204,9 @@ def create_comments_export(posts_data: List[Dict[str, Any]], platform: str):
                     comment_data = {
                         "post_id": post_id,
                         "comment_text": comment.get("text", ""),
-                        "comment_author": comment.get("author", "Unknown"),
-                        "comment_likes": comment.get("likes", 0),
-                        "comment_timestamp": comment.get("timestamp", ""),
+                        "comment_author": comment.get("author_name") or comment.get("author", "Unknown"),
+                        "comment_likes": comment.get("likes_count", comment.get("likes", 0)),
+                        "comment_timestamp": comment.get("created_time") or comment.get("timestamp", ""),
                     }
                     all_comments.append(comment_data)
                 elif isinstance(comment, str):

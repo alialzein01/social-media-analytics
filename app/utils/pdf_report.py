@@ -53,7 +53,13 @@ def _kpi_row(posts: List[Dict], platform: str) -> List[tuple]:
     total_reactions = sum(get_post_reactions_count(p) for p in posts)
     total_comments = sum(p.get("comments_count", 0) or 0 for p in posts)
     total_shares = sum(p.get("shares_count", 0) or 0 for p in posts)
-    avg_engagement = sum(get_post_engagement(p, platform) for p in posts) / len(posts)
+    try:
+        engagement_sum = sum(
+            (get_post_engagement(p, platform) or 0) if p else 0 for p in posts
+        )
+        avg_engagement = engagement_sum / len(posts) if posts else 0
+    except (TypeError, ZeroDivisionError):
+        avg_engagement = 0
 
     if platform == "Facebook":
         return [
@@ -153,14 +159,21 @@ def build_pdf_report(
         story.append(t)
     story.append(Spacer(1, 0.3 * inch))
 
-    # Top 5 posts
+    # Top 5 posts (guard against missing/non-numeric engagement)
     try:
         from app.analytics import get_post_engagement
     except Exception:
         get_post_engagement = lambda p, _: (
-            p.get("likes", 0) + p.get("comments_count", 0) + p.get("shares_count", 0)
+            (p.get("likes") or 0) + (p.get("comments_count") or 0) + (p.get("shares_count") or 0)
         )
-    posts_with_eng = [(p, get_post_engagement(p, platform)) for p in posts]
+    posts_with_eng = []
+    for p in posts:
+        try:
+            eng = get_post_engagement(p, platform)
+            eng = int(eng) if eng is not None and isinstance(eng, (int, float)) else 0
+        except (TypeError, ValueError):
+            eng = 0
+        posts_with_eng.append((p, eng))
     posts_with_eng.sort(key=lambda x: x[1], reverse=True)
     top5 = posts_with_eng[:5]
 
