@@ -13,6 +13,7 @@ from collections import Counter
 try:
     import plotly.express as px
     import plotly.graph_objects as go
+
     PLOTLY_AVAILABLE = True
 except ImportError:
     PLOTLY_AVAILABLE = False
@@ -29,7 +30,7 @@ def create_entity_summary_card(entity_summary: Dict) -> None:
     """
     st.markdown("#### 🏷️ Entity Extraction Summary")
 
-    total = entity_summary.get('total_entities', 0)
+    total = entity_summary.get("total_entities", 0)
 
     if total == 0:
         st.info("No entities found in the text.")
@@ -42,11 +43,11 @@ def create_entity_summary_card(entity_summary: Dict) -> None:
         st.metric("Total Entities", f"{total:,}")
 
     with col2:
-        entity_types = entity_summary.get('entity_types', {})
+        entity_types = entity_summary.get("entity_types", {})
         st.metric("Entity Types", len(entity_types))
 
     with col3:
-        unique_counts = entity_summary.get('unique_entities_by_type', {})
+        unique_counts = entity_summary.get("unique_entities_by_type", {})
         total_unique = sum(unique_counts.values())
         st.metric("Unique Entities", f"{total_unique:,}")
 
@@ -58,7 +59,7 @@ def create_entity_type_chart(entity_summary: Dict) -> None:
     Args:
         entity_summary: Dictionary from EntityExtractor.summarize_entities()
     """
-    entity_types = entity_summary.get('entity_types', {})
+    entity_types = entity_summary.get("entity_types", {})
 
     if not entity_types:
         return
@@ -66,28 +67,28 @@ def create_entity_type_chart(entity_summary: Dict) -> None:
     # Sort by count
     sorted_types = sorted(entity_types.items(), key=lambda x: x[1], reverse=True)
 
-    df = pd.DataFrame(sorted_types, columns=['Entity Type', 'Count'])
+    df = pd.DataFrame(sorted_types, columns=["Entity Type", "Count"])
 
     if PLOTLY_AVAILABLE:
         fig = px.bar(
             df,
-            x='Count',
-            y='Entity Type',
-            orientation='h',
+            x="Count",
+            y="Entity Type",
+            orientation="h",
             title="Entity Types Distribution",
-            color='Count',
-            color_continuous_scale='Viridis'
+            color="Count",
+            color_continuous_scale="Viridis",
         )
         fig.update_layout(
-            plot_bgcolor=THEME_COLORS['background'],
-            paper_bgcolor=THEME_COLORS['background'],
-            font_color=THEME_COLORS['text'],
+            plot_bgcolor=THEME_COLORS["background"],
+            paper_bgcolor=THEME_COLORS["background"],
+            font_color=THEME_COLORS["text"],
             height=400,
-            showlegend=False
+            showlegend=False,
         )
         st.plotly_chart(fig, use_container_width=True)
     else:
-        st.bar_chart(df.set_index('Entity Type'))
+        st.bar_chart(df.set_index("Entity Type"))
 
 
 def create_top_entities_tables(entity_summary: Dict, max_per_type: int = 10) -> None:
@@ -98,7 +99,7 @@ def create_top_entities_tables(entity_summary: Dict, max_per_type: int = 10) -> 
         entity_summary: Dictionary from EntityExtractor.summarize_entities()
         max_per_type: Maximum entities to show per type
     """
-    top_entities = entity_summary.get('top_entities', {})
+    top_entities = entity_summary.get("top_entities", {})
 
     if not top_entities:
         return
@@ -122,16 +123,11 @@ def create_top_entities_tables(entity_summary: Dict, max_per_type: int = 10) -> 
                     if entities:
                         # Create DataFrame
                         df = pd.DataFrame(
-                            list(entities.items())[:max_per_type],
-                            columns=['Entity', 'Count']
+                            list(entities.items())[:max_per_type], columns=["Entity", "Count"]
                         )
 
                         # Display as table
-                        st.dataframe(
-                            df,
-                            hide_index=True,
-                            use_container_width=True
-                        )
+                        st.dataframe(df, hide_index=True, use_container_width=True)
                     else:
                         st.info(f"No {entity_type} entities found")
 
@@ -146,7 +142,7 @@ def create_entity_network_chart(entity_summary: Dict) -> None:
     if not PLOTLY_AVAILABLE:
         return
 
-    top_entities = entity_summary.get('top_entities', {})
+    top_entities = entity_summary.get("top_entities", {})
 
     if not top_entities:
         return
@@ -176,27 +172,26 @@ def create_entity_network_chart(entity_summary: Dict) -> None:
             parents.append(entity_type.title())
             values.append(count)
 
-    fig = go.Figure(go.Sunburst(
-        labels=labels,
-        parents=parents,
-        values=values,
-        branchvalues="total",
-        marker=dict(
-            colorscale='Viridis',
-            cmid=sum(values) / len(values)
+    fig = go.Figure(
+        go.Sunburst(
+            labels=labels,
+            parents=parents,
+            values=values,
+            branchvalues="total",
+            marker=dict(colorscale="Viridis", cmid=sum(values) / len(values)),
         )
-    ))
+    )
 
     fig.update_layout(
-        height=600,
-        paper_bgcolor=THEME_COLORS['background'],
-        font_color=THEME_COLORS['text']
+        height=600, paper_bgcolor=THEME_COLORS["background"], font_color=THEME_COLORS["text"]
     )
 
     st.plotly_chart(fig, use_container_width=True)
 
 
-def create_entity_wordcloud(entity_frequencies: Dict[str, int], entity_type: str = "Entities") -> None:
+def create_entity_wordcloud(
+    entity_frequencies: Dict[str, int], entity_type: str = "Entities"
+) -> None:
     """
     Create word cloud from entity frequencies.
 
@@ -217,17 +212,17 @@ def create_entity_wordcloud(entity_frequencies: Dict[str, int], entity_type: str
         wc = WordCloud(
             width=800,
             height=400,
-            background_color=THEME_COLORS['background'],
-            colormap='viridis',
+            background_color=THEME_COLORS["background"],
+            colormap="viridis",
             relative_scaling=0.5,
-            min_font_size=10
+            min_font_size=10,
         ).generate_from_frequencies(entity_frequencies)
 
         # Display
-        fig, ax = plt.subplots(figsize=(12, 6), facecolor=THEME_COLORS['background'])
-        ax.imshow(wc, interpolation='bilinear')
-        ax.axis('off')
-        fig.patch.set_facecolor(THEME_COLORS['background'])
+        fig, ax = plt.subplots(figsize=(12, 6), facecolor=THEME_COLORS["background"])
+        ax.imshow(wc, interpolation="bilinear")
+        ax.axis("off")
+        fig.patch.set_facecolor(THEME_COLORS["background"])
 
         st.pyplot(fig)
 
@@ -260,7 +255,7 @@ def display_entity_dashboard(texts: List[str]) -> None:
             # Extract entities
             entity_summary = extract_entities_summary(texts)
 
-            if entity_summary['total_entities'] == 0:
+            if entity_summary["total_entities"] == 0:
                 st.info("No entities found in the text")
                 return
 
@@ -284,4 +279,6 @@ def display_entity_dashboard(texts: List[str]) -> None:
 
     except Exception as e:
         st.error(f"Error in entity extraction: {str(e)}")
-        st.info("Entity extraction feature is experimental. If you encounter issues, it can be disabled in settings.")
+        st.info(
+            "Entity extraction feature is experimental. If you encounter issues, it can be disabled in settings."
+        )

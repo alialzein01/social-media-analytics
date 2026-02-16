@@ -82,7 +82,7 @@ class PlatformAdapter(ABC):
         url: str,
         max_posts: int = 10,
         from_date: Optional[str] = None,
-        to_date: Optional[str] = None
+        to_date: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Build the input configuration for the Apify actor.
@@ -197,7 +197,7 @@ class PlatformAdapter(ABC):
         self,
         posts: List[Dict],
         start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None
+        end_date: Optional[datetime] = None,
     ) -> List[Dict]:
         """
         Filter posts by date range.
@@ -216,7 +216,7 @@ class PlatformAdapter(ABC):
         filtered = []
         for post in posts:
             try:
-                pub_date = pd.to_datetime(post.get('published_at'), errors='coerce')
+                pub_date = pd.to_datetime(post.get("published_at"), errors="coerce")
                 if pd.isna(pub_date):
                     continue
 
@@ -241,18 +241,20 @@ class PlatformAdapter(ABC):
         Returns:
             Dictionary with engagement totals
         """
-        total_likes = sum(post.get('likes', 0) for post in posts)
-        total_comments = sum(post.get('comments_count', 0) for post in posts)
-        total_shares = sum(post.get('shares_count', 0) for post in posts)
+        total_likes = sum(post.get("likes", 0) for post in posts)
+        total_comments = sum(post.get("comments_count", 0) for post in posts)
+        total_shares = sum(post.get("shares_count", 0) for post in posts)
 
         return {
-            'total_likes': total_likes,
-            'total_comments': total_comments,
-            'total_shares': total_shares,
-            'total_posts': len(posts)
+            "total_likes": total_likes,
+            "total_comments": total_comments,
+            "total_shares": total_shares,
+            "total_posts": len(posts),
         }
 
-    def get_top_posts(self, posts: List[Dict], top_n: int = 10, sort_by: str = 'likes') -> List[Dict]:
+    def get_top_posts(
+        self, posts: List[Dict], top_n: int = 10, sort_by: str = "likes"
+    ) -> List[Dict]:
         """
         Get top posts sorted by engagement metric.
 
@@ -269,14 +271,10 @@ class PlatformAdapter(ABC):
 
         # Calculate engagement rate for each post if not present
         for post in posts:
-            if 'engagement_rate' not in post:
-                post['engagement_rate'] = self.calculate_engagement_rate(post)
+            if "engagement_rate" not in post:
+                post["engagement_rate"] = self.calculate_engagement_rate(post)
 
         # Sort and return top N
-        sorted_posts = sorted(
-            posts,
-            key=lambda p: p.get(sort_by, 0),
-            reverse=True
-        )
+        sorted_posts = sorted(posts, key=lambda p: p.get(sort_by, 0), reverse=True)
 
         return sorted_posts[:top_n]

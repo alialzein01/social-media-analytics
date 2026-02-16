@@ -40,14 +40,14 @@ class YouTubeAdapter(PlatformAdapter):
             return False
 
         url_lower = url.lower()
-        return 'youtube.com' in url_lower or 'youtu.be' in url_lower
+        return "youtube.com" in url_lower or "youtu.be" in url_lower
 
     def build_actor_input(
         self,
         url: str,
         max_posts: int = 10,
         from_date: Optional[str] = None,
-        to_date: Optional[str] = None
+        to_date: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Build YouTube actor input configuration.
@@ -58,7 +58,7 @@ class YouTubeAdapter(PlatformAdapter):
             "startUrls": [{"url": url}],
             "maxResults": max_posts,
             "searchKeywords": "",
-            "channelId": ""
+            "channelId": "",
         }
 
         return actor_input
@@ -70,42 +70,50 @@ class YouTubeAdapter(PlatformAdapter):
         Maps actor fields to standard schema with YouTube-specific additions.
         """
         # Extract video_id
-        video_id = raw_post.get('id') or raw_post.get('videoId', '')
+        video_id = raw_post.get("id") or raw_post.get("videoId", "")
 
         # Build normalized post (video)
         post = {
             # Required fields
-            'post_id': str(video_id) if video_id else '',
-            'published_at': parse_published_at(
-                raw_post.get('publishedAt') or
-                raw_post.get('uploadDate') or
-                raw_post.get('timestamp') or
-                raw_post.get('date')
+            "post_id": str(video_id) if video_id else "",
+            "published_at": parse_published_at(
+                raw_post.get("publishedAt")
+                or raw_post.get("uploadDate")
+                or raw_post.get("timestamp")
+                or raw_post.get("date")
             ),
-            'text': raw_post.get('title') or raw_post.get('description') or raw_post.get('text', ''),
-
+            "text": raw_post.get("title")
+            or raw_post.get("description")
+            or raw_post.get("text", ""),
             # Engagement metrics
-            'likes': raw_post.get('likeCount') or raw_post.get('likes') or raw_post.get('likesCount', 0),
-            'comments_count': raw_post.get('commentCount') or raw_post.get('comments') or raw_post.get('commentsCount', 0),
-            'shares_count': raw_post.get('shareCount') or raw_post.get('shares') or raw_post.get('sharesCount', 0),
-
+            "likes": raw_post.get("likeCount")
+            or raw_post.get("likes")
+            or raw_post.get("likesCount", 0),
+            "comments_count": raw_post.get("commentCount")
+            or raw_post.get("comments")
+            or raw_post.get("commentsCount", 0),
+            "shares_count": raw_post.get("shareCount")
+            or raw_post.get("shares")
+            or raw_post.get("sharesCount", 0),
             # YouTube doesn't have detailed reactions like Facebook
-            'reactions': raw_post.get('reactions', {}),
-            'comments_list': [],  # Will be populated separately if needed
-
+            "reactions": raw_post.get("reactions", {}),
+            "comments_list": [],  # Will be populated separately if needed
             # YouTube-specific fields
-            'views': raw_post.get('viewCount') or raw_post.get('views', 0),
-            'duration': raw_post.get('duration') or raw_post.get('lengthSeconds', ''),
-            'channel': raw_post.get('channelName') or raw_post.get('channel', ''),
-            'url': raw_post.get('url') or raw_post.get('videoUrl') or f"https://www.youtube.com/watch?v={video_id}",
-            'video_id': video_id,
-            'video_title': raw_post.get('title') or raw_post.get('videoTitle', ''),
-            'thumbnail_url': raw_post.get('thumbnailUrl') or raw_post.get('thumbnail', ''),
-            'channel_id': raw_post.get('channelId', ''),
-            'channel_username': raw_post.get('channelUsername', ''),
-            'subscriber_count': raw_post.get('numberOfSubscribers') or raw_post.get('subscriberCount', 0),
-            'dislikes': raw_post.get('dislikeCount') or raw_post.get('dislikes', 0),
-            'category': raw_post.get('category', '')
+            "views": raw_post.get("viewCount") or raw_post.get("views", 0),
+            "duration": raw_post.get("duration") or raw_post.get("lengthSeconds", ""),
+            "channel": raw_post.get("channelName") or raw_post.get("channel", ""),
+            "url": raw_post.get("url")
+            or raw_post.get("videoUrl")
+            or f"https://www.youtube.com/watch?v={video_id}",
+            "video_id": video_id,
+            "video_title": raw_post.get("title") or raw_post.get("videoTitle", ""),
+            "thumbnail_url": raw_post.get("thumbnailUrl") or raw_post.get("thumbnail", ""),
+            "channel_id": raw_post.get("channelId", ""),
+            "channel_username": raw_post.get("channelUsername", ""),
+            "subscriber_count": raw_post.get("numberOfSubscribers")
+            or raw_post.get("subscriberCount", 0),
+            "dislikes": raw_post.get("dislikeCount") or raw_post.get("dislikes", 0),
+            "category": raw_post.get("category", ""),
         }
 
         return post
@@ -115,12 +123,13 @@ class YouTubeAdapter(PlatformAdapter):
         Normalize YouTube comment from Apify actor.
         """
         return {
-            'comment_id': raw_comment.get('id') or raw_comment.get('comment_id', ''),
-            'text': raw_comment.get('text') or raw_comment.get('textDisplay', ''),
-            'author_name': raw_comment.get('authorDisplayName') or raw_comment.get('author_name', ''),
-            'created_time': raw_comment.get('publishedAt') or raw_comment.get('created_time', ''),
-            'likes_count': raw_comment.get('likeCount') or raw_comment.get('likes_count', 0),
-            'reply_count': raw_comment.get('replyCount', 0)
+            "comment_id": raw_comment.get("id") or raw_comment.get("comment_id", ""),
+            "text": raw_comment.get("text") or raw_comment.get("textDisplay", ""),
+            "author_name": raw_comment.get("authorDisplayName")
+            or raw_comment.get("author_name", ""),
+            "created_time": raw_comment.get("publishedAt") or raw_comment.get("created_time", ""),
+            "likes_count": raw_comment.get("likeCount") or raw_comment.get("likes_count", 0),
+            "reply_count": raw_comment.get("replyCount", 0),
         }
 
     def calculate_engagement_rate(self, post: Dict) -> float:
@@ -129,9 +138,9 @@ class YouTubeAdapter(PlatformAdapter):
 
         Formula: (Likes + Comments) / Views * 100
         """
-        likes = post.get('likes', 0)
-        comments = post.get('comments_count', 0)
-        views = post.get('views', 0)
+        likes = post.get("likes", 0)
+        comments = post.get("comments_count", 0)
+        views = post.get("views", 0)
 
         if views == 0:
             return 0.0
@@ -154,8 +163,8 @@ class YouTubeAdapter(PlatformAdapter):
         videos_with_duration = 0
 
         for post in posts:
-            views = post.get('views', 0)
-            duration = post.get('duration', 0)
+            views = post.get("views", 0)
+            duration = post.get("duration", 0)
 
             # Try to convert duration to seconds if it's a string
             if isinstance(duration, str):
@@ -169,14 +178,16 @@ class YouTubeAdapter(PlatformAdapter):
                 videos_with_duration += 1
 
         # Estimate watch time (assuming 50% average view duration)
-        avg_duration = total_duration_seconds / videos_with_duration if videos_with_duration > 0 else 0
+        avg_duration = (
+            total_duration_seconds / videos_with_duration if videos_with_duration > 0 else 0
+        )
         estimated_watch_seconds = total_views * avg_duration * 0.5
 
         return {
-            'total_views': total_views,
-            'estimated_watch_hours': round(estimated_watch_seconds / 3600, 2),
-            'avg_video_duration_seconds': round(avg_duration, 2),
-            'videos_analyzed': videos_with_duration
+            "total_views": total_views,
+            "estimated_watch_hours": round(estimated_watch_seconds / 3600, 2),
+            "avg_video_duration_seconds": round(avg_duration, 2),
+            "videos_analyzed": videos_with_duration,
         }
 
     def get_viral_videos(self, posts: List[Dict], threshold_percentile: float = 0.9) -> List[Dict]:
@@ -194,14 +205,14 @@ class YouTubeAdapter(PlatformAdapter):
             return []
 
         # Calculate view threshold
-        view_counts = [p.get('views', 0) for p in posts]
+        view_counts = [p.get("views", 0) for p in posts]
         threshold = pd.Series(view_counts).quantile(threshold_percentile)
 
         # Filter viral videos
-        viral = [p for p in posts if p.get('views', 0) >= threshold]
+        viral = [p for p in posts if p.get("views", 0) >= threshold]
 
         # Sort by views descending
-        viral.sort(key=lambda p: p.get('views', 0), reverse=True)
+        viral.sort(key=lambda p: p.get("views", 0), reverse=True)
 
         return viral
 
@@ -217,16 +228,18 @@ class YouTubeAdapter(PlatformAdapter):
         Returns:
             Dict with like/dislike metrics
         """
-        total_likes = sum(p.get('likes', 0) for p in posts)
-        total_dislikes = sum(p.get('dislikes', 0) for p in posts)
+        total_likes = sum(p.get("likes", 0) for p in posts)
+        total_dislikes = sum(p.get("dislikes", 0) for p in posts)
 
-        ratio = total_likes / total_dislikes if total_dislikes > 0 else float('inf')
+        ratio = total_likes / total_dislikes if total_dislikes > 0 else float("inf")
 
         return {
-            'total_likes': total_likes,
-            'total_dislikes': total_dislikes,
-            'like_dislike_ratio': round(ratio, 2),
-            'like_percentage': round((total_likes / (total_likes + total_dislikes) * 100), 2) if (total_likes + total_dislikes) > 0 else 0
+            "total_likes": total_likes,
+            "total_dislikes": total_dislikes,
+            "like_dislike_ratio": round(ratio, 2),
+            "like_percentage": round((total_likes / (total_likes + total_dislikes) * 100), 2)
+            if (total_likes + total_dislikes) > 0
+            else 0,
         }
 
     def _parse_duration(self, duration_str: str) -> int:
@@ -244,25 +257,25 @@ class YouTubeAdapter(PlatformAdapter):
 
         try:
             # Remove 'PT' prefix
-            duration_str = duration_str.replace('PT', '')
+            duration_str = duration_str.replace("PT", "")
 
             hours = 0
             minutes = 0
             seconds = 0
 
             # Parse hours
-            if 'H' in duration_str:
-                hours_str, duration_str = duration_str.split('H')
+            if "H" in duration_str:
+                hours_str, duration_str = duration_str.split("H")
                 hours = int(hours_str)
 
             # Parse minutes
-            if 'M' in duration_str:
-                minutes_str, duration_str = duration_str.split('M')
+            if "M" in duration_str:
+                minutes_str, duration_str = duration_str.split("M")
                 minutes = int(minutes_str)
 
             # Parse seconds
-            if 'S' in duration_str:
-                seconds_str = duration_str.replace('S', '')
+            if "S" in duration_str:
+                seconds_str = duration_str.replace("S", "")
                 seconds = int(seconds_str)
 
             return hours * 3600 + minutes * 60 + seconds

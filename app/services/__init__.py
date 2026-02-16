@@ -46,10 +46,7 @@ class ApifyService:
         self.api_token = api_token
 
     def fetch_posts(
-        self,
-        actor_id: str,
-        actor_input: Dict[str, Any],
-        timeout: int = 300
+        self, actor_id: str, actor_input: Dict[str, Any], timeout: int = 300
     ) -> Optional[List[Dict]]:
         """
         Fetch posts from an Apify actor.
@@ -65,19 +62,16 @@ class ApifyService:
         try:
             # Run the actor
             with st.spinner(f"🔍 Fetching data using {actor_id}..."):
-                run = self.client.actor(actor_id).call(
-                    run_input=actor_input,
-                    timeout_secs=timeout
-                )
+                run = self.client.actor(actor_id).call(run_input=actor_input, timeout_secs=timeout)
 
             # Check if run was successful
-            if run['status'] != 'SUCCEEDED':
+            if run["status"] != "SUCCEEDED":
                 st.error(f"❌ Actor run failed with status: {run['status']}")
                 return None
 
             # Get dataset items
             items = []
-            for item in self.client.dataset(run['defaultDatasetId']).iterate_items():
+            for item in self.client.dataset(run["defaultDatasetId"]).iterate_items():
                 items.append(item)
 
             if not items:
@@ -92,10 +86,7 @@ class ApifyService:
             return None
 
     def fetch_comments(
-        self,
-        post_url: str,
-        platform: str,
-        max_comments: int = 50
+        self, post_url: str, platform: str, max_comments: int = 50
     ) -> Optional[List[Dict]]:
         """
         Fetch comments for a specific post.
@@ -110,35 +101,32 @@ class ApifyService:
         """
         # Platform-specific comment actors
         comment_actors = {
-            'Facebook': [
+            "Facebook": [
                 {
-                    'actor_id': 'apify/facebook-comments-scraper',
-                    'input': {
-                        'startUrls': [{'url': post_url}],
-                        'maxComments': max_comments,
-                        'includeNestedComments': False
-                    }
+                    "actor_id": "apify/facebook-comments-scraper",
+                    "input": {
+                        "startUrls": [{"url": post_url}],
+                        "maxComments": max_comments,
+                        "includeNestedComments": False,
+                    },
                 }
             ],
-            'Instagram': [
+            "Instagram": [
                 {
-                    'actor_id': 'apify/instagram-comment-scraper',
-                    'input': {
-                        'startUrls': [{'url': post_url}],
-                        'maxComments': max_comments,
-                        'includeNestedComments': False
-                    }
+                    "actor_id": "apify/instagram-comment-scraper",
+                    "input": {
+                        "startUrls": [{"url": post_url}],
+                        "maxComments": max_comments,
+                        "includeNestedComments": False,
+                    },
                 }
             ],
-            'YouTube': [
+            "YouTube": [
                 {
-                    'actor_id': 'apify/youtube-scraper',
-                    'input': {
-                        'startUrls': [{'url': post_url}],
-                        'maxComments': max_comments
-                    }
+                    "actor_id": "apify/youtube-scraper",
+                    "input": {"startUrls": [{"url": post_url}], "maxComments": max_comments},
                 }
-            ]
+            ],
         }
 
         configs = comment_actors.get(platform, [])
@@ -146,16 +134,15 @@ class ApifyService:
         # Try each actor configuration
         for i, config in enumerate(configs):
             try:
-                st.info(f"🔍 Attempt {i+1}: Using actor '{config['actor_id']}' for: {post_url}")
+                st.info(f"🔍 Attempt {i + 1}: Using actor '{config['actor_id']}' for: {post_url}")
 
-                run = self.client.actor(config['actor_id']).call(
-                    run_input=config['input'],
-                    timeout_secs=180
+                run = self.client.actor(config["actor_id"]).call(
+                    run_input=config["input"], timeout_secs=180
                 )
 
-                if run['status'] == 'SUCCEEDED':
+                if run["status"] == "SUCCEEDED":
                     items = []
-                    for item in self.client.dataset(run['defaultDatasetId']).iterate_items():
+                    for item in self.client.dataset(run["defaultDatasetId"]).iterate_items():
                         items.append(item)
 
                     if items:
@@ -167,7 +154,7 @@ class ApifyService:
                     st.warning(f"⚠️ Actor run failed with status: {run['status']}")
 
             except Exception as e:
-                st.warning(f"⚠️ Attempt {i+1} failed: {str(e)}")
+                st.warning(f"⚠️ Attempt {i + 1} failed: {str(e)}")
                 continue
 
         st.error(f"❌ All comment scrapers failed for post: {post_url}")
@@ -178,7 +165,7 @@ class ApifyService:
         post_urls: List[str],
         platform: str,
         max_comments_per_post: int = 25,
-        max_posts: int = None
+        max_posts: int = None,
     ) -> List[Dict]:
         """
         Fetch comments for multiple posts in batch.
@@ -204,7 +191,7 @@ class ApifyService:
             # Update progress
             progress = (i + 1) / len(urls_to_process)
             progress_bar.progress(progress)
-            status_text.text(f"Fetching comments {i+1}/{len(urls_to_process)}...")
+            status_text.text(f"Fetching comments {i + 1}/{len(urls_to_process)}...")
 
             # Fetch comments for this post
             comments = self.fetch_comments(post_url, platform, max_comments_per_post)
@@ -212,7 +199,7 @@ class ApifyService:
             if comments:
                 # Add post_url reference to each comment
                 for comment in comments:
-                    comment['post_url'] = post_url
+                    comment["post_url"] = post_url
                 all_comments.extend(comments)
 
         progress_bar.empty()
@@ -245,7 +232,7 @@ class DataFetchingService:
         url: str,
         max_posts: int = 10,
         from_date: Optional[str] = None,
-        to_date: Optional[str] = None
+        to_date: Optional[str] = None,
     ) -> Optional[List[Dict]]:
         """
         Fetch and normalize posts for a platform.
@@ -267,17 +254,11 @@ class DataFetchingService:
 
         # Build actor input
         actor_input = adapter.build_actor_input(
-            url=url,
-            max_posts=max_posts,
-            from_date=from_date,
-            to_date=to_date
+            url=url, max_posts=max_posts, from_date=from_date, to_date=to_date
         )
 
         # Fetch raw data
-        raw_data = self.apify.fetch_posts(
-            actor_id=adapter.get_actor_id(),
-            actor_input=actor_input
-        )
+        raw_data = self.apify.fetch_posts(actor_id=adapter.get_actor_id(), actor_input=actor_input)
 
         if not raw_data:
             return None
@@ -294,7 +275,7 @@ class DataFetchingService:
         adapter,
         posts: List[Dict],
         max_comments_per_post: int = 25,
-        max_posts_to_fetch: int = None
+        max_posts_to_fetch: int = None,
     ) -> List[Dict]:
         """
         Fetch comments for posts and attach them.
@@ -312,7 +293,7 @@ class DataFetchingService:
             return posts
 
         # Extract post URLs
-        post_urls = [p.get('post_url') for p in posts if p.get('post_url')]
+        post_urls = [p.get("post_url") for p in posts if p.get("post_url")]
 
         if not post_urls:
             st.warning("⚠️ No post URLs found to fetch comments")
@@ -323,7 +304,7 @@ class DataFetchingService:
             post_urls=post_urls,
             platform=adapter.platform_name,
             max_comments_per_post=max_comments_per_post,
-            max_posts=max_posts_to_fetch
+            max_posts=max_posts_to_fetch,
         )
 
         if not all_comments:
@@ -336,17 +317,17 @@ class DataFetchingService:
         # Group comments by post URL
         comments_by_url = {}
         for comment in normalized_comments:
-            post_url = comment.get('post_url', '')
+            post_url = comment.get("post_url", "")
             if post_url not in comments_by_url:
                 comments_by_url[post_url] = []
             comments_by_url[post_url].append(comment)
 
         # Attach comments to posts
         for post in posts:
-            post_url = post.get('post_url', '')
+            post_url = post.get("post_url", "")
             if post_url in comments_by_url:
-                post['comments_list'] = comments_by_url[post_url]
-                post['comments_count'] = len(comments_by_url[post_url])
+                post["comments_list"] = comments_by_url[post_url]
+                post["comments_count"] = len(comments_by_url[post_url])
 
         st.success(f"✅ Attached {len(normalized_comments)} comments to posts")
 
@@ -360,7 +341,7 @@ class DataFetchingService:
         fetch_comments: bool = True,
         max_comments_per_post: int = 25,
         from_date: Optional[str] = None,
-        to_date: Optional[str] = None
+        to_date: Optional[str] = None,
     ) -> Optional[List[Dict]]:
         """
         Fetch complete dataset with posts and comments.
@@ -379,11 +360,7 @@ class DataFetchingService:
         """
         # Step 1: Fetch posts
         posts = self.fetch_platform_posts(
-            adapter=adapter,
-            url=url,
-            max_posts=max_posts,
-            from_date=from_date,
-            to_date=to_date
+            adapter=adapter, url=url, max_posts=max_posts, from_date=from_date, to_date=to_date
         )
 
         if not posts:
@@ -392,9 +369,7 @@ class DataFetchingService:
         # Step 2: Fetch comments if requested
         if fetch_comments:
             posts = self.fetch_post_comments(
-                adapter=adapter,
-                posts=posts,
-                max_comments_per_post=max_comments_per_post
+                adapter=adapter, posts=posts, max_comments_per_post=max_comments_per_post
             )
 
         return posts

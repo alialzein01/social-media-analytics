@@ -9,8 +9,4 @@ from app.db.post_repository import PostRepository
 from app.db.comment_repository import CommentRepository
 from app.db.job_repository import ScrapingJobRepository
 
-__all__ = [
-    'PostRepository',
-    'CommentRepository',
-    'ScrapingJobRepository'
-]
+__all__ = ["PostRepository", "CommentRepository", "ScrapingJobRepository"]

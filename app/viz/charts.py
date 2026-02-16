@@ -23,6 +23,7 @@ import matplotlib.pyplot as plt
 try:
     import plotly.express as px
     import plotly.graph_objects as go
+
     PLOTLY_AVAILABLE = True
 except ImportError:
     go = None
@@ -35,14 +36,7 @@ except ImportError:
 
 from app.styles.theme import THEME_COLORS, SENTIMENT_COLORS, GRADIENT_STYLES
 
-REACTION_EMOJIS = {
-    'like': '👍',
-    'love': '❤️',
-    'haha': '😂',
-    'wow': '😮',
-    'sad': '😢',
-    'angry': '😠'
-}
+REACTION_EMOJIS = {"like": "👍", "love": "❤️", "haha": "😂", "wow": "😮", "sad": "😢", "angry": "😠"}
 
 
 # ============================================================================
@@ -62,15 +56,17 @@ def create_monthly_overview_charts(df: pd.DataFrame) -> None:
     """
     df_copy = df.copy()
 
-    if 'published_at' in df_copy.columns:
-        df_copy['published_at'] = pd.to_datetime(df_copy['published_at'], utc=True).dt.tz_localize(None)
-        df_copy['date'] = df_copy['published_at'].dt.date
+    if "published_at" in df_copy.columns:
+        df_copy["published_at"] = pd.to_datetime(df_copy["published_at"], utc=True).dt.tz_localize(
+            None
+        )
+        df_copy["date"] = df_copy["published_at"].dt.date
     else:
-        df_copy['date'] = pd.to_datetime(df_copy['published_at']).dt.date
+        df_copy["date"] = pd.to_datetime(df_copy["published_at"]).dt.date
 
     # Posts per day — when did we post?
     st.subheader("📈 Posts Per Day")
-    posts_per_day = df_copy.groupby('date').size().reset_index(name='count')
+    posts_per_day = df_copy.groupby("date").size().reset_index(name="count")
 
     if PLOTLY_AVAILABLE:
         fig = px.line(
@@ -79,45 +75,47 @@ def create_monthly_overview_charts(df: pd.DataFrame) -> None:
             y="count",
             markers=True,
             title="Posts Per Day",
-            color_discrete_sequence=[THEME_COLORS['primary']]
+            color_discrete_sequence=[THEME_COLORS["primary"]],
         )
         fig.update_layout(
-            plot_bgcolor=THEME_COLORS['background'],
-            paper_bgcolor=THEME_COLORS['background'],
-            font_color=THEME_COLORS['text'],
+            plot_bgcolor=THEME_COLORS["background"],
+            paper_bgcolor=THEME_COLORS["background"],
+            font_color=THEME_COLORS["text"],
             height=CHART_HEIGHT,
         )
         st.plotly_chart(fig, use_container_width=True)
     else:
-        st.line_chart(posts_per_day.set_index('date'))
+        st.line_chart(posts_per_day.set_index("date"))
 
     # Top posts — which content performed best? Use precomputed engagement if present (e.g. Facebook reactions).
     st.subheader("🏆 Top 5 Posts by Engagement")
     df_work = df.copy()
-    if 'engagement' in df_work.columns:
-        df_work['total_engagement'] = df_work['engagement']
+    if "engagement" in df_work.columns:
+        df_work["total_engagement"] = df_work["engagement"]
     else:
-        df_work['total_engagement'] = df_work['likes'] + df_work['comments_count'] + df_work['shares_count']
-    top_posts = df_work.nlargest(5, 'total_engagement')[['text', 'total_engagement']].copy()
-    top_posts['text'] = top_posts['text'].str[:50] + '...'
+        df_work["total_engagement"] = (
+            df_work["likes"] + df_work["comments_count"] + df_work["shares_count"]
+        )
+    top_posts = df_work.nlargest(5, "total_engagement")[["text", "total_engagement"]].copy()
+    top_posts["text"] = top_posts["text"].str[:50] + "..."
 
     if PLOTLY_AVAILABLE:
         fig = px.bar(
-            top_posts.reset_index().rename(columns={'text': 'Caption'}),
+            top_posts.reset_index().rename(columns={"text": "Caption"}),
             x="Caption",
             y="total_engagement",
             title="Top 5 Posts by Engagement",
-            color_discrete_sequence=[THEME_COLORS['primary']]
+            color_discrete_sequence=[THEME_COLORS["primary"]],
         )
         fig.update_layout(
-            plot_bgcolor=THEME_COLORS['background'],
-            paper_bgcolor=THEME_COLORS['background'],
-            font_color=THEME_COLORS['text'],
+            plot_bgcolor=THEME_COLORS["background"],
+            paper_bgcolor=THEME_COLORS["background"],
+            font_color=THEME_COLORS["text"],
             height=CHART_HEIGHT,
         )
         st.plotly_chart(fig, use_container_width=True)
     else:
-        st.bar_chart(top_posts.set_index('text'))
+        st.bar_chart(top_posts.set_index("text"))
 
 
 def create_engagement_over_time_chart(df: pd.DataFrame) -> None:
@@ -126,18 +124,22 @@ def create_engagement_over_time_chart(df: pd.DataFrame) -> None:
     Uses 'engagement' column if present (platform-aware), else likes + comments + shares.
     """
     df_copy = df.copy()
-    if 'published_at' in df_copy.columns:
-        df_copy['published_at'] = pd.to_datetime(df_copy['published_at'], utc=True).dt.tz_localize(None)
-        df_copy['date'] = df_copy['published_at'].dt.date
+    if "published_at" in df_copy.columns:
+        df_copy["published_at"] = pd.to_datetime(df_copy["published_at"], utc=True).dt.tz_localize(
+            None
+        )
+        df_copy["date"] = df_copy["published_at"].dt.date
     else:
-        df_copy['date'] = pd.to_datetime(df_copy['published_at']).dt.date
+        df_copy["date"] = pd.to_datetime(df_copy["published_at"]).dt.date
 
-    if 'engagement' not in df_copy.columns:
-        df_copy['engagement'] = df_copy['likes'] + df_copy['comments_count'] + df_copy['shares_count']
+    if "engagement" not in df_copy.columns:
+        df_copy["engagement"] = (
+            df_copy["likes"] + df_copy["comments_count"] + df_copy["shares_count"]
+        )
 
-    daily = df_copy.groupby('date')['engagement'].sum().reset_index(name='engagement')
+    daily = df_copy.groupby("date")["engagement"].sum().reset_index(name="engagement")
 
-    if daily.empty or daily['engagement'].sum() == 0:
+    if daily.empty or daily["engagement"].sum() == 0:
         st.caption("No engagement data to show over time.")
         return
 
@@ -149,22 +151,23 @@ def create_engagement_over_time_chart(df: pd.DataFrame) -> None:
             y="engagement",
             markers=True,
             title="Daily total engagement",
-            color_discrete_sequence=[THEME_COLORS['primary']],
+            color_discrete_sequence=[THEME_COLORS["primary"]],
         )
         fig.update_layout(
-            plot_bgcolor=THEME_COLORS['background'],
-            paper_bgcolor=THEME_COLORS['background'],
-            font_color=THEME_COLORS['text'],
+            plot_bgcolor=THEME_COLORS["background"],
+            paper_bgcolor=THEME_COLORS["background"],
+            font_color=THEME_COLORS["text"],
             height=CHART_HEIGHT,
         )
         st.plotly_chart(fig, use_container_width=True)
     else:
-        st.line_chart(daily.set_index('date'))
+        st.line_chart(daily.set_index("date"))
 
 
 # ============================================================================
 # REACTION CHARTS
 # ============================================================================
+
 
 def create_reaction_donut_with_summary(reactions: Dict[str, int]) -> None:
     """
@@ -185,25 +188,34 @@ def create_reaction_donut_with_summary(reactions: Dict[str, int]) -> None:
     if PLOTLY_AVAILABLE and go is not None:
         reactions_df = pd.DataFrame(
             list(reactions_filtered.items()),
-            columns=['Reaction', 'Count'],
+            columns=["Reaction", "Count"],
         )
-        reactions_df['Label'] = reactions_df['Reaction'].apply(
+        reactions_df["Label"] = reactions_df["Reaction"].apply(
             lambda r: f"{REACTION_EMOJIS.get(r, '👍')} {str(r).title()}"
         )
         fig = go.Figure(
-            data=[go.Pie(
-                labels=reactions_df['Label'],
-                values=reactions_df['Count'],
-                hole=0.5,
-                marker_colors=[THEME_COLORS['primary'], THEME_COLORS['secondary'], THEME_COLORS['tertiary'], '#667eea', '#f093fb', '#4facfe'],
-            )]
+            data=[
+                go.Pie(
+                    labels=reactions_df["Label"],
+                    values=reactions_df["Count"],
+                    hole=0.5,
+                    marker_colors=[
+                        THEME_COLORS["primary"],
+                        THEME_COLORS["secondary"],
+                        THEME_COLORS["tertiary"],
+                        "#667eea",
+                        "#f093fb",
+                        "#4facfe",
+                    ],
+                )
+            ]
         )
         fig.update_layout(
             showlegend=True,
             legend=dict(orientation="h", yanchor="bottom", y=-0.2),
-            plot_bgcolor=THEME_COLORS['background'],
-            paper_bgcolor=THEME_COLORS['background'],
-            font_color=THEME_COLORS['text'],
+            plot_bgcolor=THEME_COLORS["background"],
+            paper_bgcolor=THEME_COLORS["background"],
+            font_color=THEME_COLORS["text"],
             height=CHART_HEIGHT,
             margin=dict(t=40, b=80),
         )
@@ -223,14 +235,11 @@ def create_reaction_pie_chart(reactions: Dict[str, int]) -> None:
         return
 
     st.subheader("😊 Reaction Breakdown")
-    reactions_df = pd.DataFrame(
-        list(reactions_filtered.items()),
-        columns=['Reaction', 'Count']
-    )
-    reactions_df['Reaction'] = reactions_df['Reaction'].apply(
+    reactions_df = pd.DataFrame(list(reactions_filtered.items()), columns=["Reaction", "Count"])
+    reactions_df["Reaction"] = reactions_df["Reaction"].apply(
         lambda r: f"{REACTION_EMOJIS.get(r, '👍')} {str(r).title()}"
     )
-    reactions_df = reactions_df.set_index('Reaction')
+    reactions_df = reactions_df.set_index("Reaction")
     st.bar_chart(reactions_df)
 
 
@@ -248,28 +257,25 @@ def create_reaction_breakdown_detailed(reactions: Dict[str, int]) -> None:
         return
 
     if PLOTLY_AVAILABLE:
-        reactions_df = pd.DataFrame(
-            list(reactions_filtered.items()),
-            columns=['Reaction', 'Count']
-        )
+        reactions_df = pd.DataFrame(list(reactions_filtered.items()), columns=["Reaction", "Count"])
         fig = px.pie(
             reactions_df,
-            values='Count',
-            names='Reaction',
-            title='Reaction Distribution',
+            values="Count",
+            names="Reaction",
+            title="Reaction Distribution",
             color_discrete_sequence=[
-                THEME_COLORS['primary'],
-                THEME_COLORS['secondary'],
-                THEME_COLORS['tertiary'],
-                '#667eea',
-                '#f093fb',
-                '#4facfe'
-            ]
+                THEME_COLORS["primary"],
+                THEME_COLORS["secondary"],
+                THEME_COLORS["tertiary"],
+                "#667eea",
+                "#f093fb",
+                "#4facfe",
+            ],
         )
         fig.update_layout(
-            plot_bgcolor=THEME_COLORS['background'],
-            paper_bgcolor=THEME_COLORS['background'],
-            font_color=THEME_COLORS['text']
+            plot_bgcolor=THEME_COLORS["background"],
+            paper_bgcolor=THEME_COLORS["background"],
+            font_color=THEME_COLORS["text"],
         )
         st.plotly_chart(fig, use_container_width=True)
     else:
@@ -279,6 +285,7 @@ def create_reaction_breakdown_detailed(reactions: Dict[str, int]) -> None:
 # ============================================================================
 # SENTIMENT CHARTS
 # ============================================================================
+
 
 def create_sentiment_pie_chart(sentiment_counts: Dict[str, int]) -> None:
     """
@@ -300,31 +307,27 @@ def create_sentiment_pie_chart(sentiment_counts: Dict[str, int]) -> None:
         if count > 0:
             labels.append(sentiment.title())
             sizes.append(count)
-            color_list.append(SENTIMENT_COLORS.get(sentiment, '#95a5a6'))
+            color_list.append(SENTIMENT_COLORS.get(sentiment, "#95a5a6"))
 
     if not sizes:
         st.info("No sentiment data to display")
         return
 
     # Create pie chart
-    fig, ax = plt.subplots(figsize=(8, 6), facecolor=THEME_COLORS['background'])
+    fig, ax = plt.subplots(figsize=(8, 6), facecolor=THEME_COLORS["background"])
     wedges, texts, autotexts = ax.pie(
         sizes,
         labels=labels,
         colors=color_list,
-        autopct='%1.1f%%',
+        autopct="%1.1f%%",
         startangle=90,
-        textprops={'fontsize': 12, 'weight': 'bold', 'color': THEME_COLORS['text']}
+        textprops={"fontsize": 12, "weight": "bold", "color": THEME_COLORS["text"]},
     )
 
     ax.set_title(
-        'Sentiment Distribution',
-        fontsize=16,
-        fontweight='bold',
-        pad=20,
-        color=THEME_COLORS['text']
+        "Sentiment Distribution", fontsize=16, fontweight="bold", pad=20, color=THEME_COLORS["text"]
     )
-    fig.patch.set_facecolor(THEME_COLORS['background'])
+    fig.patch.set_facecolor(THEME_COLORS["background"])
 
     st.pyplot(fig)
 
@@ -347,33 +350,22 @@ def create_sentiment_summary(sentiment_counts: Dict[str, int]) -> None:
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        positive_pct = sentiment_counts.get('positive', 0) / total_comments * 100
-        st.metric(
-            "😊 Positive",
-            f"{sentiment_counts.get('positive', 0):,}",
-            f"{positive_pct:.1f}%"
-        )
+        positive_pct = sentiment_counts.get("positive", 0) / total_comments * 100
+        st.metric("😊 Positive", f"{sentiment_counts.get('positive', 0):,}", f"{positive_pct:.1f}%")
 
     with col2:
-        negative_pct = sentiment_counts.get('negative', 0) / total_comments * 100
-        st.metric(
-            "😢 Negative",
-            f"{sentiment_counts.get('negative', 0):,}",
-            f"{negative_pct:.1f}%"
-        )
+        negative_pct = sentiment_counts.get("negative", 0) / total_comments * 100
+        st.metric("😢 Negative", f"{sentiment_counts.get('negative', 0):,}", f"{negative_pct:.1f}%")
 
     with col3:
-        neutral_pct = sentiment_counts.get('neutral', 0) / total_comments * 100
-        st.metric(
-            "😐 Neutral",
-            f"{sentiment_counts.get('neutral', 0):,}",
-            f"{neutral_pct:.1f}%"
-        )
+        neutral_pct = sentiment_counts.get("neutral", 0) / total_comments * 100
+        st.metric("😐 Neutral", f"{sentiment_counts.get('neutral', 0):,}", f"{neutral_pct:.1f}%")
 
 
 # ============================================================================
 # INSTAGRAM-SPECIFIC CHARTS
 # ============================================================================
+
 
 def create_content_type_chart(posts: List[Dict]) -> None:
     """
@@ -382,38 +374,35 @@ def create_content_type_chart(posts: List[Dict]) -> None:
     Args:
         posts: List of Instagram posts
     """
-    content_types = Counter(post.get('type', 'Unknown') for post in posts)
+    content_types = Counter(post.get("type", "Unknown") for post in posts)
 
     if not content_types:
         st.info("No content type data available")
         return
 
     st.markdown("### 📱 Content Type Distribution")
-    content_df = pd.DataFrame(
-        list(content_types.items()),
-        columns=['Type', 'Count']
-    )
+    content_df = pd.DataFrame(list(content_types.items()), columns=["Type", "Count"])
 
     if PLOTLY_AVAILABLE:
         fig = px.pie(
             content_df,
-            values='Count',
-            names='Type',
+            values="Count",
+            names="Type",
             title="Content Type Distribution",
             color_discrete_sequence=[
-                THEME_COLORS['primary'],
-                THEME_COLORS['secondary'],
-                THEME_COLORS['tertiary']
-            ]
+                THEME_COLORS["primary"],
+                THEME_COLORS["secondary"],
+                THEME_COLORS["tertiary"],
+            ],
         )
         fig.update_layout(
-            plot_bgcolor=THEME_COLORS['background'],
-            paper_bgcolor=THEME_COLORS['background'],
-            font_color=THEME_COLORS['text']
+            plot_bgcolor=THEME_COLORS["background"],
+            paper_bgcolor=THEME_COLORS["background"],
+            font_color=THEME_COLORS["text"],
         )
         st.plotly_chart(fig, use_container_width=True)
     else:
-        st.bar_chart(content_df.set_index('Type'))
+        st.bar_chart(content_df.set_index("Type"))
 
 
 def create_hashtag_chart(posts: List[Dict], top_n: int = 10) -> None:
@@ -426,7 +415,7 @@ def create_hashtag_chart(posts: List[Dict], top_n: int = 10) -> None:
     """
     all_hashtags = []
     for post in posts:
-        hashtags = post.get('hashtags', [])
+        hashtags = post.get("hashtags", [])
         if isinstance(hashtags, list):
             all_hashtags.extend(hashtags)
 
@@ -436,25 +425,25 @@ def create_hashtag_chart(posts: List[Dict], top_n: int = 10) -> None:
 
     st.markdown("### #️⃣ Top Hashtags")
     top_hashtags = Counter(all_hashtags).most_common(top_n)
-    hashtag_df = pd.DataFrame(top_hashtags, columns=['Hashtag', 'Count'])
+    hashtag_df = pd.DataFrame(top_hashtags, columns=["Hashtag", "Count"])
 
     if PLOTLY_AVAILABLE:
         fig = px.bar(
             hashtag_df,
-            x='Count',
-            y='Hashtag',
-            orientation='h',
+            x="Count",
+            y="Hashtag",
+            orientation="h",
             title=f"Top {top_n} Hashtags",
-            color_discrete_sequence=[THEME_COLORS['primary']]
+            color_discrete_sequence=[THEME_COLORS["primary"]],
         )
         fig.update_layout(
-            plot_bgcolor=THEME_COLORS['background'],
-            paper_bgcolor=THEME_COLORS['background'],
-            font_color=THEME_COLORS['text']
+            plot_bgcolor=THEME_COLORS["background"],
+            paper_bgcolor=THEME_COLORS["background"],
+            font_color=THEME_COLORS["text"],
         )
         st.plotly_chart(fig, use_container_width=True)
     else:
-        st.bar_chart(hashtag_df.set_index('Hashtag'))
+        st.bar_chart(hashtag_df.set_index("Hashtag"))
 
 
 def create_instagram_engagement_chart(posts: List[Dict]) -> None:
@@ -464,32 +453,31 @@ def create_instagram_engagement_chart(posts: List[Dict]) -> None:
     Args:
         posts: List of Instagram posts
     """
-    total_likes = sum(post.get('likes', 0) for post in posts)
-    total_comments = sum(post.get('comments_count', 0) for post in posts)
+    total_likes = sum(post.get("likes", 0) for post in posts)
+    total_comments = sum(post.get("comments_count", 0) for post in posts)
 
     st.markdown("### 📊 Total Engagement Breakdown")
 
-    engagement_data = pd.DataFrame({
-        'Metric': ['Likes', 'Comments'],
-        'Count': [total_likes, total_comments]
-    })
+    engagement_data = pd.DataFrame(
+        {"Metric": ["Likes", "Comments"], "Count": [total_likes, total_comments]}
+    )
 
     if PLOTLY_AVAILABLE:
         fig = px.bar(
             engagement_data,
-            x='Metric',
-            y='Count',
+            x="Metric",
+            y="Count",
             title="Total Engagement Breakdown",
-            color_discrete_sequence=[THEME_COLORS['primary'], THEME_COLORS['secondary']]
+            color_discrete_sequence=[THEME_COLORS["primary"], THEME_COLORS["secondary"]],
         )
         fig.update_layout(
-            plot_bgcolor=THEME_COLORS['background'],
-            paper_bgcolor=THEME_COLORS['background'],
-            font_color=THEME_COLORS['text']
+            plot_bgcolor=THEME_COLORS["background"],
+            paper_bgcolor=THEME_COLORS["background"],
+            font_color=THEME_COLORS["text"],
         )
         st.plotly_chart(fig, use_container_width=True)
     else:
-        st.bar_chart(engagement_data.set_index('Metric'))
+        st.bar_chart(engagement_data.set_index("Metric"))
 
 
 def create_top_posts_chart(posts: List[Dict], top_n: int = 5) -> None:
@@ -505,27 +493,29 @@ def create_top_posts_chart(posts: List[Dict], top_n: int = 5) -> None:
     # Calculate engagement for each post
     posts_with_engagement = []
     for post in posts:
-        likes = post.get('likes', 0)
-        comments = post.get('comments_count', 0)
+        likes = post.get("likes", 0)
+        comments = post.get("comments_count", 0)
         engagement = likes + comments
 
         # Safely handle text field (might be float/NaN)
-        text = post.get('text', '')
+        text = post.get("text", "")
         if not isinstance(text, str):
-            text = str(text) if text is not None else ''
-        text_preview = text[:100] + '...' if len(text) > 100 else text
+            text = str(text) if text is not None else ""
+        text_preview = text[:100] + "..." if len(text) > 100 else text
 
-        posts_with_engagement.append({
-            'post_id': post.get('post_id', ''),
-            'text': text_preview,
-            'likes': likes,
-            'comments': comments,
-            'engagement': engagement,
-            'type': post.get('type', 'Unknown')
-        })
+        posts_with_engagement.append(
+            {
+                "post_id": post.get("post_id", ""),
+                "text": text_preview,
+                "likes": likes,
+                "comments": comments,
+                "engagement": engagement,
+                "type": post.get("type", "Unknown"),
+            }
+        )
 
     # Sort and get top N
-    top_posts = sorted(posts_with_engagement, key=lambda x: x['engagement'], reverse=True)[:top_n]
+    top_posts = sorted(posts_with_engagement, key=lambda x: x["engagement"], reverse=True)[:top_n]
 
     if not top_posts:
         st.info("No posts data available")
@@ -536,26 +526,27 @@ def create_top_posts_chart(posts: List[Dict], top_n: int = 5) -> None:
     if PLOTLY_AVAILABLE:
         fig = px.bar(
             top_posts_df,
-            x='engagement',
-            y='text',
-            orientation='h',
+            x="engagement",
+            y="text",
+            orientation="h",
             title=f"Top {top_n} Posts by Engagement",
-            color_discrete_sequence=[THEME_COLORS['primary']]
+            color_discrete_sequence=[THEME_COLORS["primary"]],
         )
         fig.update_layout(
-            plot_bgcolor=THEME_COLORS['background'],
-            paper_bgcolor=THEME_COLORS['background'],
-            font_color=THEME_COLORS['text'],
-            height=400
+            plot_bgcolor=THEME_COLORS["background"],
+            paper_bgcolor=THEME_COLORS["background"],
+            font_color=THEME_COLORS["text"],
+            height=400,
         )
         st.plotly_chart(fig, use_container_width=True)
     else:
-        st.bar_chart(top_posts_df.set_index('text')['engagement'])
+        st.bar_chart(top_posts_df.set_index("text")["engagement"])
 
 
 # ============================================================================
 # EMOJI ANALYSIS CHARTS
 # ============================================================================
+
 
 def create_emoji_chart(emoji_counts: Dict[str, int], top_n: int = 15) -> None:
     """
@@ -573,37 +564,34 @@ def create_emoji_chart(emoji_counts: Dict[str, int], top_n: int = 15) -> None:
 
     # Get top emojis
     top_emojis = sorted(emoji_counts.items(), key=lambda x: x[1], reverse=True)[:top_n]
-    emoji_df = pd.DataFrame(top_emojis, columns=['Emoji', 'Count'])
+    emoji_df = pd.DataFrame(top_emojis, columns=["Emoji", "Count"])
 
     if PLOTLY_AVAILABLE:
         fig = px.bar(
             emoji_df,
-            x='Count',
-            y='Emoji',
-            orientation='h',
+            x="Count",
+            y="Emoji",
+            orientation="h",
             title=f"Most Used Emojis (Top {top_n})",
-            color_discrete_sequence=[THEME_COLORS['primary']]
+            color_discrete_sequence=[THEME_COLORS["primary"]],
         )
         fig.update_layout(
-            plot_bgcolor=THEME_COLORS['background'],
-            paper_bgcolor=THEME_COLORS['background'],
-            font_color=THEME_COLORS['text']
+            plot_bgcolor=THEME_COLORS["background"],
+            paper_bgcolor=THEME_COLORS["background"],
+            font_color=THEME_COLORS["text"],
         )
         st.plotly_chart(fig, use_container_width=True)
     else:
-        st.bar_chart(emoji_df.set_index('Emoji'))
+        st.bar_chart(emoji_df.set_index("Emoji"))
 
 
 # ============================================================================
 # METRIC CARDS
 # ============================================================================
 
+
 def create_metric_card(
-    title: str,
-    value: str,
-    emoji: str,
-    gradient: str,
-    help_text: Optional[str] = None
+    title: str, value: str, emoji: str, gradient: str, help_text: Optional[str] = None
 ) -> None:
     """
     Create a styled metric card with gradient background.
@@ -629,7 +617,7 @@ def create_metric_card(
             <h2 style="margin: 0.5rem 0; font-size: 1.5rem;">{title}</h2>
         </div>
         """,
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
     st.metric(title, value, help=help_text, label_visibility="collapsed")
 
@@ -642,8 +630,8 @@ def create_instagram_metric_cards(posts: List[Dict]) -> None:
         posts: List of Instagram posts
     """
     total_posts = len(posts)
-    total_likes = sum(post.get('likes', 0) for post in posts)
-    total_comments = sum(post.get('comments_count', 0) for post in posts)
+    total_likes = sum(post.get("likes", 0) for post in posts)
+    total_comments = sum(post.get("comments_count", 0) for post in posts)
     avg_engagement = (total_likes + total_comments) / total_posts if total_posts > 0 else 0
 
     col1, col2, col3, col4 = st.columns(4)
@@ -653,8 +641,8 @@ def create_instagram_metric_cards(posts: List[Dict]) -> None:
             "Total Posts",
             f"{total_posts:,}",
             "📸",
-            GRADIENT_STYLES['purple'],
-            "Total number of Instagram posts"
+            GRADIENT_STYLES["purple"],
+            "Total number of Instagram posts",
         )
 
     with col2:
@@ -662,8 +650,8 @@ def create_instagram_metric_cards(posts: List[Dict]) -> None:
             "Total Likes",
             f"{total_likes:,}",
             "❤️",
-            GRADIENT_STYLES['pink'],
-            "Total likes across all posts"
+            GRADIENT_STYLES["pink"],
+            "Total likes across all posts",
         )
 
     with col3:
@@ -671,8 +659,8 @@ def create_instagram_metric_cards(posts: List[Dict]) -> None:
             "Total Comments",
             f"{total_comments:,}",
             "💬",
-            GRADIENT_STYLES['blue'],
-            "Total comments across all posts"
+            GRADIENT_STYLES["blue"],
+            "Total comments across all posts",
         )
 
     with col4:
@@ -680,14 +668,15 @@ def create_instagram_metric_cards(posts: List[Dict]) -> None:
             "Avg Engagement",
             f"{avg_engagement:.1f}",
             "📊",
-            GRADIENT_STYLES['green'],
-            "Average engagement per post (likes + comments)"
+            GRADIENT_STYLES["green"],
+            "Average engagement per post (likes + comments)",
         )
 
 
 # ============================================================================
 # UTILITY FUNCTIONS
 # ============================================================================
+
 
 def format_number(num: int) -> str:
     """
@@ -717,21 +706,21 @@ def create_comparison_chart(data: Dict[str, float], title: str) -> None:
         data: Dictionary of metric name -> value
         title: Chart title
     """
-    df = pd.DataFrame(list(data.items()), columns=['Metric', 'Value'])
+    df = pd.DataFrame(list(data.items()), columns=["Metric", "Value"])
 
     if PLOTLY_AVAILABLE:
         fig = px.bar(
             df,
-            x='Metric',
-            y='Value',
+            x="Metric",
+            y="Value",
             title=title,
-            color_discrete_sequence=[THEME_COLORS['primary']]
+            color_discrete_sequence=[THEME_COLORS["primary"]],
         )
         fig.update_layout(
-            plot_bgcolor=THEME_COLORS['background'],
-            paper_bgcolor=THEME_COLORS['background'],
-            font_color=THEME_COLORS['text']
+            plot_bgcolor=THEME_COLORS["background"],
+            paper_bgcolor=THEME_COLORS["background"],
+            font_color=THEME_COLORS["text"],
         )
         st.plotly_chart(fig, use_container_width=True)
     else:
-        st.bar_chart(df.set_index('Metric'))
+        st.bar_chart(df.set_index("Metric"))

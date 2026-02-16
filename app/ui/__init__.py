@@ -23,12 +23,12 @@ from app.styles.errors import show_warning, show_success, show_info, ErrorHandle
 
 # KPI card accent colors (same metric = same color across the app)
 KPI_COLORS = {
-    "reactions": "#6366f1",   # primary
-    "comments": "#3b82f6",   # info
-    "shares": "#14b8a6",     # teal
+    "reactions": "#6366f1",  # primary
+    "comments": "#3b82f6",  # info
+    "shares": "#14b8a6",  # teal
     "engagement": "#10b981",  # success
-    "views": "#8b5cf6",      # secondary
-    "likes": "#ec4899",      # pink
+    "views": "#8b5cf6",  # secondary
+    "likes": "#ec4899",  # pink
     "default": "#475569",
 }
 
@@ -58,7 +58,7 @@ def page_header(
                 color: var(--text-primary, #0f172a);
                 letter-spacing: -0.02em;
             ">{title}</h1>
-            {f'<p style="margin: 0.5rem 0 0 0; color: var(--text-secondary, #475569); font-size: 0.9375rem;">{subtitle}</p>' if subtitle else ''}
+            {f'<p style="margin: 0.5rem 0 0 0; color: var(--text-secondary, #475569); font-size: 0.9375rem;">{subtitle}</p>' if subtitle else ""}
         </div>
         """,
         unsafe_allow_html=True,

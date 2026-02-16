@@ -15,33 +15,33 @@ Use get_custom_css() for global styles; keep spacing/breakpoints consistent.
 # =============================================================================
 
 THEME_COLORS = {
-    'primary': '#6366f1',
-    'secondary': '#8b5cf6',
-    'tertiary': '#475569',
-    'background': '#f8fafc',
-    'text': '#0f172a',
-    'success': '#10b981',
-    'warning': '#f59e0b',
-    'info': '#3b82f6',
+    "primary": "#6366f1",
+    "secondary": "#8b5cf6",
+    "tertiary": "#475569",
+    "background": "#f8fafc",
+    "text": "#0f172a",
+    "success": "#10b981",
+    "warning": "#f59e0b",
+    "info": "#3b82f6",
 }
 
 SENTIMENT_COLORS = {
-    'positive': '#10b981',
-    'negative': '#ef4444',
-    'neutral': '#64748b',
+    "positive": "#10b981",
+    "negative": "#ef4444",
+    "neutral": "#64748b",
 }
 
 GRADIENT_STYLES = {
-    'purple': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    'pink': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-    'blue': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-    'green': 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
-    'orange': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-    'teal': 'linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%)',
+    "purple": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    "pink": "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+    "blue": "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+    "green": "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)",
+    "orange": "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+    "teal": "linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%)",
 }
 
 
-def get_custom_css(theme: str = 'light') -> str:
+def get_custom_css(theme: str = "light") -> str:
     """
     Get custom CSS for the dashboard.
 
@@ -52,7 +52,7 @@ def get_custom_css(theme: str = 'light') -> str:
         CSS string
     """
 
-    if theme == 'dark':
+    if theme == "dark":
         return get_dark_theme_css()
     else:
         return get_light_theme_css()

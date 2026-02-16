@@ -17,7 +17,7 @@ def create_csv_download_button(
     data: pd.DataFrame,
     filename: str,
     button_text: str = "📥 Download CSV",
-    help_text: Optional[str] = None
+    help_text: Optional[str] = None,
 ):
     """
     Create a download button for CSV export.
@@ -41,7 +41,7 @@ def create_csv_download_button(
         data=csv,
         file_name=f"{filename}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
         mime="text/csv",
-        help=help_text or f"Download {len(data)} rows as CSV"
+        help=help_text or f"Download {len(data)} rows as CSV",
     )
 
 
@@ -49,7 +49,7 @@ def create_json_download_button(
     data: List[Dict[str, Any]],
     filename: str,
     button_text: str = "📥 Download JSON",
-    help_text: Optional[str] = None
+    help_text: Optional[str] = None,
 ):
     """
     Create a download button for JSON export.
@@ -70,9 +70,10 @@ def create_json_download_button(
     def json_serializer(obj):
         """Custom JSON serializer for objects not serializable by default json code"""
         import pandas as pd
+
         if isinstance(obj, (pd.Timestamp, pd.DatetimeTZDtype)):
-            return obj.isoformat() if hasattr(obj, 'isoformat') else str(obj)
-        elif hasattr(obj, 'isoformat'):  # datetime objects
+            return obj.isoformat() if hasattr(obj, "isoformat") else str(obj)
+        elif hasattr(obj, "isoformat"):  # datetime objects
             return obj.isoformat()
         elif isinstance(obj, (pd.Series, pd.DataFrame)):
             return obj.to_dict()
@@ -87,14 +88,11 @@ def create_json_download_button(
         data=json_str,
         file_name=f"{filename}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
         mime="application/json",
-        help=help_text or f"Download {len(data)} items as JSON"
+        help=help_text or f"Download {len(data)} items as JSON",
     )
 
 
-def create_export_section(
-    posts_data: List[Dict[str, Any]],
-    platform: str
-):
+def create_export_section(posts_data: List[Dict[str, Any]], platform: str):
     """
     Create export section with multiple format options.
 
@@ -114,34 +112,19 @@ def create_export_section(
     with col1:
         # Export posts as CSV
         posts_df = pd.DataFrame(posts_data)
-        create_csv_download_button(
-            posts_df,
-            f"{platform.lower()}_posts",
-            "📥 Posts CSV"
-        )
+        create_csv_download_button(posts_df, f"{platform.lower()}_posts", "📥 Posts CSV")
 
     with col2:
         # Export posts as JSON
-        create_json_download_button(
-            posts_data,
-            f"{platform.lower()}_posts",
-            "📥 Posts JSON"
-        )
+        create_json_download_button(posts_data, f"{platform.lower()}_posts", "📥 Posts JSON")
 
     with col3:
         # Export summary statistics
         summary_data = generate_summary_stats(posts_data, platform)
-        create_csv_download_button(
-            summary_data,
-            f"{platform.lower()}_summary",
-            "📥 Summary CSV"
-        )
+        create_csv_download_button(summary_data, f"{platform.lower()}_summary", "📥 Summary CSV")
 
 
-def generate_summary_stats(
-    posts_data: List[Dict[str, Any]],
-    platform: str
-) -> pd.DataFrame:
+def generate_summary_stats(posts_data: List[Dict[str, Any]], platform: str) -> pd.DataFrame:
     """
     Generate summary statistics DataFrame.
 
@@ -157,56 +140,50 @@ def generate_summary_stats(
 
     df = pd.DataFrame(posts_data)
 
-    summary = {
-        'Metric': [],
-        'Value': []
-    }
+    summary = {"Metric": [], "Value": []}
 
     # Basic counts
-    summary['Metric'].append('Total Posts')
-    summary['Value'].append(len(posts_data))
+    summary["Metric"].append("Total Posts")
+    summary["Value"].append(len(posts_data))
 
     # Engagement metrics
-    if 'likes' in df.columns:
-        summary['Metric'].append('Total Likes')
-        summary['Value'].append(df['likes'].sum())
-        summary['Metric'].append('Average Likes')
-        summary['Value'].append(round(df['likes'].mean(), 2))
+    if "likes" in df.columns:
+        summary["Metric"].append("Total Likes")
+        summary["Value"].append(df["likes"].sum())
+        summary["Metric"].append("Average Likes")
+        summary["Value"].append(round(df["likes"].mean(), 2))
 
-    if 'comments_count' in df.columns:
-        summary['Metric'].append('Total Comments')
-        summary['Value'].append(df['comments_count'].sum())
-        summary['Metric'].append('Average Comments')
-        summary['Value'].append(round(df['comments_count'].mean(), 2))
+    if "comments_count" in df.columns:
+        summary["Metric"].append("Total Comments")
+        summary["Value"].append(df["comments_count"].sum())
+        summary["Metric"].append("Average Comments")
+        summary["Value"].append(round(df["comments_count"].mean(), 2))
 
-    if 'shares' in df.columns:
-        summary['Metric'].append('Total Shares')
-        summary['Value'].append(df['shares'].sum())
-        summary['Metric'].append('Average Shares')
-        summary['Value'].append(round(df['shares'].mean(), 2))
+    if "shares" in df.columns:
+        summary["Metric"].append("Total Shares")
+        summary["Value"].append(df["shares"].sum())
+        summary["Metric"].append("Average Shares")
+        summary["Value"].append(round(df["shares"].mean(), 2))
 
     # Platform-specific metrics
     if platform == "Instagram":
-        if 'hashtags' in df.columns:
-            all_hashtags = [tag for post in posts_data if post.get('hashtags')
-                           for tag in post['hashtags']]
-            summary['Metric'].append('Total Hashtags Used')
-            summary['Value'].append(len(all_hashtags))
+        if "hashtags" in df.columns:
+            all_hashtags = [
+                tag for post in posts_data if post.get("hashtags") for tag in post["hashtags"]
+            ]
+            summary["Metric"].append("Total Hashtags Used")
+            summary["Value"].append(len(all_hashtags))
 
     elif platform == "Facebook":
-        if 'reactions' in df.columns:
-            total_reactions = sum(sum(post.get('reactions', {}).values())
-                                for post in posts_data)
-            summary['Metric'].append('Total Reactions')
-            summary['Value'].append(total_reactions)
+        if "reactions" in df.columns:
+            total_reactions = sum(sum(post.get("reactions", {}).values()) for post in posts_data)
+            summary["Metric"].append("Total Reactions")
+            summary["Value"].append(total_reactions)
 
     return pd.DataFrame(summary)
 
 
-def create_comments_export(
-    posts_data: List[Dict[str, Any]],
-    platform: str
-):
+def create_comments_export(posts_data: List[Dict[str, Any]], platform: str):
     """
     Create export buttons for comments data.
 
@@ -218,27 +195,27 @@ def create_comments_export(
     all_comments = []
 
     for post in posts_data:
-        post_id = post.get('post_id', 'unknown')
-        comments = post.get('comments_list', [])
+        post_id = post.get("post_id", "unknown")
+        comments = post.get("comments_list", [])
 
         if isinstance(comments, list):
             for comment in comments:
                 if isinstance(comment, dict):
                     comment_data = {
-                        'post_id': post_id,
-                        'comment_text': comment.get('text', ''),
-                        'comment_author': comment.get('author', 'Unknown'),
-                        'comment_likes': comment.get('likes', 0),
-                        'comment_timestamp': comment.get('timestamp', '')
+                        "post_id": post_id,
+                        "comment_text": comment.get("text", ""),
+                        "comment_author": comment.get("author", "Unknown"),
+                        "comment_likes": comment.get("likes", 0),
+                        "comment_timestamp": comment.get("timestamp", ""),
                     }
                     all_comments.append(comment_data)
                 elif isinstance(comment, str):
                     comment_data = {
-                        'post_id': post_id,
-                        'comment_text': comment,
-                        'comment_author': 'Unknown',
-                        'comment_likes': 0,
-                        'comment_timestamp': ''
+                        "post_id": post_id,
+                        "comment_text": comment,
+                        "comment_author": "Unknown",
+                        "comment_likes": 0,
+                        "comment_timestamp": "",
                     }
                     all_comments.append(comment_data)
 
@@ -252,23 +229,20 @@ def create_comments_export(
             create_csv_download_button(
                 comments_df,
                 f"{platform.lower()}_comments",
-                f"📥 Comments CSV ({len(all_comments)} comments)"
+                f"📥 Comments CSV ({len(all_comments)} comments)",
             )
 
         with col2:
             create_json_download_button(
                 all_comments,
                 f"{platform.lower()}_comments",
-                f"📥 Comments JSON ({len(all_comments)} comments)"
+                f"📥 Comments JSON ({len(all_comments)} comments)",
             )
     else:
         st.info("No comments available to export")
 
 
-def create_analytics_export(
-    analytics_data: Dict[str, Any],
-    platform: str
-):
+def create_analytics_export(analytics_data: Dict[str, Any], platform: str):
     """
     Create export button for analytics summary.
 
@@ -286,7 +260,7 @@ def create_analytics_export(
         analytics_df,
         f"{platform.lower()}_analytics",
         "📥 Analytics Summary CSV",
-        "Download complete analytics summary"
+        "Download complete analytics summary",
     )
 
 
@@ -314,6 +288,7 @@ def create_comprehensive_export_section(
         # PDF report (when reportlab available)
         try:
             from app.utils.pdf_report import build_pdf_report, REPORTLAB_AVAILABLE
+
             if REPORTLAB_AVAILABLE:
                 st.markdown("#### 📄 Report (PDF)")
                 pdf_bytes = build_pdf_report(posts_data, platform, date_range_str)
@@ -338,16 +313,14 @@ def create_comprehensive_export_section(
         with col1:
             posts_df = pd.DataFrame(posts_data)
             create_csv_download_button(
-                posts_df,
-                f"{platform.lower()}_posts",
-                f"📥 All Posts CSV ({len(posts_data)} posts)"
+                posts_df, f"{platform.lower()}_posts", f"📥 All Posts CSV ({len(posts_data)} posts)"
             )
 
         with col2:
             create_json_download_button(
                 posts_data,
                 f"{platform.lower()}_posts",
-                f"📥 All Posts JSON ({len(posts_data)} posts)"
+                f"📥 All Posts JSON ({len(posts_data)} posts)",
             )
 
         st.markdown("---")
@@ -369,9 +342,7 @@ def create_comprehensive_export_section(
 
             with col2:
                 create_csv_download_button(
-                    summary_data,
-                    f"{platform.lower()}_summary",
-                    "📥 Download Summary"
+                    summary_data, f"{platform.lower()}_summary", "📥 Download Summary"
                 )
 
         st.markdown("---")

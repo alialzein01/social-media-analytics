@@ -40,14 +40,14 @@ class InstagramAdapter(PlatformAdapter):
             return False
 
         url_lower = url.lower()
-        return 'instagram.com' in url_lower
+        return "instagram.com" in url_lower
 
     def build_actor_input(
         self,
         url: str,
         max_posts: int = 10,
         from_date: Optional[str] = None,
-        to_date: Optional[str] = None
+        to_date: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Build Instagram actor input configuration.
@@ -59,7 +59,7 @@ class InstagramAdapter(PlatformAdapter):
             "resultsLimit": max_posts,
             "searchLimit": 1,
             "searchType": "hashtag",
-            "addParentData": False
+            "addParentData": False,
         }
 
         return actor_input
@@ -71,37 +71,34 @@ class InstagramAdapter(PlatformAdapter):
         Maps actor fields to standard schema with Instagram-specific additions.
         """
         # Extract post_id (shortCode is Instagram's post identifier)
-        post_id = raw_post.get('shortCode') or raw_post.get('id', '')
+        post_id = raw_post.get("shortCode") or raw_post.get("id", "")
 
         # Build normalized post
         post = {
             # Required fields
-            'post_id': str(post_id) if post_id else '',
-            'published_at': parse_published_at(raw_post.get('timestamp')),
-            'text': raw_post.get('caption', ''),
-
+            "post_id": str(post_id) if post_id else "",
+            "published_at": parse_published_at(raw_post.get("timestamp")),
+            "text": raw_post.get("caption", ""),
             # Engagement metrics
-            'likes': raw_post.get('likesCount', 0),
-            'comments_count': raw_post.get('commentsCount', 0),
-            'shares_count': 0,  # Instagram doesn't have public shares
-
+            "likes": raw_post.get("likesCount", 0),
+            "comments_count": raw_post.get("commentsCount", 0),
+            "shares_count": 0,  # Instagram doesn't have public shares
             # Instagram doesn't have Facebook-style reactions
-            'reactions': {},
-            'comments_list': raw_post.get('latestComments', []),
-
+            "reactions": {},
+            "comments_list": raw_post.get("latestComments", []),
             # Instagram-specific fields
-            'post_url': f"https://www.instagram.com/p/{post_id}/" if post_id else '',
-            'type': raw_post.get('type', ''),
-            'displayUrl': raw_post.get('displayUrl', ''),
-            'ownerUsername': raw_post.get('ownerUsername', ''),
-            'ownerFullName': raw_post.get('ownerFullName', ''),
-            'hashtags': raw_post.get('hashtags', []),
-            'mentions': raw_post.get('mentions', []),
-            'dimensionsHeight': raw_post.get('dimensionsHeight', 0),
-            'dimensionsWidth': raw_post.get('dimensionsWidth', 0),
-            'isSponsored': raw_post.get('isSponsored', False),
-            'videoViewCount': raw_post.get('videoViewCount', 0),
-            'videoPlayCount': raw_post.get('videoPlayCount', 0)
+            "post_url": f"https://www.instagram.com/p/{post_id}/" if post_id else "",
+            "type": raw_post.get("type", ""),
+            "displayUrl": raw_post.get("displayUrl", ""),
+            "ownerUsername": raw_post.get("ownerUsername", ""),
+            "ownerFullName": raw_post.get("ownerFullName", ""),
+            "hashtags": raw_post.get("hashtags", []),
+            "mentions": raw_post.get("mentions", []),
+            "dimensionsHeight": raw_post.get("dimensionsHeight", 0),
+            "dimensionsWidth": raw_post.get("dimensionsWidth", 0),
+            "isSponsored": raw_post.get("isSponsored", False),
+            "videoViewCount": raw_post.get("videoViewCount", 0),
+            "videoPlayCount": raw_post.get("videoPlayCount", 0),
         }
 
         return post
@@ -111,11 +108,11 @@ class InstagramAdapter(PlatformAdapter):
         Normalize Instagram comment from Apify actor.
         """
         return {
-            'comment_id': raw_comment.get('id') or raw_comment.get('comment_id', ''),
-            'text': raw_comment.get('text') or raw_comment.get('caption', ''),
-            'author_name': raw_comment.get('ownerUsername') or raw_comment.get('author_name', ''),
-            'created_time': raw_comment.get('timestamp') or raw_comment.get('created_time', ''),
-            'likes_count': raw_comment.get('likesCount') or raw_comment.get('likes_count', 0)
+            "comment_id": raw_comment.get("id") or raw_comment.get("comment_id", ""),
+            "text": raw_comment.get("text") or raw_comment.get("caption", ""),
+            "author_name": raw_comment.get("ownerUsername") or raw_comment.get("author_name", ""),
+            "created_time": raw_comment.get("timestamp") or raw_comment.get("created_time", ""),
+            "likes_count": raw_comment.get("likesCount") or raw_comment.get("likes_count", 0),
         }
 
     def calculate_engagement_rate(self, post: Dict) -> float:
@@ -125,8 +122,8 @@ class InstagramAdapter(PlatformAdapter):
         Formula: (Likes + Comments) / Total Posts * 100
         Note: Without follower count, we return raw engagement.
         """
-        likes = post.get('likes', 0)
-        comments = post.get('comments_count', 0)
+        likes = post.get("likes", 0)
+        comments = post.get("comments_count", 0)
 
         return float(likes + comments)
 
@@ -143,12 +140,12 @@ class InstagramAdapter(PlatformAdapter):
         hashtag_counts = {}
 
         for post in posts:
-            hashtags = post.get('hashtags', [])
+            hashtags = post.get("hashtags", [])
             if isinstance(hashtags, list):
                 for tag in hashtags:
                     if tag:
                         # Remove # if present
-                        clean_tag = tag.lstrip('#')
+                        clean_tag = tag.lstrip("#")
                         hashtag_counts[clean_tag] = hashtag_counts.get(clean_tag, 0) + 1
 
         return hashtag_counts
@@ -167,11 +164,7 @@ class InstagramAdapter(PlatformAdapter):
         hashtag_counts = self.extract_hashtags(posts)
 
         # Sort by count descending
-        sorted_tags = sorted(
-            hashtag_counts.items(),
-            key=lambda x: x[1],
-            reverse=True
-        )
+        sorted_tags = sorted(hashtag_counts.items(), key=lambda x: x[1], reverse=True)
 
         return sorted_tags[:top_n]
 
@@ -188,7 +181,7 @@ class InstagramAdapter(PlatformAdapter):
         by_type = {}
 
         for post in posts:
-            post_type = post.get('type', 'Unknown')
+            post_type = post.get("type", "Unknown")
             if post_type not in by_type:
                 by_type[post_type] = []
             by_type[post_type].append(post)
@@ -205,20 +198,18 @@ class InstagramAdapter(PlatformAdapter):
         Returns:
             Dict with video-specific metrics
         """
-        video_posts = [p for p in posts if p.get('type') == 'Video']
+        video_posts = [p for p in posts if p.get("type") == "Video"]
 
         if not video_posts:
-            return {
-                'total_videos': 0,
-                'total_views': 0,
-                'avg_views_per_video': 0
-            }
+            return {"total_videos": 0, "total_views": 0, "avg_views_per_video": 0}
 
-        total_views = sum(p.get('videoViewCount', 0) for p in video_posts)
+        total_views = sum(p.get("videoViewCount", 0) for p in video_posts)
 
         return {
-            'total_videos': len(video_posts),
-            'total_views': total_views,
-            'avg_views_per_video': total_views / len(video_posts) if video_posts else 0,
-            'most_viewed': max(video_posts, key=lambda p: p.get('videoViewCount', 0)) if video_posts else None
+            "total_videos": len(video_posts),
+            "total_views": total_views,
+            "avg_views_per_video": total_views / len(video_posts) if video_posts else 0,
+            "most_viewed": max(video_posts, key=lambda p: p.get("videoViewCount", 0))
+            if video_posts
+            else None,
         }

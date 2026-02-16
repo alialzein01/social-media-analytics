@@ -22,8 +22,13 @@ class DatabaseConfig:
         """Initialize database configuration from environment or Streamlit secrets."""
         try:
             import streamlit as st
-            self.connection_string = st.secrets.get("MONGODB_URI", os.getenv("MONGODB_URI", "mongodb://localhost:27017/"))
-            self.database_name = st.secrets.get("MONGODB_DATABASE", os.getenv("MONGODB_DATABASE", "social_media_analytics"))
+
+            self.connection_string = st.secrets.get(
+                "MONGODB_URI", os.getenv("MONGODB_URI", "mongodb://localhost:27017/")
+            )
+            self.database_name = st.secrets.get(
+                "MONGODB_DATABASE", os.getenv("MONGODB_DATABASE", "social_media_analytics")
+            )
         except Exception:
             self.connection_string = os.getenv("MONGODB_URI", "mongodb://localhost:27017/")
             self.database_name = os.getenv("MONGODB_DATABASE", "social_media_analytics")
@@ -72,7 +77,7 @@ class DatabaseConfig:
             True if connection successful, False otherwise
         """
         try:
-            self.client.admin.command('ping')
+            self.client.admin.command("ping")
             return True
         except Exception as e:
             print(f"Database connection failed: {e}")
@@ -82,22 +87,22 @@ class DatabaseConfig:
         """
         Create indexes for optimal query performance.
         """
-        posts = self.get_collection('posts')
-        posts.create_index([('post_id', ASCENDING), ('platform', ASCENDING)], unique=True)
-        posts.create_index([('platform', ASCENDING)])
-        posts.create_index([('published_at', DESCENDING)])
-        posts.create_index([('scraping_job_id', ASCENDING)])
+        posts = self.get_collection("posts")
+        posts.create_index([("post_id", ASCENDING), ("platform", ASCENDING)], unique=True)
+        posts.create_index([("platform", ASCENDING)])
+        posts.create_index([("published_at", DESCENDING)])
+        posts.create_index([("scraping_job_id", ASCENDING)])
 
-        comments = self.get_collection('comments')
-        comments.create_index([('comment_id', ASCENDING), ('platform', ASCENDING)], unique=True)
-        comments.create_index([('post_id', ASCENDING)])
-        comments.create_index([('platform', ASCENDING)])
-        comments.create_index([('created_time', DESCENDING)])
+        comments = self.get_collection("comments")
+        comments.create_index([("comment_id", ASCENDING), ("platform", ASCENDING)], unique=True)
+        comments.create_index([("post_id", ASCENDING)])
+        comments.create_index([("platform", ASCENDING)])
+        comments.create_index([("created_time", DESCENDING)])
 
-        jobs = self.get_collection('scraping_jobs')
-        jobs.create_index([('created_at', DESCENDING)])
-        jobs.create_index([('platform', ASCENDING)])
-        jobs.create_index([('status', ASCENDING)])
+        jobs = self.get_collection("scraping_jobs")
+        jobs.create_index([("created_at", DESCENDING)])
+        jobs.create_index([("platform", ASCENDING)])
+        jobs.create_index([("status", ASCENDING)])
 
 
 _db_config: Optional[DatabaseConfig] = None

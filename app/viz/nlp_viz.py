@@ -14,6 +14,7 @@ try:
     import plotly.express as px
     import plotly.graph_objects as go
     from plotly.subplots import make_subplots
+
     PLOTLY_AVAILABLE = True
 except ImportError:
     PLOTLY_AVAILABLE = False
@@ -32,13 +33,14 @@ def _next_chart_key(prefix: str) -> str:
 def _cached_analyze_corpus(texts_tuple: tuple) -> Dict[str, Any]:
     """Cache heavy corpus analysis (topics, TF-IDF, emoji) for 10 min to speed up dashboard."""
     from app.nlp.advanced_nlp import analyze_corpus_advanced
-    return analyze_corpus_advanced(list(texts_tuple))
 
+    return analyze_corpus_advanced(list(texts_tuple))
 
 
 # ============================================================================
 # TOPIC MODELING VISUALIZATION
 # ============================================================================
+
 
 def create_topic_modeling_view(topics: List[Dict[str, Any]]) -> None:
     """
@@ -56,46 +58,46 @@ def create_topic_modeling_view(topics: List[Dict[str, Any]]) -> None:
     st.markdown(f"**{len(topics)} topics discovered** from the conversation:")
 
     for topic in topics:
-        topic_id = topic['topic_id']
-        words = topic['words']
-        weights = topic['weights']
+        topic_id = topic["topic_id"]
+        words = topic["words"]
+        weights = topic["weights"]
 
-        with st.expander(f"📌 Topic {topic_id + 1}: {', '.join(words[:3])}", expanded=topic_id == 0):
+        with st.expander(
+            f"📌 Topic {topic_id + 1}: {', '.join(words[:3])}", expanded=topic_id == 0
+        ):
             # Create word cloud-style display
             col1, col2 = st.columns([2, 1])
 
             with col1:
                 # Word importance chart
                 if PLOTLY_AVAILABLE:
-                    df = pd.DataFrame({
-                        'Word': words,
-                        'Importance': weights
-                    })
+                    df = pd.DataFrame({"Word": words, "Importance": weights})
 
                     fig = px.bar(
                         df,
-                        x='Importance',
-                        y='Word',
-                        orientation='h',
+                        x="Importance",
+                        y="Word",
+                        orientation="h",
                         title=f"Topic {topic_id + 1} - Top Words",
-                        color='Importance',
-                        color_continuous_scale='Viridis'
+                        color="Importance",
+                        color_continuous_scale="Viridis",
                     )
                     fig.update_layout(
                         showlegend=False,
-                        plot_bgcolor=THEME_COLORS['background'],
-                        paper_bgcolor=THEME_COLORS['background'],
-                        font_color=THEME_COLORS['text'],
-                        height=400
+                        plot_bgcolor=THEME_COLORS["background"],
+                        paper_bgcolor=THEME_COLORS["background"],
+                        font_color=THEME_COLORS["text"],
+                        height=400,
                     )
-                    st.plotly_chart(fig, use_container_width=True, key=_next_chart_key(f"topic-words-{topic_id}"))
+                    st.plotly_chart(
+                        fig,
+                        use_container_width=True,
+                        key=_next_chart_key(f"topic-words-{topic_id}"),
+                    )
                 else:
                     # Fallback
-                    df = pd.DataFrame({
-                        'Word': words,
-                        'Importance': weights
-                    })
-                    st.bar_chart(df.set_index('Word'))
+                    df = pd.DataFrame({"Word": words, "Importance": weights})
+                    st.bar_chart(df.set_index("Word"))
 
             with col2:
                 st.markdown("**Top 10 Words:**")
@@ -106,6 +108,7 @@ def create_topic_modeling_view(topics: List[Dict[str, Any]]) -> None:
 # ============================================================================
 # KEYWORD VISUALIZATION
 # ============================================================================
+
 
 def create_keyword_cloud(keywords: List[Tuple[str, float]], title: str = "Top Keywords") -> None:
     """
@@ -125,33 +128,34 @@ def create_keyword_cloud(keywords: List[Tuple[str, float]], title: str = "Top Ke
     keywords = keywords[:20]
 
     if PLOTLY_AVAILABLE:
-        df = pd.DataFrame(keywords, columns=['Keyword', 'Score'])
+        df = pd.DataFrame(keywords, columns=["Keyword", "Score"])
 
         fig = px.bar(
             df,
-            x='Score',
-            y='Keyword',
-            orientation='h',
+            x="Score",
+            y="Keyword",
+            orientation="h",
             title=title,
-            color='Score',
-            color_continuous_scale='Blues'
+            color="Score",
+            color_continuous_scale="Blues",
         )
         fig.update_layout(
             showlegend=False,
-            plot_bgcolor=THEME_COLORS['background'],
-            paper_bgcolor=THEME_COLORS['background'],
-            font_color=THEME_COLORS['text'],
-            height=500
+            plot_bgcolor=THEME_COLORS["background"],
+            paper_bgcolor=THEME_COLORS["background"],
+            font_color=THEME_COLORS["text"],
+            height=500,
         )
         st.plotly_chart(fig, use_container_width=True, key=_next_chart_key("keyword-cloud"))
     else:
-        df = pd.DataFrame(keywords, columns=['Keyword', 'Score'])
-        st.bar_chart(df.set_index('Keyword'))
+        df = pd.DataFrame(keywords, columns=["Keyword", "Score"])
+        st.bar_chart(df.set_index("Keyword"))
 
 
 # ============================================================================
 # ENHANCED EMOJI ANALYSIS
 # ============================================================================
+
 
 def create_emoji_sentiment_chart(emoji_analysis: Dict[str, Any]) -> None:
     """
@@ -162,7 +166,7 @@ def create_emoji_sentiment_chart(emoji_analysis: Dict[str, Any]) -> None:
     """
     st.markdown("### 😊 Emoji Sentiment Analysis")
 
-    if not emoji_analysis or emoji_analysis.get('emoji_count', 0) == 0:
+    if not emoji_analysis or emoji_analysis.get("emoji_count", 0) == 0:
         st.info("No emojis found in the text")
         return
 
@@ -176,27 +180,27 @@ def create_emoji_sentiment_chart(emoji_analysis: Dict[str, Any]) -> None:
         st.metric("Unique Emojis", f"{emoji_analysis['unique_emojis']:,}")
 
     with col3:
-        sentiment_score = emoji_analysis['emoji_sentiment_score']
+        sentiment_score = emoji_analysis["emoji_sentiment_score"]
         st.metric(
             "Emoji Sentiment",
-            emoji_analysis['emoji_sentiment_label'].capitalize(),
-            delta=f"{sentiment_score:+.2f}"
+            emoji_analysis["emoji_sentiment_label"].capitalize(),
+            delta=f"{sentiment_score:+.2f}",
         )
 
     with col4:
-        contribution = emoji_analysis.get('sentiment_contribution', 0)
+        contribution = emoji_analysis.get("sentiment_contribution", 0)
         st.metric("Sentiment Impact", f"{contribution:+.1f}")
 
     # Emoji details
     st.markdown("---")
     st.markdown("#### 📊 Emoji Breakdown")
 
-    emojis = emoji_analysis.get('emojis', [])
+    emojis = emoji_analysis.get("emojis", [])
     if emojis:
         # Create dataframe
         emoji_df = pd.DataFrame(emojis)
-        emoji_df['sentiment_label'] = emoji_df['sentiment'].apply(
-            lambda x: 'Positive' if x > 0.3 else 'Negative' if x < -0.3 else 'Neutral'
+        emoji_df["sentiment_label"] = emoji_df["sentiment"].apply(
+            lambda x: "Positive" if x > 0.3 else "Negative" if x < -0.3 else "Neutral"
         )
 
         col1, col2 = st.columns([2, 1])
@@ -207,44 +211,48 @@ def create_emoji_sentiment_chart(emoji_analysis: Dict[str, Any]) -> None:
 
                 # Create bars colored by sentiment
                 colors = []
-                for sentiment in emoji_df['sentiment']:
+                for sentiment in emoji_df["sentiment"]:
                     if sentiment > 0.3:
-                        colors.append('#43e97b')  # Green
+                        colors.append("#43e97b")  # Green
                     elif sentiment < -0.3:
-                        colors.append('#f5576c')  # Red
+                        colors.append("#f5576c")  # Red
                     else:
-                        colors.append('#4facfe')  # Blue
+                        colors.append("#4facfe")  # Blue
 
-                fig.add_trace(go.Bar(
-                    x=emoji_df['count'],
-                    y=emoji_df['emoji'],
-                    orientation='h',
-                    marker_color=colors,
-                    text=emoji_df['sentiment'].apply(lambda x: f"{x:+.2f}"),
-                    textposition='outside'
-                ))
+                fig.add_trace(
+                    go.Bar(
+                        x=emoji_df["count"],
+                        y=emoji_df["emoji"],
+                        orientation="h",
+                        marker_color=colors,
+                        text=emoji_df["sentiment"].apply(lambda x: f"{x:+.2f}"),
+                        textposition="outside",
+                    )
+                )
 
                 fig.update_layout(
                     title="Emoji Usage & Sentiment",
                     xaxis_title="Count",
                     yaxis_title="Emoji",
-                    plot_bgcolor=THEME_COLORS['background'],
-                    paper_bgcolor=THEME_COLORS['background'],
-                    font_color=THEME_COLORS['text'],
+                    plot_bgcolor=THEME_COLORS["background"],
+                    paper_bgcolor=THEME_COLORS["background"],
+                    font_color=THEME_COLORS["text"],
                     height=400,
-                    showlegend=False
+                    showlegend=False,
                 )
 
-                st.plotly_chart(fig, use_container_width=True, key=_next_chart_key("emoji-sentiment"))
+                st.plotly_chart(
+                    fig, use_container_width=True, key=_next_chart_key("emoji-sentiment")
+                )
             else:
-                st.bar_chart(emoji_df.set_index('emoji')['count'])
+                st.bar_chart(emoji_df.set_index("emoji")["count"])
 
         with col2:
             st.markdown("**Emoji Sentiment Scores:**")
             for emoji_info in emojis[:10]:
-                emoji = emoji_info['emoji']
-                count = emoji_info['count']
-                sentiment = emoji_info['sentiment']
+                emoji = emoji_info["emoji"]
+                count = emoji_info["count"]
+                sentiment = emoji_info["sentiment"]
 
                 if sentiment > 0:
                     color = "🟢"
@@ -259,6 +267,7 @@ def create_emoji_sentiment_chart(emoji_analysis: Dict[str, Any]) -> None:
 # ============================================================================
 # TEXT STATISTICS DASHBOARD
 # ============================================================================
+
 
 def create_text_statistics_dashboard(stats: Dict[str, Any]) -> None:
     """
@@ -281,7 +290,7 @@ def create_text_statistics_dashboard(stats: Dict[str, Any]) -> None:
         st.metric("Avg Words/Text", f"{stats['avg_word_count']:.1f}")
 
     with col4:
-        richness_pct = stats['vocabulary_richness'] * 100
+        richness_pct = stats["vocabulary_richness"] * 100
         st.metric("Vocabulary Richness", f"{richness_pct:.1f}%")
 
     # Additional stats
@@ -302,12 +311,13 @@ def create_text_statistics_dashboard(stats: Dict[str, Any]) -> None:
 # COMPREHENSIVE NLP DASHBOARD
 # ============================================================================
 
+
 def create_advanced_nlp_dashboard(
     texts: List[str],
     show_topics: bool = True,
     show_keywords: bool = True,
     show_emoji_analysis: bool = True,
-    show_statistics: bool = True
+    show_statistics: bool = True,
 ) -> None:
     """
     Create comprehensive NLP analysis dashboard.
@@ -323,15 +333,15 @@ def create_advanced_nlp_dashboard(
     if not texts:
         st.warning("No text data available for analysis")
         return
-    
+
     # Ensure texts is a list of strings
     if not isinstance(texts, list):
         st.error("Invalid input: texts must be a list")
         return
-    
+
     # Filter out non-string items and empty strings
     texts = [str(t).strip() for t in texts if t and str(t).strip()]
-    
+
     if not texts:
         st.warning("No valid text data available for analysis")
         return
@@ -340,10 +350,7 @@ def create_advanced_nlp_dashboard(
     st.markdown("---")
 
     # Import advanced NLP functions
-    from app.nlp.advanced_nlp import (
-        analyze_corpus_advanced,
-        SKLEARN_AVAILABLE
-    )
+    from app.nlp.advanced_nlp import analyze_corpus_advanced, SKLEARN_AVAILABLE
 
     # Run comprehensive analysis (cached 10 min for same corpus → faster repeat views)
     with st.spinner("Analyzing text corpus..."):
@@ -351,13 +358,13 @@ def create_advanced_nlp_dashboard(
 
     # Text Statistics
     if show_statistics:
-        create_text_statistics_dashboard(analysis['statistics'])
+        create_text_statistics_dashboard(analysis["statistics"])
         st.markdown("---")
 
     # Topic Modeling
     if show_topics and SKLEARN_AVAILABLE:
-        if analysis['topics']:
-            create_topic_modeling_view(analysis['topics'])
+        if analysis["topics"]:
+            create_topic_modeling_view(analysis["topics"])
             st.markdown("---")
         else:
             st.info("💡 Topic modeling requires at least 10 texts with sufficient content.")
@@ -366,41 +373,43 @@ def create_advanced_nlp_dashboard(
 
     # Keyword Extraction
     if show_keywords and SKLEARN_AVAILABLE:
-        if analysis['keywords']:
-            create_keyword_cloud(analysis['keywords'], "Most Important Keywords (TF-IDF)")
+        if analysis["keywords"]:
+            create_keyword_cloud(analysis["keywords"], "Most Important Keywords (TF-IDF)")
             st.markdown("---")
     elif show_keywords and not SKLEARN_AVAILABLE:
         st.warning("📦 Install scikit-learn for keyword extraction: `pip install scikit-learn`")
 
     # Emoji Analysis
-    if show_emoji_analysis and analysis.get('emoji_analysis'):
-        emoji_data = analysis['emoji_analysis']
-        if emoji_data.get('total_emojis', 0) > 0:
+    if show_emoji_analysis and analysis.get("emoji_analysis"):
+        emoji_data = analysis["emoji_analysis"]
+        if emoji_data.get("total_emojis", 0) > 0:
             # Adapt corpus-level emoji data to the schema expected by the chart
             try:
                 from app.nlp.advanced_nlp import get_emoji_sentiment
-                avg_sent = float(emoji_data.get('avg_sentiment', 0.0))
+
+                avg_sent = float(emoji_data.get("avg_sentiment", 0.0))
                 if avg_sent > 0.3:
-                    label = 'positive'
+                    label = "positive"
                 elif avg_sent < -0.3:
-                    label = 'negative'
+                    label = "negative"
                 else:
-                    label = 'neutral'
+                    label = "neutral"
 
                 transformed = {
-                    'emoji_count': int(emoji_data.get('total_emojis', 0)),
-                    'unique_emojis': int(emoji_data.get('unique_emojis', 0)),
-                    'emoji_sentiment_score': avg_sent,
-                    'emoji_sentiment_label': label,
-                    'emojis': [
+                    "emoji_count": int(emoji_data.get("total_emojis", 0)),
+                    "unique_emojis": int(emoji_data.get("unique_emojis", 0)),
+                    "emoji_sentiment_score": avg_sent,
+                    "emoji_sentiment_label": label,
+                    "emojis": [
                         {
-                            'emoji': item.get('emoji'),
-                            'count': int(item.get('count', 0)),
-                            'sentiment': float(get_emoji_sentiment(item.get('emoji')))
+                            "emoji": item.get("emoji"),
+                            "count": int(item.get("count", 0)),
+                            "sentiment": float(get_emoji_sentiment(item.get("emoji"))),
                         }
-                        for item in emoji_data.get('top_emojis', []) if item.get('emoji')
+                        for item in emoji_data.get("top_emojis", [])
+                        if item.get("emoji")
                     ],
-                    'sentiment_contribution': avg_sent * float(emoji_data.get('total_emojis', 0))
+                    "sentiment_contribution": avg_sent * float(emoji_data.get("total_emojis", 0)),
                 }
 
                 create_emoji_sentiment_chart(transformed)
@@ -427,6 +436,7 @@ def create_advanced_nlp_dashboard(
 # ============================================================================
 # SENTIMENT THEMES VIEW (Positive vs Negative)
 # ============================================================================
+
 
 def create_sentiment_themes_view(texts: List[str], top_n: int = 15) -> None:
     """
@@ -485,10 +495,11 @@ def create_sentiment_themes_view(texts: List[str], top_n: int = 15) -> None:
 # SENTIMENT COMPARISON VIEW
 # ============================================================================
 
+
 def create_sentiment_comparison_view(
     text_sentiment: Dict[str, Any],
     emoji_sentiment: Dict[str, Any],
-    combined_sentiment: Dict[str, Any]
+    combined_sentiment: Dict[str, Any],
 ) -> None:
     """
     Create comparison view of text vs emoji vs combined sentiment.
@@ -504,67 +515,57 @@ def create_sentiment_comparison_view(
 
     with col1:
         st.markdown("#### 📝 Text Sentiment")
-        text_score = text_sentiment.get('overall_score', 0)
-        text_label = text_sentiment.get('overall_label', 'neutral')
-        st.metric(
-            "Score",
-            text_label.capitalize(),
-            delta=f"{text_score:+.2f}"
-        )
+        text_score = text_sentiment.get("overall_score", 0)
+        text_label = text_sentiment.get("overall_label", "neutral")
+        st.metric("Score", text_label.capitalize(), delta=f"{text_score:+.2f}")
 
     with col2:
         st.markdown("#### 😊 Emoji Sentiment")
-        emoji_score = emoji_sentiment.get('emoji_sentiment_score', 0)
-        emoji_label = emoji_sentiment.get('emoji_sentiment_label', 'neutral')
-        st.metric(
-            "Score",
-            emoji_label.capitalize(),
-            delta=f"{emoji_score:+.2f}"
-        )
+        emoji_score = emoji_sentiment.get("emoji_sentiment_score", 0)
+        emoji_label = emoji_sentiment.get("emoji_sentiment_label", "neutral")
+        st.metric("Score", emoji_label.capitalize(), delta=f"{emoji_score:+.2f}")
 
     with col3:
         st.markdown("#### ⚖️ Combined Sentiment")
-        combined_score = combined_sentiment.get('combined_score', 0)
-        combined_label = combined_sentiment.get('combined_label', 'neutral')
-        st.metric(
-            "Final Score",
-            combined_label.capitalize(),
-            delta=f"{combined_score:+.2f}"
-        )
+        combined_score = combined_sentiment.get("combined_score", 0)
+        combined_label = combined_sentiment.get("combined_label", "neutral")
+        st.metric("Final Score", combined_label.capitalize(), delta=f"{combined_score:+.2f}")
 
     # Visualization
     if PLOTLY_AVAILABLE:
         st.markdown("---")
 
-        categories = ['Text Only', 'Emoji Only', 'Combined']
+        categories = ["Text Only", "Emoji Only", "Combined"]
         scores = [text_score, emoji_score, combined_score]
         colors = []
 
         for score in scores:
             if score > 0.3:
-                colors.append('#43e97b')
+                colors.append("#43e97b")
             elif score < -0.3:
-                colors.append('#f5576c')
+                colors.append("#f5576c")
             else:
-                colors.append('#4facfe')
+                colors.append("#4facfe")
 
-        fig = go.Figure(data=[
-            go.Bar(
-                x=categories,
-                y=scores,
-                marker_color=colors,
-                text=[f"{s:+.2f}" for s in scores],
-                textposition='outside'
-            )
-        ])
+        fig = go.Figure(
+            data=[
+                go.Bar(
+                    x=categories,
+                    y=scores,
+                    marker_color=colors,
+                    text=[f"{s:+.2f}" for s in scores],
+                    textposition="outside",
+                )
+            ]
+        )
 
         fig.update_layout(
             title="Sentiment Score Comparison",
             yaxis_title="Sentiment Score",
             yaxis=dict(range=[-1.2, 1.2]),
-            plot_bgcolor=THEME_COLORS['background'],
-            paper_bgcolor=THEME_COLORS['background'],
-            font_color=THEME_COLORS['text'],
-            height=400
+            plot_bgcolor=THEME_COLORS["background"],
+            paper_bgcolor=THEME_COLORS["background"],
+            font_color=THEME_COLORS["text"],
+            height=400,
         )
         st.plotly_chart(fig, use_container_width=True, key=_next_chart_key("sentiment-comparison"))

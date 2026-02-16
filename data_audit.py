@@ -20,24 +20,24 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.data.validators import (
     calculate_data_completeness,
     print_completeness_report,
-    validate_all_platforms
+    validate_all_platforms,
 )
 
 
 def audit_saved_data():
     """Audit data from saved files in data/processed/"""
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("SOCIAL MEDIA ANALYTICS - DATA AUDIT")
-    print("="*70)
+    print("=" * 70)
     print(f"Audit Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
     import glob
     import json
     import pandas as pd
 
-    data_dir = os.path.join(os.path.dirname(__file__), 'data', 'processed')
+    data_dir = os.path.join(os.path.dirname(__file__), "data", "processed")
 
     if not os.path.exists(data_dir):
         print(f"❌ Data directory not found: {data_dir}")
@@ -46,9 +46,15 @@ def audit_saved_data():
 
     # Find CSV files for each platform (exclude comments files)
     platforms = {
-        'Facebook': [f for f in glob.glob(os.path.join(data_dir, 'facebook_*.csv')) if 'comments' not in f],
-        'Instagram': [f for f in glob.glob(os.path.join(data_dir, 'instagram_*.csv')) if 'comments' not in f],
-        'YouTube': [f for f in glob.glob(os.path.join(data_dir, 'youtube_*.csv')) if 'comments' not in f]
+        "Facebook": [
+            f for f in glob.glob(os.path.join(data_dir, "facebook_*.csv")) if "comments" not in f
+        ],
+        "Instagram": [
+            f for f in glob.glob(os.path.join(data_dir, "instagram_*.csv")) if "comments" not in f
+        ],
+        "YouTube": [
+            f for f in glob.glob(os.path.join(data_dir, "youtube_*.csv")) if "comments" not in f
+        ],
     }
 
     all_results = {}
@@ -70,26 +76,26 @@ def audit_saved_data():
             df = pd.read_csv(latest_file)
 
             # Convert to list of dicts
-            posts = df.to_dict('records')
+            posts = df.to_dict("records")
 
             # Parse JSON fields
             for post in posts:
-                if 'reactions' in post and isinstance(post['reactions'], str):
+                if "reactions" in post and isinstance(post["reactions"], str):
                     try:
-                        post['reactions'] = json.loads(post['reactions'])
+                        post["reactions"] = json.loads(post["reactions"])
                     except:
-                        post['reactions'] = {}
+                        post["reactions"] = {}
 
-                if 'comments_list' in post and isinstance(post['comments_list'], str):
+                if "comments_list" in post and isinstance(post["comments_list"], str):
                     try:
-                        post['comments_list'] = json.loads(post['comments_list'])
+                        post["comments_list"] = json.loads(post["comments_list"])
                     except:
-                        post['comments_list'] = []
+                        post["comments_list"] = []
 
                 # Convert published_at to datetime
-                if 'published_at' in post:
+                if "published_at" in post:
                     try:
-                        post['published_at'] = pd.to_datetime(post['published_at'])
+                        post["published_at"] = pd.to_datetime(post["published_at"])
                     except:
                         pass
 
@@ -116,106 +122,104 @@ def audit_saved_data():
             print(f"❌ Error processing {platform} data: {str(e)}\n")
 
     # Summary
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("AUDIT SUMMARY")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
     for platform, results in all_results.items():
-        status = "✅" if results['completeness_rate'] >= 80 else "⚠️" if results['completeness_rate'] >= 50 else "❌"
-        print(f"{status} {platform}: {results['completeness_rate']:.1f}% complete ({results['valid_posts']}/{results['total_posts']} valid posts)")
+        status = (
+            "✅"
+            if results["completeness_rate"] >= 80
+            else "⚠️"
+            if results["completeness_rate"] >= 50
+            else "❌"
+        )
+        print(
+            f"{status} {platform}: {results['completeness_rate']:.1f}% complete ({results['valid_posts']}/{results['total_posts']} valid posts)"
+        )
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
 
     # Recommendations
     print("\n💡 RECOMMENDATIONS:\n")
 
     for platform, results in all_results.items():
-        if results['completeness_rate'] < 100:
+        if results["completeness_rate"] < 100:
             print(f"\n{platform}:")
 
             # Find fields with low completeness
             incomplete_fields = [
-                (field, stats) for field, stats in results['field_completeness'].items()
-                if stats['percentage'] < 80
+                (field, stats)
+                for field, stats in results["field_completeness"].items()
+                if stats["percentage"] < 80
             ]
 
             if incomplete_fields:
                 print("  Fields needing attention:")
-                for field, stats in sorted(incomplete_fields, key=lambda x: x[1]['percentage']):
+                for field, stats in sorted(incomplete_fields, key=lambda x: x[1]["percentage"]):
                     print(f"    - {field}: {stats['percentage']:.1f}% complete")
-                    if field == 'comments_list' and stats['percentage'] < 50:
+                    if field == "comments_list" and stats["percentage"] < 50:
                         print(f"      💡 Enable 'Fetch Detailed Comments' to get comment content")
-                    elif field == 'reactions' and stats['percentage'] < 80:
+                    elif field == "reactions" and stats["percentage"] < 80:
                         print(f"      💡 Verify Facebook actor returns reaction breakdown")
 
-            if results['common_errors']:
+            if results["common_errors"]:
                 print("  Common issues:")
-                for error_info in results['common_errors'][:3]:
+                for error_info in results["common_errors"][:3]:
                     print(f"    - {error_info['error']}")
 
-    print("\n" + "="*70 + "\n")
+    print("\n" + "=" * 70 + "\n")
 
 
 def show_platform_schemas():
     """Display expected data schemas for each platform"""
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("EXPECTED DATA SCHEMAS")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
     schemas = {
-        'Facebook': {
-            'Required Fields': [
-                'post_id (str)',
-                'published_at (datetime/str)',
-                'text (str)',
-                'post_url (str)'
+        "Facebook": {
+            "Required Fields": [
+                "post_id (str)",
+                "published_at (datetime/str)",
+                "text (str)",
+                "post_url (str)",
             ],
-            'Numeric Fields': [
-                'likes (int) - sum of all reactions',
-                'comments_count (int)',
-                'shares_count (int)'
+            "Numeric Fields": [
+                "likes (int) - sum of all reactions",
+                "comments_count (int)",
+                "shares_count (int)",
             ],
-            'Complex Fields': [
-                'reactions (dict) - {type: count}',
-                'comments_list (list[dict]/list[str])'
-            ]
+            "Complex Fields": [
+                "reactions (dict) - {type: count}",
+                "comments_list (list[dict]/list[str])",
+            ],
         },
-        'Instagram': {
-            'Required Fields': [
-                'post_id (str)',
-                'published_at (datetime/str)',
-                'text (str)',
-                'post_url (str)'
+        "Instagram": {
+            "Required Fields": [
+                "post_id (str)",
+                "published_at (datetime/str)",
+                "text (str)",
+                "post_url (str)",
             ],
-            'Numeric Fields': [
-                'likes (int)',
-                'comments_count (int)'
+            "Numeric Fields": ["likes (int)", "comments_count (int)"],
+            "Platform-Specific": [
+                "ownerUsername (str)",
+                "type (str) - photo/video/carousel",
+                "hashtags (list[str])",
+                "mentions (list[str])",
             ],
-            'Platform-Specific': [
-                'ownerUsername (str)',
-                'type (str) - photo/video/carousel',
-                'hashtags (list[str])',
-                'mentions (list[str])'
-            ]
         },
-        'YouTube': {
-            'Required Fields': [
-                'post_id (str) - video ID',
-                'published_at (datetime/str)',
-                'text (str) - title or description'
+        "YouTube": {
+            "Required Fields": [
+                "post_id (str) - video ID",
+                "published_at (datetime/str)",
+                "text (str) - title or description",
             ],
-            'Numeric Fields': [
-                'views (int)',
-                'likes (int)',
-                'comments_count (int)'
-            ],
-            'Platform-Specific': [
-                'url (str) - video URL',
-                'duration (str)',
-                'channel (str)'
-            ]
-        }
+            "Numeric Fields": ["views (int)", "likes (int)", "comments_count (int)"],
+            "Platform-Specific": ["url (str) - video URL", "duration (str)", "channel (str)"],
+        },
     }
 
     for platform, schema in schemas.items():
@@ -227,14 +231,14 @@ def show_platform_schemas():
                 print(f"    • {field}")
         print()
 
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
 
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description='Audit social media data quality')
-    parser.add_argument('--schema', action='store_true', help='Show expected data schemas')
+    parser = argparse.ArgumentParser(description="Audit social media data quality")
+    parser.add_argument("--schema", action="store_true", help="Show expected data schemas")
     args = parser.parse_args()
 
     if args.schema:

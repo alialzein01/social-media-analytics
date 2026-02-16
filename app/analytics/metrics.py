@@ -17,6 +17,7 @@ import re
 # EMOJI ANALYSIS
 # ============================================================================
 
+
 def analyze_emojis_in_comments(comments: List[str]) -> Dict[str, int]:
     """
     Analyze emojis in comments and return frequency count.
@@ -30,14 +31,14 @@ def analyze_emojis_in_comments(comments: List[str]) -> Dict[str, int]:
     # Emoji regex pattern
     emoji_pattern = re.compile(
         "["
-        "\U0001F600-\U0001F64F"  # emoticons
-        "\U0001F300-\U0001F5FF"  # symbols & pictographs
-        "\U0001F680-\U0001F6FF"  # transport & map symbols
-        "\U0001F1E0-\U0001F1FF"  # flags (iOS)
-        "\U00002702-\U000027B0"
-        "\U000024C2-\U0001F251"
+        "\U0001f600-\U0001f64f"  # emoticons
+        "\U0001f300-\U0001f5ff"  # symbols & pictographs
+        "\U0001f680-\U0001f6ff"  # transport & map symbols
+        "\U0001f1e0-\U0001f1ff"  # flags (iOS)
+        "\U00002702-\U000027b0"
+        "\U000024c2-\U0001f251"
         "]+",
-        flags=re.UNICODE
+        flags=re.UNICODE,
     )
 
     emoji_counts = Counter()
@@ -54,6 +55,7 @@ def analyze_emojis_in_comments(comments: List[str]) -> Dict[str, int]:
 # COMMENT AGGREGATION
 # ============================================================================
 
+
 def aggregate_all_comments(posts: List[Dict]) -> List[str]:
     """
     Aggregate all comments from posts into a single list.
@@ -67,16 +69,16 @@ def aggregate_all_comments(posts: List[Dict]) -> List[str]:
     all_comments = []
 
     for post in posts:
-        comments_list = post.get('comments_list', [])
+        comments_list = post.get("comments_list", [])
 
         if isinstance(comments_list, list):
             for comment in comments_list:
                 if isinstance(comment, dict):
                     # Support multiple keys (Facebook uses 'message', normalized uses 'text')
                     text = (
-                        comment.get('text', '')
-                        or comment.get('message', '')
-                        or comment.get('content', '')
+                        comment.get("text", "")
+                        or comment.get("message", "")
+                        or comment.get("content", "")
                     )
                     if text and str(text).strip():
                         all_comments.append(str(text).strip())
@@ -101,9 +103,7 @@ def extract_comment_texts(comments_list: List[Any]) -> List[str]:
     for comment in comments_list:
         if isinstance(comment, dict):
             text = (
-                comment.get('text', '')
-                or comment.get('message', '')
-                or comment.get('content', '')
+                comment.get("text", "") or comment.get("message", "") or comment.get("content", "")
             )
             if text and str(text).strip():
                 comment_texts.append(str(text).strip())
@@ -117,6 +117,7 @@ def extract_comment_texts(comments_list: List[Any]) -> List[str]:
 # ENGAGEMENT METRICS
 # ============================================================================
 
+
 def calculate_engagement_rate(post: Dict) -> float:
     """
     Calculate engagement rate for a post.
@@ -127,10 +128,10 @@ def calculate_engagement_rate(post: Dict) -> float:
     Returns:
         Engagement rate as percentage
     """
-    likes = post.get('likes', 0)
-    comments = post.get('comments_count', 0)
-    shares = post.get('shares_count', 0)
-    followers = post.get('followers', 0)
+    likes = post.get("likes", 0)
+    comments = post.get("comments_count", 0)
+    shares = post.get("shares_count", 0)
+    followers = post.get("followers", 0)
 
     total_engagement = likes + comments + shares
 
@@ -151,15 +152,15 @@ def calculate_total_engagement(posts: List[Dict]) -> Dict[str, int]:
     Returns:
         Dictionary with total likes, comments, shares, and engagement
     """
-    total_likes = sum(post.get('likes', 0) for post in posts)
-    total_comments = sum(post.get('comments_count', 0) for post in posts)
-    total_shares = sum(post.get('shares_count', 0) for post in posts)
+    total_likes = sum(post.get("likes", 0) for post in posts)
+    total_comments = sum(post.get("comments_count", 0) for post in posts)
+    total_shares = sum(post.get("shares_count", 0) for post in posts)
 
     return {
-        'total_likes': total_likes,
-        'total_comments': total_comments,
-        'total_shares': total_shares,
-        'total_engagement': total_likes + total_comments + total_shares
+        "total_likes": total_likes,
+        "total_comments": total_comments,
+        "total_shares": total_shares,
+        "total_engagement": total_likes + total_comments + total_shares,
     }
 
 
@@ -174,28 +175,21 @@ def calculate_average_engagement(posts: List[Dict]) -> Dict[str, float]:
         Dictionary with average likes, comments, shares, and engagement
     """
     if not posts:
-        return {
-            'avg_likes': 0.0,
-            'avg_comments': 0.0,
-            'avg_shares': 0.0,
-            'avg_engagement': 0.0
-        }
+        return {"avg_likes": 0.0, "avg_comments": 0.0, "avg_shares": 0.0, "avg_engagement": 0.0}
 
     totals = calculate_total_engagement(posts)
     num_posts = len(posts)
 
     return {
-        'avg_likes': totals['total_likes'] / num_posts,
-        'avg_comments': totals['total_comments'] / num_posts,
-        'avg_shares': totals['total_shares'] / num_posts,
-        'avg_engagement': totals['total_engagement'] / num_posts
+        "avg_likes": totals["total_likes"] / num_posts,
+        "avg_comments": totals["total_comments"] / num_posts,
+        "avg_shares": totals["total_shares"] / num_posts,
+        "avg_engagement": totals["total_engagement"] / num_posts,
     }
 
 
 def get_top_posts_by_metric(
-    posts: List[Dict],
-    metric: str = 'engagement',
-    top_n: int = 5
+    posts: List[Dict], metric: str = "engagement", top_n: int = 5
 ) -> List[Dict]:
     """
     Get top N posts by specified metric.
@@ -211,28 +205,26 @@ def get_top_posts_by_metric(
     posts_with_metrics = []
 
     for post in posts:
-        likes = post.get('likes', 0)
-        comments = post.get('comments_count', 0)
-        shares = post.get('shares_count', 0)
+        likes = post.get("likes", 0)
+        comments = post.get("comments_count", 0)
+        shares = post.get("shares_count", 0)
         engagement = likes + comments + shares
 
-        posts_with_metrics.append({
-            **post,
-            'total_engagement': engagement,
-            'metric_value': {
-                'engagement': engagement,
-                'likes': likes,
-                'comments': comments,
-                'shares': shares
-            }.get(metric, engagement)
-        })
+        posts_with_metrics.append(
+            {
+                **post,
+                "total_engagement": engagement,
+                "metric_value": {
+                    "engagement": engagement,
+                    "likes": likes,
+                    "comments": comments,
+                    "shares": shares,
+                }.get(metric, engagement),
+            }
+        )
 
     # Sort by metric and return top N
-    sorted_posts = sorted(
-        posts_with_metrics,
-        key=lambda x: x['metric_value'],
-        reverse=True
-    )
+    sorted_posts = sorted(posts_with_metrics, key=lambda x: x["metric_value"], reverse=True)
 
     return sorted_posts[:top_n]
 
@@ -240,6 +232,7 @@ def get_top_posts_by_metric(
 # ============================================================================
 # CONTENT ANALYSIS
 # ============================================================================
+
 
 def analyze_posting_frequency(posts: List[Dict]) -> Dict[str, Any]:
     """
@@ -253,16 +246,16 @@ def analyze_posting_frequency(posts: List[Dict]) -> Dict[str, Any]:
     """
     if not posts:
         return {
-            'posts_per_day': {},
-            'posts_per_week': {},
-            'avg_posts_per_day': 0.0,
-            'most_active_day': None
+            "posts_per_day": {},
+            "posts_per_week": {},
+            "avg_posts_per_day": 0.0,
+            "most_active_day": None,
         }
 
     # Parse dates
     dates = []
     for post in posts:
-        pub_date = post.get('published_at')
+        pub_date = post.get("published_at")
         if pub_date:
             if isinstance(pub_date, str):
                 try:
@@ -274,10 +267,10 @@ def analyze_posting_frequency(posts: List[Dict]) -> Dict[str, Any]:
 
     if not dates:
         return {
-            'posts_per_day': {},
-            'posts_per_week': {},
-            'avg_posts_per_day': 0.0,
-            'most_active_day': None
+            "posts_per_day": {},
+            "posts_per_week": {},
+            "avg_posts_per_day": 0.0,
+            "most_active_day": None,
         }
 
     # Count posts per day
@@ -291,11 +284,11 @@ def analyze_posting_frequency(posts: List[Dict]) -> Dict[str, Any]:
     most_active_day = max(posts_per_day.items(), key=lambda x: x[1])[0]
 
     return {
-        'posts_per_day': dict(posts_per_day),
-        'avg_posts_per_day': avg_posts_per_day,
-        'most_active_day': most_active_day,
-        'total_days': total_days,
-        'date_range': (min(dates), max(dates))
+        "posts_per_day": dict(posts_per_day),
+        "avg_posts_per_day": avg_posts_per_day,
+        "most_active_day": most_active_day,
+        "total_days": total_days,
+        "date_range": (min(dates), max(dates)),
     }
 
 
@@ -309,7 +302,7 @@ def analyze_content_types(posts: List[Dict]) -> Dict[str, int]:
     Returns:
         Dictionary of content type -> count
     """
-    content_types = Counter(post.get('type', 'Unknown') for post in posts)
+    content_types = Counter(post.get("type", "Unknown") for post in posts)
     return dict(content_types)
 
 
@@ -327,7 +320,7 @@ def analyze_hashtags(posts: List[Dict], top_n: int = 20) -> List[Tuple[str, int]
     all_hashtags = []
 
     for post in posts:
-        hashtags = post.get('hashtags', [])
+        hashtags = post.get("hashtags", [])
         if isinstance(hashtags, list):
             all_hashtags.extend(hashtags)
 
@@ -339,6 +332,7 @@ def analyze_hashtags(posts: List[Dict], top_n: int = 20) -> List[Tuple[str, int]
 # VIDEO METRICS (Instagram/YouTube)
 # ============================================================================
 
+
 def calculate_video_metrics(posts: List[Dict]) -> Dict[str, Any]:
     """
     Calculate video-specific metrics.
@@ -349,30 +343,31 @@ def calculate_video_metrics(posts: List[Dict]) -> Dict[str, Any]:
     Returns:
         Dictionary with video metrics
     """
-    video_posts = [p for p in posts if p.get('type') == 'Video']
+    video_posts = [p for p in posts if p.get("type") == "Video"]
 
     if not video_posts:
         return {
-            'total_videos': 0,
-            'total_video_views': 0,
-            'avg_views_per_video': 0.0,
-            'total_play_count': 0
+            "total_videos": 0,
+            "total_video_views": 0,
+            "avg_views_per_video": 0.0,
+            "total_play_count": 0,
         }
 
-    total_views = sum(p.get('video_view_count', 0) for p in video_posts)
-    total_play_count = sum(p.get('video_play_count', 0) for p in video_posts)
+    total_views = sum(p.get("video_view_count", 0) for p in video_posts)
+    total_play_count = sum(p.get("video_play_count", 0) for p in video_posts)
 
     return {
-        'total_videos': len(video_posts),
-        'total_video_views': total_views,
-        'avg_views_per_video': total_views / len(video_posts),
-        'total_play_count': total_play_count
+        "total_videos": len(video_posts),
+        "total_video_views": total_views,
+        "avg_views_per_video": total_views / len(video_posts),
+        "total_play_count": total_play_count,
     }
 
 
 # ============================================================================
 # REACTION ANALYSIS (Facebook)
 # ============================================================================
+
 
 def get_post_reactions_count(post: Dict) -> int:
     """
@@ -406,17 +401,10 @@ def analyze_reactions(posts: List[Dict]) -> Dict[str, int]:
     Returns:
         Dictionary of reaction type -> total count
     """
-    total_reactions = {
-        'like': 0,
-        'love': 0,
-        'haha': 0,
-        'wow': 0,
-        'sad': 0,
-        'angry': 0
-    }
+    total_reactions = {"like": 0, "love": 0, "haha": 0, "wow": 0, "sad": 0, "angry": 0}
 
     for post in posts:
-        reactions = post.get('reactions', {})
+        reactions = post.get("reactions", {})
         if isinstance(reactions, dict):
             for reaction_type, count in reactions.items():
                 if reaction_type in total_reactions:
@@ -435,16 +423,16 @@ def get_dominant_reaction(post: Dict) -> str:
     Returns:
         Dominant reaction type or 'none'
     """
-    reactions = post.get('reactions', {})
+    reactions = post.get("reactions", {})
 
     if not reactions or not isinstance(reactions, dict):
-        return 'none'
+        return "none"
 
     # Filter out zero values
     reactions_filtered = {k: v for k, v in reactions.items() if v > 0}
 
     if not reactions_filtered:
-        return 'none'
+        return "none"
 
     # Return reaction with max count
     return max(reactions_filtered.items(), key=lambda x: x[1])[0]
@@ -453,6 +441,7 @@ def get_dominant_reaction(post: Dict) -> str:
 # ============================================================================
 # TIME-BASED ANALYSIS
 # ============================================================================
+
 
 def group_posts_by_date(posts: List[Dict]) -> Dict[str, List[Dict]]:
     """
@@ -467,7 +456,7 @@ def group_posts_by_date(posts: List[Dict]) -> Dict[str, List[Dict]]:
     grouped = {}
 
     for post in posts:
-        pub_date = post.get('published_at')
+        pub_date = post.get("published_at")
         if pub_date:
             if isinstance(pub_date, str):
                 try:
@@ -502,11 +491,7 @@ def calculate_engagement_trend(posts: List[Dict]) -> List[Dict[str, Any]]:
     trend = []
     for date_str, date_posts in sorted(grouped.items()):
         metrics = calculate_total_engagement(date_posts)
-        trend.append({
-            'date': date_str,
-            'posts': len(date_posts),
-            **metrics
-        })
+        trend.append({"date": date_str, "posts": len(date_posts), **metrics})
 
     return trend
 
@@ -514,6 +499,7 @@ def calculate_engagement_trend(posts: List[Dict]) -> List[Dict[str, Any]]:
 # ============================================================================
 # PERFORMANCE BENCHMARKS
 # ============================================================================
+
 
 def calculate_performance_percentiles(posts: List[Dict]) -> Dict[str, Dict[str, float]]:
     """
@@ -531,23 +517,20 @@ def calculate_performance_percentiles(posts: List[Dict]) -> Dict[str, Dict[str, 
     df = pd.DataFrame(posts)
 
     metrics = {}
-    for col in ['likes', 'comments_count', 'shares_count']:
+    for col in ["likes", "comments_count", "shares_count"]:
         if col in df.columns:
             metrics[col] = {
-                'p25': df[col].quantile(0.25),
-                'p50': df[col].quantile(0.50),
-                'p75': df[col].quantile(0.75),
-                'p90': df[col].quantile(0.90),
-                'max': df[col].max()
+                "p25": df[col].quantile(0.25),
+                "p50": df[col].quantile(0.50),
+                "p75": df[col].quantile(0.75),
+                "p90": df[col].quantile(0.90),
+                "max": df[col].max(),
             }
 
     return metrics
 
 
-def identify_viral_posts(
-    posts: List[Dict],
-    percentile: float = 0.9
-) -> List[Dict]:
+def identify_viral_posts(posts: List[Dict], percentile: float = 0.9) -> List[Dict]:
     """
     Identify viral posts (top percentile by engagement).
 
@@ -565,23 +548,15 @@ def identify_viral_posts(
     posts_with_engagement = []
     for post in posts:
         engagement = (
-            post.get('likes', 0) +
-            post.get('comments_count', 0) +
-            post.get('shares_count', 0)
+            post.get("likes", 0) + post.get("comments_count", 0) + post.get("shares_count", 0)
         )
-        posts_with_engagement.append({
-            **post,
-            'total_engagement': engagement
-        })
+        posts_with_engagement.append({**post, "total_engagement": engagement})
 
     # Calculate threshold
-    engagements = [p['total_engagement'] for p in posts_with_engagement]
+    engagements = [p["total_engagement"] for p in posts_with_engagement]
     threshold = pd.Series(engagements).quantile(percentile)
 
     # Filter viral posts
-    viral_posts = [
-        p for p in posts_with_engagement
-        if p['total_engagement'] >= threshold
-    ]
+    viral_posts = [p for p in posts_with_engagement if p["total_engagement"] >= threshold]
 
-    return sorted(viral_posts, key=lambda x: x['total_engagement'], reverse=True)
+    return sorted(viral_posts, key=lambda x: x["total_engagement"], reverse=True)

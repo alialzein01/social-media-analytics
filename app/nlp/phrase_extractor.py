@@ -22,8 +22,9 @@ import functools
 
 # Arabic text processing patterns (reused from main app)
 ARABIC_LETTERS = r"\u0621-\u064A\u0660-\u0669"
-TOKEN_RE = re.compile(fr"[{ARABIC_LETTERS}A-Za-z0-9]+", re.UNICODE)
-ARABIC_DIACRITICS = re.compile("""
+TOKEN_RE = re.compile(rf"[{ARABIC_LETTERS}A-Za-z0-9]+", re.UNICODE)
+ARABIC_DIACRITICS = re.compile(
+    """
         ّ    | # Tashdid
         َ    | # Fatha
         ً    | # Tanwin Fath
@@ -33,42 +34,126 @@ ARABIC_DIACRITICS = re.compile("""
         ٍ    | # Tanwin Kasr
         ْ    | # Sukun
         ـ     # Tatwil/Kashida
-    """, re.VERBOSE)
+    """,
+    re.VERBOSE,
+)
 
 # Extended stopwords for phrase filtering
 ARABIC_STOPWORDS = {
-    'في', 'من', 'إلى', 'على', 'هذا', 'هذه', 'ذلك', 'التي', 'الذي',
-    'أن', 'أو', 'لا', 'نعم', 'كان', 'يكون', 'ما', 'هل', 'قد', 'لقد',
-    'عن', 'مع', 'بعد', 'قبل', 'عند', 'كل', 'بين', 'حتى', 'لكن', 'ثم',
-    'و', 'أو', 'لم', 'لن', 'إن', 'أن', 'كما', 'لماذا', 'كيف', 'أين',
-    'متى', 'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
-    'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are', 'were', 'be', 'been',
-    'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should'
+    "في",
+    "من",
+    "إلى",
+    "على",
+    "هذا",
+    "هذه",
+    "ذلك",
+    "التي",
+    "الذي",
+    "أن",
+    "أو",
+    "لا",
+    "نعم",
+    "كان",
+    "يكون",
+    "ما",
+    "هل",
+    "قد",
+    "لقد",
+    "عن",
+    "مع",
+    "بعد",
+    "قبل",
+    "عند",
+    "كل",
+    "بين",
+    "حتى",
+    "لكن",
+    "ثم",
+    "و",
+    "أو",
+    "لم",
+    "لن",
+    "إن",
+    "أن",
+    "كما",
+    "لماذا",
+    "كيف",
+    "أين",
+    "متى",
+    "the",
+    "a",
+    "an",
+    "and",
+    "or",
+    "but",
+    "in",
+    "on",
+    "at",
+    "to",
+    "for",
+    "of",
+    "with",
+    "by",
+    "from",
+    "as",
+    "is",
+    "was",
+    "are",
+    "were",
+    "be",
+    "been",
+    "have",
+    "has",
+    "had",
+    "do",
+    "does",
+    "did",
+    "will",
+    "would",
+    "could",
+    "should",
 }
 
 # Common meaningless phrases to filter out
 MEANINGLESS_PHRASES = {
-    'في في', 'من من', 'على على', 'هذا هذا', 'هذه هذه',
-    'the the', 'and and', 'or or', 'but but', 'in in', 'on on',
-    'at at', 'to to', 'for for', 'of of', 'with with', 'by by'
+    "في في",
+    "من من",
+    "على على",
+    "هذا هذا",
+    "هذه هذه",
+    "the the",
+    "and and",
+    "or or",
+    "but but",
+    "in in",
+    "on on",
+    "at at",
+    "to to",
+    "for for",
+    "of of",
+    "with with",
+    "by by",
 }
+
 
 class PhraseExtractor:
     """
     Advanced phrase extractor for sentiment analysis.
-    
+
     Extracts meaningful phrases from text using n-gram analysis and
     statistical collocation detection.
     """
-    
-    def __init__(self, 
-                 min_frequency: int = 2,
-                 min_pmi: float = 1.0,
-                 max_phrase_length: int = 3,
-                 language: str = 'auto'):
+
+    def __init__(
+        self,
+        min_frequency: int = 2,
+        min_pmi: float = 1.0,
+        max_phrase_length: int = 3,
+        language: str = "auto",
+    ):
         """
         Initialize phrase extractor.
-        
+
         Args:
             min_frequency: Minimum frequency for phrases to be considered
             min_pmi: Minimum Pointwise Mutual Information score
@@ -79,74 +164,74 @@ class PhraseExtractor:
         self.min_pmi = min_pmi
         self.max_phrase_length = max_phrase_length
         self.language = language
-        
+
         # Cache for performance
         self._phrase_cache = {}
         self._ngram_cache = {}
-    
+
     def clean_text(self, text: str) -> str:
         """Clean text by removing diacritics, URLs, and extra whitespace."""
         if not text:
             return ""
-        
+
         # Remove diacritics
-        text = ARABIC_DIACRITICS.sub('', text)
-        
+        text = ARABIC_DIACRITICS.sub("", text)
+
         # Remove URLs and mentions
-        text = re.sub(r'http\S+|www\S+', '', text)
-        text = re.sub(r'[@#]', '', text)
-        
+        text = re.sub(r"http\S+|www\S+", "", text)
+        text = re.sub(r"[@#]", "", text)
+
         # Remove extra whitespace
-        text = ' '.join(text.split())
-        
+        text = " ".join(text.split())
+
         return text
-    
+
     def tokenize_text(self, text: str) -> List[str]:
         """Tokenize text into words, filtering stopwords."""
         text = self.clean_text(text)
         tokens = TOKEN_RE.findall(text)
-        
+
         # Filter stopwords and short tokens
         filtered_tokens = [
-            token.lower() for token in tokens 
-            if (token.lower() not in ARABIC_STOPWORDS and 
-                len(token) > 2 and 
-                not token.isdigit())
+            token.lower()
+            for token in tokens
+            if (token.lower() not in ARABIC_STOPWORDS and len(token) > 2 and not token.isdigit())
         ]
-        
+
         return filtered_tokens
-    
+
     def extract_ngrams(self, tokens: List[str], n: int) -> List[Tuple[str, ...]]:
         """Extract n-grams from tokenized text."""
         if len(tokens) < n:
             return []
-        
+
         ngrams = []
         for i in range(len(tokens) - n + 1):
-            ngram = tuple(tokens[i:i+n])
+            ngram = tuple(tokens[i : i + n])
             ngrams.append(ngram)
-        
+
         return ngrams
-    
-    def calculate_pmi(self, phrase: Tuple[str, ...], word_freqs: Dict[str, int], 
-                     total_words: int) -> float:
+
+    def calculate_pmi(
+        self, phrase: Tuple[str, ...], word_freqs: Dict[str, int], total_words: int
+    ) -> float:
         """
         Calculate Pointwise Mutual Information for a phrase.
-        
+
         PMI measures how much more likely the words appear together
         than if they were independent.
         """
         if len(phrase) < 2:
             return 0.0
-        
+
         # Calculate joint probability
-        phrase_text = ' '.join(phrase)
+        phrase_text = " ".join(phrase)
         phrase_freq = word_freqs.get(phrase_text, 0)
         if phrase_freq == 0:
             return 0.0
-        
+
         joint_prob = phrase_freq / total_words
-        
+
         # Calculate individual word probabilities
         word_probs = []
         for word in phrase:
@@ -154,68 +239,68 @@ class PhraseExtractor:
             if word_freq == 0:
                 return 0.0
             word_probs.append(word_freq / total_words)
-        
+
         # Calculate PMI
         independent_prob = 1.0
         for prob in word_probs:
             independent_prob *= prob
-        
+
         if independent_prob == 0:
             return 0.0
-        
+
         pmi = math.log2(joint_prob / independent_prob)
         return pmi
-    
+
     def is_meaningful_phrase(self, phrase: Tuple[str, ...]) -> bool:
         """Check if a phrase is meaningful and not just noise."""
-        phrase_text = ' '.join(phrase)
-        
+        phrase_text = " ".join(phrase)
+
         # Check against meaningless phrases
         if phrase_text in MEANINGLESS_PHRASES:
             return False
-        
+
         # Check for repeated words
         if len(set(phrase)) < len(phrase):
             return False
-        
+
         # Check for very short words (likely noise)
         if any(len(word) < 2 for word in phrase):
             return False
-        
+
         return True
-    
+
     @functools.lru_cache(maxsize=1000)
     def extract_phrases_from_text(self, text: str) -> Dict[str, int]:
         """
         Extract meaningful phrases from a single text.
-        
+
         Returns:
             Dictionary mapping phrases to their frequencies
         """
         tokens = self.tokenize_text(text)
         if len(tokens) < 2:
             return {}
-        
+
         phrase_freqs = {}
-        
+
         # Extract n-grams of different lengths
         for n in range(2, min(self.max_phrase_length + 1, len(tokens) + 1)):
             ngrams = self.extract_ngrams(tokens, n)
-            
+
             for ngram in ngrams:
                 if self.is_meaningful_phrase(ngram):
-                    phrase = ' '.join(ngram)
+                    phrase = " ".join(ngram)
                     phrase_freqs[phrase] = phrase_freqs.get(phrase, 0) + 1
-        
+
         return phrase_freqs
-    
+
     def extract_phrases_from_corpus(self, texts: List[str]) -> Dict[str, Dict[str, int]]:
         """
         Extract phrases from a corpus of texts with statistical validation.
-        
+
         Args:
             texts: List of text strings to analyze
-            
+
         Returns:
             Dictionary with phrase statistics:
             {
@@ -229,64 +314,64 @@ class PhraseExtractor:
         all_phrases = Counter()
         word_freqs = Counter()
         total_words = 0
-        
+
         for text in texts:
             if not text or not text.strip():
                 continue
-                
+
             # Extract phrases from this text
             text_phrases = self.extract_phrases_from_text(text)
             for phrase, freq in text_phrases.items():
                 all_phrases[phrase] += freq
-            
+
             # Extract individual words for PMI calculation
             tokens = self.tokenize_text(text)
             for token in tokens:
                 word_freqs[token] += 1
                 total_words += 1
-        
+
         # Calculate PMI scores for phrases
         pmi_scores = {}
         validated_phrases = {}
-        
+
         for phrase, freq in all_phrases.items():
             if freq >= self.min_frequency:
                 phrase_tokens = tuple(phrase.split())
                 pmi = self.calculate_pmi(phrase_tokens, dict(word_freqs), total_words)
                 pmi_scores[phrase] = pmi
-                
+
                 if pmi >= self.min_pmi:
                     validated_phrases[phrase] = freq
-        
+
         return {
-            'phrases': validated_phrases,
-            'word_freqs': dict(word_freqs),
-            'total_words': total_words,
-            'pmi_scores': pmi_scores
+            "phrases": validated_phrases,
+            "word_freqs": dict(word_freqs),
+            "total_words": total_words,
+            "pmi_scores": pmi_scores,
         }
-    
+
     def get_top_phrases(self, texts: List[str], top_n: int = 50) -> Dict[str, int]:
         """
         Get top phrases from a corpus of texts.
-        
+
         Args:
             texts: List of text strings
             top_n: Number of top phrases to return
-            
+
         Returns:
             Dictionary of top phrases with their frequencies
         """
         corpus_stats = self.extract_phrases_from_corpus(texts)
-        phrases = corpus_stats['phrases']
-        
+        phrases = corpus_stats["phrases"]
+
         # Sort by frequency and return top N
         sorted_phrases = sorted(phrases.items(), key=lambda x: x[1], reverse=True)
         return dict(sorted_phrases[:top_n])
-    
+
     def extract_phrases_with_sentiment_context(self, texts: List[str]) -> Dict[str, Dict]:
         """
         Extract phrases with additional context for sentiment analysis.
-        
+
         Returns:
             Dictionary with phrase information including context:
             {
@@ -299,64 +384,86 @@ class PhraseExtractor:
             }
         """
         corpus_stats = self.extract_phrases_from_corpus(texts)
-        phrases = corpus_stats['phrases']
-        pmi_scores = corpus_stats['pmi_scores']
-        
+        phrases = corpus_stats["phrases"]
+        pmi_scores = corpus_stats["pmi_scores"]
+
         enhanced_phrases = {}
-        
+
         for phrase, freq in phrases.items():
             enhanced_phrases[phrase] = {
-                'frequency': freq,
-                'pmi_score': pmi_scores.get(phrase, 0.0),
-                'contexts': self._extract_phrase_contexts(phrase, texts),
-                'sentiment_hints': self._extract_sentiment_hints(phrase, texts)
+                "frequency": freq,
+                "pmi_score": pmi_scores.get(phrase, 0.0),
+                "contexts": self._extract_phrase_contexts(phrase, texts),
+                "sentiment_hints": self._extract_sentiment_hints(phrase, texts),
             }
-        
+
         return enhanced_phrases
-    
+
     def _extract_phrase_contexts(self, phrase: str, texts: List[str]) -> List[str]:
         """Extract surrounding context for a phrase."""
         contexts = []
         phrase_words = phrase.split()
-        
+
         for text in texts:
             tokens = self.tokenize_text(text)
             for i in range(len(tokens) - len(phrase_words) + 1):
-                if tuple(tokens[i:i+len(phrase_words)]) == tuple(phrase_words):
+                if tuple(tokens[i : i + len(phrase_words)]) == tuple(phrase_words):
                     # Extract context (2 words before and after)
                     start = max(0, i - 2)
                     end = min(len(tokens), i + len(phrase_words) + 2)
-                    context = ' '.join(tokens[start:end])
+                    context = " ".join(tokens[start:end])
                     contexts.append(context)
-        
+
         return contexts[:10]  # Limit to 10 contexts
-    
+
     def _extract_sentiment_hints(self, phrase: str, texts: List[str]) -> List[str]:
         """Extract sentiment-related words that appear near the phrase."""
         sentiment_hints = []
         phrase_words = phrase.split()
-        
+
         # Common sentiment indicators
         sentiment_words = {
-            'very', 'really', 'quite', 'extremely', 'absolutely', 'totally',
-            'not', 'never', 'no', 'nothing', 'nobody', 'nowhere',
-            'always', 'all', 'every', 'completely', 'perfectly',
-            'جدا', 'حقا', 'تماما', 'مطلقا', 'كليا', 'لا', 'لم', 'لن', 'ليس'
+            "very",
+            "really",
+            "quite",
+            "extremely",
+            "absolutely",
+            "totally",
+            "not",
+            "never",
+            "no",
+            "nothing",
+            "nobody",
+            "nowhere",
+            "always",
+            "all",
+            "every",
+            "completely",
+            "perfectly",
+            "جدا",
+            "حقا",
+            "تماما",
+            "مطلقا",
+            "كليا",
+            "لا",
+            "لم",
+            "لن",
+            "ليس",
         }
-        
+
         for text in texts:
             tokens = self.tokenize_text(text)
             for i in range(len(tokens) - len(phrase_words) + 1):
-                if tuple(tokens[i:i+len(phrase_words)]) == tuple(phrase_words):
+                if tuple(tokens[i : i + len(phrase_words)]) == tuple(phrase_words):
                     # Look for sentiment words in nearby context
                     start = max(0, i - 3)
                     end = min(len(tokens), i + len(phrase_words) + 3)
                     context_tokens = tokens[start:end]
-                    
+
                     for token in context_tokens:
                         if token in sentiment_words:
                             sentiment_hints.append(token)
-        
+
         return list(set(sentiment_hints))  # Remove duplicates
 
 
@@ -364,11 +471,11 @@ class PhraseExtractor:
 def extract_phrases_simple(texts: List[str], top_n: int = 50) -> Dict[str, int]:
     """
     Simple phrase extraction function for quick integration.
-    
+
     Args:
         texts: List of text strings
         top_n: Number of top phrases to return
-        
+
     Returns:
         Dictionary of top phrases with frequencies
     """
@@ -379,17 +486,17 @@ def extract_phrases_simple(texts: List[str], top_n: int = 50) -> Dict[str, int]:
 def extract_phrases_advanced(texts: List[str], top_n: int = 50) -> Dict[str, Dict]:
     """
     Advanced phrase extraction with sentiment context.
-    
+
     Args:
         texts: List of text strings
         top_n: Number of top phrases to return
-        
+
     Returns:
         Dictionary with detailed phrase information
     """
     extractor = PhraseExtractor()
     phrases = extractor.extract_phrases_with_sentiment_context(texts)
-    
+
     # Sort by frequency and return top N
-    sorted_phrases = sorted(phrases.items(), key=lambda x: x[1]['frequency'], reverse=True)
+    sorted_phrases = sorted(phrases.items(), key=lambda x: x[1]["frequency"], reverse=True)
     return dict(sorted_phrases[:top_n])

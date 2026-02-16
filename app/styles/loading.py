@@ -18,14 +18,17 @@ def show_spinner(message: str = "Loading..."):
     Args:
         message: Loading message to display
     """
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <div style="text-align: center; padding: 2rem;">
         <div class="loading-spinner"></div>
         <p style="margin-top: 1rem; color: var(--text-secondary); font-weight: 500;">
             {message}
         </p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 
 def show_loading_dots(message: str = "Processing"):
@@ -35,7 +38,8 @@ def show_loading_dots(message: str = "Processing"):
     Args:
         message: Message to display
     """
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <div style="text-align: center; padding: 1rem;">
         <p style="color: var(--text-secondary); font-weight: 500; margin-bottom: 0.5rem;">
             {message}
@@ -46,7 +50,9 @@ def show_loading_dots(message: str = "Processing"):
             <div class="loading-dot"></div>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 
 def show_progress_bar(progress: float, message: str = ""):
@@ -59,9 +65,10 @@ def show_progress_bar(progress: float, message: str = ""):
     """
     percentage = int(progress * 100)
 
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <div style="margin: 1rem 0;">
-        {f'<p style="color: var(--text-secondary); font-weight: 500; margin-bottom: 0.5rem;">{message}</p>' if message else ''}
+        {f'<p style="color: var(--text-secondary); font-weight: 500; margin-bottom: 0.5rem;">{message}</p>' if message else ""}
         <div style="
             width: 100%;
             height: 8px;
@@ -84,7 +91,9 @@ def show_progress_bar(progress: float, message: str = ""):
             margin-top: 0.25rem;
         ">{percentage}%</p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 
 def show_skeleton_loader(height: str = "100px", count: int = 1):
@@ -114,7 +123,8 @@ def show_skeleton_loader(height: str = "100px", count: int = 1):
         "></div>
         """
 
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <style>
         @keyframes loading {{
             0% {{ background-position: 200% 0; }}
@@ -122,7 +132,9 @@ def show_skeleton_loader(height: str = "100px", count: int = 1):
         }}
     </style>
     {skeleton_html}
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 
 @contextmanager
@@ -167,19 +179,18 @@ def with_loading(message: str = "Loading..."):
             # Your code here
             return posts
     """
+
     def decorator(func: Callable) -> Callable:
         def wrapper(*args, **kwargs) -> Any:
             with st.spinner(message):
                 return func(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
-def show_status_indicator(
-    status: str,
-    message: str,
-    icon: Optional[str] = None
-):
+def show_status_indicator(status: str, message: str, icon: Optional[str] = None):
     """
     Show a status indicator (success, warning, error, info).
 
@@ -189,34 +200,35 @@ def show_status_indicator(
         icon: Optional emoji icon
     """
     status_config = {
-        'success': {
-            'color': 'var(--accent-green)',
-            'bg': 'rgba(16, 185, 129, 0.1)',
-            'icon': '✅' if not icon else icon
+        "success": {
+            "color": "var(--accent-green)",
+            "bg": "rgba(16, 185, 129, 0.1)",
+            "icon": "✅" if not icon else icon,
         },
-        'warning': {
-            'color': 'var(--accent-orange)',
-            'bg': 'rgba(245, 158, 11, 0.1)',
-            'icon': '⚠️' if not icon else icon
+        "warning": {
+            "color": "var(--accent-orange)",
+            "bg": "rgba(245, 158, 11, 0.1)",
+            "icon": "⚠️" if not icon else icon,
         },
-        'error': {
-            'color': 'var(--accent-red)',
-            'bg': 'rgba(239, 68, 68, 0.1)',
-            'icon': '❌' if not icon else icon
+        "error": {
+            "color": "var(--accent-red)",
+            "bg": "rgba(239, 68, 68, 0.1)",
+            "icon": "❌" if not icon else icon,
         },
-        'info': {
-            'color': 'var(--accent-blue)',
-            'bg': 'rgba(59, 130, 246, 0.1)',
-            'icon': 'ℹ️' if not icon else icon
-        }
+        "info": {
+            "color": "var(--accent-blue)",
+            "bg": "rgba(59, 130, 246, 0.1)",
+            "icon": "ℹ️" if not icon else icon,
+        },
     }
 
-    config = status_config.get(status, status_config['info'])
+    config = status_config.get(status, status_config["info"])
 
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <div style="
-        background: {config['bg']};
-        border-left: 4px solid {config['color']};
+        background: {config["bg"]};
+        border-left: 4px solid {config["color"]};
         padding: 1rem 1.5rem;
         border-radius: var(--radius-md);
         display: flex;
@@ -224,14 +236,16 @@ def show_status_indicator(
         gap: 1rem;
         margin: 1rem 0;
     ">
-        <span style="font-size: 1.5rem;">{config['icon']}</span>
+        <span style="font-size: 1.5rem;">{config["icon"]}</span>
         <p style="
             margin: 0;
             color: var(--text-primary);
             font-weight: 500;
         ">{message}</p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 
 def show_processing_steps(steps: list, current_step: int):
@@ -275,12 +289,13 @@ def show_processing_steps(steps: list, current_step: int):
             <p style="
                 margin: 0;
                 color: {color};
-                font-weight: {'600' if is_current else '500'};
+                font-weight: {"600" if is_current else "500"};
             ">{step}</p>
         </div>
         """
 
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <div style="
         background: var(--bg-primary);
         padding: 1rem;
@@ -289,7 +304,9 @@ def show_processing_steps(steps: list, current_step: int):
     ">
         {steps_html}
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 
 def show_data_loading_placeholder(rows: int = 3):
@@ -308,7 +325,8 @@ def show_data_loading_placeholder(rows: int = 3):
 
 def show_chart_loading_placeholder():
     """Show placeholder for chart that's loading."""
-    st.markdown("""
+    st.markdown(
+        """
     <div style="
         width: 100%;
         height: 400px;
@@ -325,7 +343,9 @@ def show_chart_loading_placeholder():
             Loading chart...
         </p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 
 def show_empty_state(
@@ -333,7 +353,7 @@ def show_empty_state(
     title: str,
     message: str,
     action_text: Optional[str] = None,
-    action_callback: Optional[Callable] = None
+    action_callback: Optional[Callable] = None,
 ):
     """
     Show an empty state when no data is available.
@@ -345,7 +365,8 @@ def show_empty_state(
         action_text: Optional action button text
         action_callback: Optional callback for action button
     """
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <div style="
         text-align: center;
         padding: 3rem 2rem;
@@ -359,7 +380,9 @@ def show_empty_state(
             {message}
         </p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     if action_text and action_callback:
         if st.button(action_text, key=f"empty_state_{title}"):

@@ -19,6 +19,7 @@ import functools
 try:
     from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
     from sklearn.decomposition import LatentDirichletAllocation
+
     SKLEARN_AVAILABLE = True
 except ImportError:
     SKLEARN_AVAILABLE = False
@@ -30,36 +31,98 @@ except ImportError:
 
 EMOJI_SENTIMENT_MAP = {
     # Very Positive
-    '❤️': 1.0, '😍': 1.0, '🥰': 1.0, '😘': 1.0, '💕': 1.0, '💖': 1.0, '💗': 1.0,
-    '🤩': 1.0, '🌟': 1.0, '✨': 1.0, '🎉': 1.0, '🎊': 1.0, '🏆': 1.0, '🥇': 1.0,
-
+    "❤️": 1.0,
+    "😍": 1.0,
+    "🥰": 1.0,
+    "😘": 1.0,
+    "💕": 1.0,
+    "💖": 1.0,
+    "💗": 1.0,
+    "🤩": 1.0,
+    "🌟": 1.0,
+    "✨": 1.0,
+    "🎉": 1.0,
+    "🎊": 1.0,
+    "🏆": 1.0,
+    "🥇": 1.0,
     # Positive
-    '😊': 0.8, '😀': 0.8, '😃': 0.8, '😄': 0.8, '😁': 0.8, '😆': 0.8, '🙂': 0.8,
-    '👍': 0.8, '👏': 0.8, '🙌': 0.8, '💪': 0.8, '🔥': 0.8, '💯': 0.8, '✅': 0.8,
-    '😎': 0.7, '🤗': 0.7, '😇': 0.7, '🌈': 0.7, '🌻': 0.7, '🌺': 0.7, '🌸': 0.7,
-
+    "😊": 0.8,
+    "😀": 0.8,
+    "😃": 0.8,
+    "😄": 0.8,
+    "😁": 0.8,
+    "😆": 0.8,
+    "🙂": 0.8,
+    "👍": 0.8,
+    "👏": 0.8,
+    "🙌": 0.8,
+    "💪": 0.8,
+    "🔥": 0.8,
+    "💯": 0.8,
+    "✅": 0.8,
+    "😎": 0.7,
+    "🤗": 0.7,
+    "😇": 0.7,
+    "🌈": 0.7,
+    "🌻": 0.7,
+    "🌺": 0.7,
+    "🌸": 0.7,
     # Slightly Positive
-    '🙏': 0.5, '🤝': 0.5, '👌': 0.5, '✌️': 0.5, '🎵': 0.5, '🎶': 0.5, '📈': 0.5,
-
+    "🙏": 0.5,
+    "🤝": 0.5,
+    "👌": 0.5,
+    "✌️": 0.5,
+    "🎵": 0.5,
+    "🎶": 0.5,
+    "📈": 0.5,
     # Neutral/Ambiguous
-    '😐': 0.0, '😑': 0.0, '🤔': 0.0, '🧐': 0.0, '😶': 0.0, '🙃': 0.0,
-
+    "😐": 0.0,
+    "😑": 0.0,
+    "🤔": 0.0,
+    "🧐": 0.0,
+    "😶": 0.0,
+    "🙃": 0.0,
     # Slightly Negative
-    '😕': -0.4, '🤨': -0.4, '😬': -0.4, '😓': -0.5, '😥': -0.5, '😰': -0.5,
-
+    "😕": -0.4,
+    "🤨": -0.4,
+    "😬": -0.4,
+    "😓": -0.5,
+    "😥": -0.5,
+    "😰": -0.5,
     # Negative
-    '😞': -0.7, '😔': -0.7, '😟': -0.7, '🙁': -0.7, '☹️': -0.7, '😣': -0.7,
-    '😖': -0.7, '😫': -0.7, '😩': -0.7, '😢': -0.8, '😭': -0.8, '😪': -0.6,
-    '👎': -0.8, '😤': -0.7, '😠': -0.8, '😡': -0.9, '🤬': -1.0, '💔': -0.9,
-
+    "😞": -0.7,
+    "😔": -0.7,
+    "😟": -0.7,
+    "🙁": -0.7,
+    "☹️": -0.7,
+    "😣": -0.7,
+    "😖": -0.7,
+    "😫": -0.7,
+    "😩": -0.7,
+    "😢": -0.8,
+    "😭": -0.8,
+    "😪": -0.6,
+    "👎": -0.8,
+    "😤": -0.7,
+    "😠": -0.8,
+    "😡": -0.9,
+    "🤬": -1.0,
+    "💔": -0.9,
     # Very Negative
-    '😱': -1.0, '😨': -1.0, '🤮': -1.0, '🤢': -1.0, '😷': -0.7,
-
+    "😱": -1.0,
+    "😨": -1.0,
+    "🤮": -1.0,
+    "🤢": -1.0,
+    "😷": -0.7,
     # Surprise (context-dependent, default neutral)
-    '😲': 0.0, '😯': 0.0, '😮': 0.0, '😧': -0.3,
-
+    "😲": 0.0,
+    "😯": 0.0,
+    "😮": 0.0,
+    "😧": -0.3,
     # Laughing (positive)
-    '😂': 0.9, '🤣': 0.9, '😹': 0.9,
+    "😂": 0.9,
+    "🤣": 0.9,
+    "😹": 0.9,
 }
 
 
@@ -87,27 +150,30 @@ def analyze_text_emojis(text: str) -> Dict[str, Any]:
         Dictionary with emoji analysis
     """
     # Find all emojis
-    emoji_pattern = re.compile("["
-        u"\U0001F600-\U0001F64F"  # emoticons
-        u"\U0001F300-\U0001F5FF"  # symbols & pictographs
-        u"\U0001F680-\U0001F6FF"  # transport & map symbols
-        u"\U0001F1E0-\U0001F1FF"  # flags
-        u"\U00002702-\U000027B0"
-        u"\U000024C2-\U0001F251"
-        u"\U0001F900-\U0001F9FF"  # Supplemental Symbols and Pictographs
-        u"\U0001FA70-\U0001FAFF"  # Symbols and Pictographs Extended-A
-        "]+", flags=re.UNICODE)
+    emoji_pattern = re.compile(
+        "["
+        "\U0001f600-\U0001f64f"  # emoticons
+        "\U0001f300-\U0001f5ff"  # symbols & pictographs
+        "\U0001f680-\U0001f6ff"  # transport & map symbols
+        "\U0001f1e0-\U0001f1ff"  # flags
+        "\U00002702-\U000027b0"
+        "\U000024c2-\U0001f251"
+        "\U0001f900-\U0001f9ff"  # Supplemental Symbols and Pictographs
+        "\U0001fa70-\U0001faff"  # Symbols and Pictographs Extended-A
+        "]+",
+        flags=re.UNICODE,
+    )
 
     emojis = emoji_pattern.findall(text)
 
     if not emojis:
         return {
-            'emoji_count': 0,
-            'unique_emojis': 0,
-            'emoji_sentiment_score': 0.0,
-            'emoji_sentiment_label': 'neutral',
-            'emojis': [],
-            'sentiment_contribution': 0.0
+            "emoji_count": 0,
+            "unique_emojis": 0,
+            "emoji_sentiment_score": 0.0,
+            "emoji_sentiment_label": "neutral",
+            "emojis": [],
+            "sentiment_contribution": 0.0,
         }
 
     emoji_counts = Counter(emojis)
@@ -117,11 +183,7 @@ def analyze_text_emojis(text: str) -> Dict[str, Any]:
     for emoji, count in emoji_counts.items():
         sentiment = get_emoji_sentiment(emoji)
         total_sentiment += sentiment * count
-        emoji_details.append({
-            'emoji': emoji,
-            'count': count,
-            'sentiment': sentiment
-        })
+        emoji_details.append({"emoji": emoji, "count": count, "sentiment": sentiment})
 
     # Calculate average sentiment
     total_emojis = len(emojis)
@@ -129,22 +191,22 @@ def analyze_text_emojis(text: str) -> Dict[str, Any]:
 
     # Determine label
     if avg_sentiment > 0.3:
-        label = 'positive'
+        label = "positive"
     elif avg_sentiment < -0.3:
-        label = 'negative'
+        label = "negative"
     else:
-        label = 'neutral'
+        label = "neutral"
 
     # Sort by count
-    emoji_details.sort(key=lambda x: x['count'], reverse=True)
+    emoji_details.sort(key=lambda x: x["count"], reverse=True)
 
     return {
-        'emoji_count': total_emojis,
-        'unique_emojis': len(emoji_counts),
-        'emoji_sentiment_score': avg_sentiment,
-        'emoji_sentiment_label': label,
-        'emojis': emoji_details,
-        'sentiment_contribution': total_sentiment
+        "emoji_count": total_emojis,
+        "unique_emojis": len(emoji_counts),
+        "emoji_sentiment_score": avg_sentiment,
+        "emoji_sentiment_label": label,
+        "emojis": emoji_details,
+        "sentiment_contribution": total_sentiment,
     }
 
 
@@ -152,16 +214,15 @@ def analyze_text_emojis(text: str) -> Dict[str, Any]:
 # TOPIC MODELING
 # ============================================================================
 
+
 class TopicModeler:
     """
     Topic modeling using LDA (Latent Dirichlet Allocation).
     """
 
-    def __init__(self,
-                 n_topics: int = 5,
-                 max_features: int = 1000,
-                 min_df: int = 2,
-                 max_df: float = 0.8):
+    def __init__(
+        self, n_topics: int = 5, max_features: int = 1000, min_df: int = 2, max_df: float = 0.8
+    ):
         """
         Initialize topic modeler.
 
@@ -172,7 +233,9 @@ class TopicModeler:
             max_df: Maximum document frequency
         """
         if not SKLEARN_AVAILABLE:
-            raise ImportError("sklearn is required for topic modeling. Install with: pip install scikit-learn")
+            raise ImportError(
+                "sklearn is required for topic modeling. Install with: pip install scikit-learn"
+            )
 
         self.n_topics = n_topics
         self.max_features = max_features
@@ -183,7 +246,7 @@ class TopicModeler:
         self.lda_model = None
         self.feature_names = None
 
-    def fit(self, texts: List[str]) -> 'TopicModeler':
+    def fit(self, texts: List[str]) -> "TopicModeler":
         """
         Fit topic model on texts.
 
@@ -199,7 +262,7 @@ class TopicModeler:
             min_df=self.min_df,
             max_df=self.max_df,
             stop_words=None,  # We handle stopwords separately
-            token_pattern=r'\b\w+\b'
+            token_pattern=r"\b\w+\b",
         )
 
         doc_term_matrix = self.vectorizer.fit_transform(texts)
@@ -210,8 +273,8 @@ class TopicModeler:
             n_components=self.n_topics,
             random_state=42,
             max_iter=20,
-            learning_method='online',
-            n_jobs=-1
+            learning_method="online",
+            n_jobs=-1,
         )
 
         self.lda_model.fit(doc_term_matrix)
@@ -239,12 +302,14 @@ class TopicModeler:
             top_words = [self.feature_names[i] for i in top_indices]
             top_weights = [topic[i] for i in top_indices]
 
-            topics.append({
-                'topic_id': topic_idx,
-                'words': top_words,
-                'weights': top_weights.tolist(),
-                'word_weight_pairs': list(zip(top_words, top_weights.tolist()))
-            })
+            topics.append(
+                {
+                    "topic_id": topic_idx,
+                    "words": top_words,
+                    "weights": top_weights.tolist(),
+                    "word_weight_pairs": list(zip(top_words, top_weights.tolist())),
+                }
+            )
 
         return topics
 
@@ -273,9 +338,7 @@ class TopicModeler:
 
 
 def extract_topics_from_texts(
-    texts: List[str],
-    n_topics: int = 5,
-    top_n_words: int = 10
+    texts: List[str], n_topics: int = 5, top_n_words: int = 10
 ) -> List[Dict[str, Any]]:
     """
     Extract topics from a corpus of texts.
@@ -307,11 +370,9 @@ def extract_topics_from_texts(
 # KEYWORD EXTRACTION
 # ============================================================================
 
+
 def extract_keywords_tfidf(
-    texts: List[str],
-    top_n: int = 20,
-    min_df: int = 2,
-    max_df: float = 0.8
+    texts: List[str], top_n: int = 20, min_df: int = 2, max_df: float = 0.8
 ) -> List[Tuple[str, float]]:
     """
     Extract keywords using TF-IDF.
@@ -337,7 +398,7 @@ def extract_keywords_tfidf(
             min_df=min_df,
             max_df=max_df,
             stop_words=None,
-            token_pattern=r'\b\w+\b'
+            token_pattern=r"\b\w+\b",
         )
 
         tfidf_matrix = vectorizer.fit_transform(texts)
@@ -360,6 +421,7 @@ def extract_keywords_tfidf(
 # TEXT STATISTICS
 # ============================================================================
 
+
 def calculate_text_statistics(texts: List[str]) -> Dict[str, Any]:
     """
     Calculate comprehensive text statistics.
@@ -372,13 +434,13 @@ def calculate_text_statistics(texts: List[str]) -> Dict[str, Any]:
     """
     if not texts:
         return {
-            'total_texts': 0,
-            'total_words': 0,
-            'total_chars': 0,
-            'avg_text_length': 0.0,
-            'avg_word_count': 0.0,
-            'unique_words': 0,
-            'vocabulary_richness': 0.0
+            "total_texts": 0,
+            "total_words": 0,
+            "total_chars": 0,
+            "avg_text_length": 0.0,
+            "avg_word_count": 0.0,
+            "unique_words": 0,
+            "vocabulary_richness": 0.0,
         }
 
     total_words = 0
@@ -395,19 +457,20 @@ def calculate_text_statistics(texts: List[str]) -> Dict[str, Any]:
     vocabulary_richness = unique_words / total_words if total_words > 0 else 0.0
 
     return {
-        'total_texts': len(texts),
-        'total_words': total_words,
-        'total_chars': total_chars,
-        'avg_text_length': total_chars / len(texts),
-        'avg_word_count': total_words / len(texts),
-        'unique_words': unique_words,
-        'vocabulary_richness': vocabulary_richness
+        "total_texts": len(texts),
+        "total_words": total_words,
+        "total_chars": total_chars,
+        "avg_text_length": total_chars / len(texts),
+        "avg_word_count": total_words / len(texts),
+        "unique_words": unique_words,
+        "vocabulary_richness": vocabulary_richness,
     }
 
 
 # ============================================================================
 # ENHANCED SENTIMENT WITH EMOJI INTEGRATION
 # ============================================================================
+
 
 def analyze_text_with_emoji_sentiment(text: str) -> Dict[str, Any]:
     """
@@ -432,30 +495,31 @@ def analyze_text_with_emoji_sentiment(text: str) -> Dict[str, Any]:
     emoji_weight = 0.3
 
     combined_score = (
-        text_sentiment['overall_score'] * text_weight +
-        emoji_analysis['emoji_sentiment_score'] * emoji_weight
+        text_sentiment["overall_score"] * text_weight
+        + emoji_analysis["emoji_sentiment_score"] * emoji_weight
     )
 
     # Determine combined label
     if combined_score > 0.3:
-        combined_label = 'positive'
+        combined_label = "positive"
     elif combined_score < -0.3:
-        combined_label = 'negative'
+        combined_label = "negative"
     else:
-        combined_label = 'neutral'
+        combined_label = "neutral"
 
     return {
-        'text_sentiment': text_sentiment,
-        'emoji_sentiment': emoji_analysis,
-        'combined_score': combined_score,
-        'combined_label': combined_label,
-        'emoji_contribution': emoji_analysis['sentiment_contribution']
+        "text_sentiment": text_sentiment,
+        "emoji_sentiment": emoji_analysis,
+        "combined_score": combined_score,
+        "combined_label": combined_label,
+        "emoji_contribution": emoji_analysis["sentiment_contribution"],
     }
 
 
 # ============================================================================
 # BATCH ANALYSIS
 # ============================================================================
+
 
 def analyze_corpus_advanced(texts: List[str]) -> Dict[str, Any]:
     """
@@ -468,11 +532,11 @@ def analyze_corpus_advanced(texts: List[str]) -> Dict[str, Any]:
         Complete analysis results
     """
     results = {
-        'statistics': calculate_text_statistics(texts),
-        'topics': extract_topics_from_texts(texts, n_topics=5, top_n_words=10),
-        'keywords': extract_keywords_tfidf(texts, top_n=20),
-        'emoji_analysis': {},
-        'sentiment_distribution': {'positive': 0, 'negative': 0, 'neutral': 0}
+        "statistics": calculate_text_statistics(texts),
+        "topics": extract_topics_from_texts(texts, n_topics=5, top_n_words=10),
+        "keywords": extract_keywords_tfidf(texts, top_n=20),
+        "emoji_analysis": {},
+        "sentiment_distribution": {"positive": 0, "negative": 0, "neutral": 0},
     }
 
     # Analyze emojis across corpus
@@ -481,19 +545,19 @@ def analyze_corpus_advanced(texts: List[str]) -> Dict[str, Any]:
 
     for text in texts:
         emoji_data = analyze_text_emojis(text)
-        all_emojis.extend(emoji_data['emojis'])
-        emoji_sentiment_total += emoji_data['emoji_sentiment_score']
+        all_emojis.extend(emoji_data["emojis"])
+        emoji_sentiment_total += emoji_data["emoji_sentiment_score"]
 
     if all_emojis:
         emoji_counter = Counter()
         for emoji_info in all_emojis:
-            emoji_counter[emoji_info['emoji']] += emoji_info['count']
+            emoji_counter[emoji_info["emoji"]] += emoji_info["count"]
 
-        results['emoji_analysis'] = {
-            'total_emojis': sum(emoji_counter.values()),
-            'unique_emojis': len(emoji_counter),
-            'avg_sentiment': emoji_sentiment_total / len(texts),
-            'top_emojis': [{'emoji': e, 'count': c} for e, c in emoji_counter.most_common(15)]
+        results["emoji_analysis"] = {
+            "total_emojis": sum(emoji_counter.values()),
+            "unique_emojis": len(emoji_counter),
+            "avg_sentiment": emoji_sentiment_total / len(texts),
+            "top_emojis": [{"emoji": e, "count": c} for e, c in emoji_counter.most_common(15)],
         }
 
     return results

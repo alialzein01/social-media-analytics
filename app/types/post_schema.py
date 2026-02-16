@@ -23,11 +23,23 @@ NORMALIZED_POST_DEFAULTS: Dict[str, Any] = {
 }
 
 # Optional platform-specific keys we preserve but don't require
-OPTIONAL_KEYS = frozenset({
-    "type", "views", "duration", "hashtags", "mentions",
-    "displayUrl", "thumbnail_url", "channel", "channel_username",
-    "subscriber_count", "ownerUsername", "ownerFullName", "url",
-})
+OPTIONAL_KEYS = frozenset(
+    {
+        "type",
+        "views",
+        "duration",
+        "hashtags",
+        "mentions",
+        "displayUrl",
+        "thumbnail_url",
+        "channel",
+        "channel_username",
+        "subscriber_count",
+        "ownerUsername",
+        "ownerFullName",
+        "url",
+    }
+)
 
 
 def normalize_post_to_schema(post: Dict[str, Any]) -> Dict[str, Any]:
@@ -53,7 +65,9 @@ def normalize_post_to_schema(post: Dict[str, Any]) -> Dict[str, Any]:
                 val = {}
             if key == "attachments" and not isinstance(val, list):
                 val = []
-            if key in ("likes", "comments_count", "shares_count") and not isinstance(val, (int, float)):
+            if key in ("likes", "comments_count", "shares_count") and not isinstance(
+                val, (int, float)
+            ):
                 try:
                     val = int(val) if val is not None else 0
                 except (TypeError, ValueError):

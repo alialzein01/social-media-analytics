@@ -19,6 +19,7 @@ from collections import Counter
 
 try:
     from gliner import GLiNER
+
     GLINER_AVAILABLE = True
 except ImportError:
     GLINER_AVAILABLE = False
@@ -57,10 +58,7 @@ class EntityExtractor:
         return self._model
 
     def extract_entities(
-        self,
-        text: str,
-        labels: Optional[List[str]] = None,
-        threshold: float = 0.5
+        self, text: str, labels: Optional[List[str]] = None, threshold: float = 0.5
     ) -> List[Dict]:
         """
         Extract entities from text.
@@ -84,16 +82,16 @@ class EntityExtractor:
         # Default entity types (work well for both Arabic and English)
         if labels is None:
             labels = [
-                "person",           # أشخاص / People
-                "organization",     # منظمات / Organizations
-                "location",         # أماكن / Locations
-                "date",            # تواريخ / Dates
-                "time",            # أوقات / Times
-                "money",           # مبالغ مالية / Money amounts
-                "product",         # منتجات / Products
-                "event",           # أحداث / Events
-                "language",        # لغات / Languages
-                "nationality"      # جنسيات / Nationalities
+                "person",  # أشخاص / People
+                "organization",  # منظمات / Organizations
+                "location",  # أماكن / Locations
+                "date",  # تواريخ / Dates
+                "time",  # أوقات / Times
+                "money",  # مبالغ مالية / Money amounts
+                "product",  # منتجات / Products
+                "event",  # أحداث / Events
+                "language",  # لغات / Languages
+                "nationality",  # جنسيات / Nationalities
             ]
 
         # Extract entities using GLiNER
@@ -102,21 +100,20 @@ class EntityExtractor:
         # Convert to standard format
         result = []
         for entity in entities:
-            result.append({
-                'text': entity['text'],
-                'label': entity['label'],
-                'score': entity['score'],
-                'start': entity['start'],
-                'end': entity['end']
-            })
+            result.append(
+                {
+                    "text": entity["text"],
+                    "label": entity["label"],
+                    "score": entity["score"],
+                    "start": entity["start"],
+                    "end": entity["end"],
+                }
+            )
 
         return result
 
     def extract_entities_from_corpus(
-        self,
-        texts: List[str],
-        labels: Optional[List[str]] = None,
-        threshold: float = 0.5
+        self, texts: List[str], labels: Optional[List[str]] = None, threshold: float = 0.5
     ) -> Dict[str, List[Dict]]:
         """
         Extract entities from multiple texts.
@@ -142,7 +139,7 @@ class EntityExtractor:
         texts: List[str],
         labels: Optional[List[str]] = None,
         threshold: float = 0.5,
-        top_n: int = 20
+        top_n: int = 20,
     ) -> Dict[str, Dict[str, int]]:
         """
         Get frequency counts of entities by type.
@@ -171,8 +168,8 @@ class EntityExtractor:
             entities = self.extract_entities(text, labels, threshold)
 
             for entity in entities:
-                label = entity['label']
-                text = entity['text']
+                label = entity["label"]
+                text = entity["text"]
 
                 if label not in entity_counts:
                     entity_counts[label] = Counter()
@@ -187,10 +184,7 @@ class EntityExtractor:
         return result
 
     def extract_entity_contexts(
-        self,
-        texts: List[str],
-        entity_text: str,
-        context_window: int = 50
+        self, texts: List[str], entity_text: str, context_window: int = 50
     ) -> List[str]:
         """
         Extract context around specific entity mentions.
@@ -230,10 +224,7 @@ class EntityExtractor:
         return contexts[:10]  # Limit to 10 contexts
 
     def summarize_entities(
-        self,
-        texts: List[str],
-        labels: Optional[List[str]] = None,
-        threshold: float = 0.5
+        self, texts: List[str], labels: Optional[List[str]] = None, threshold: float = 0.5
     ) -> Dict:
         """
         Get comprehensive entity summary.
@@ -252,15 +243,15 @@ class EntityExtractor:
         total_entities = len(all_entities)
 
         # Count by type
-        entity_types = Counter(e['label'] for e in all_entities)
+        entity_types = Counter(e["label"] for e in all_entities)
 
         # Get unique entities per type
         unique_by_type = {}
         for entity in all_entities:
-            label = entity['label']
+            label = entity["label"]
             if label not in unique_by_type:
                 unique_by_type[label] = set()
-            unique_by_type[label].add(entity['text'])
+            unique_by_type[label].add(entity["text"])
 
         unique_counts = {label: len(entities) for label, entities in unique_by_type.items()}
 
@@ -268,10 +259,10 @@ class EntityExtractor:
         frequencies = self.get_entity_frequencies(texts, labels, threshold, top_n=10)
 
         return {
-            'total_entities': total_entities,
-            'entity_types': dict(entity_types),
-            'unique_entities_by_type': unique_counts,
-            'top_entities': frequencies
+            "total_entities": total_entities,
+            "entity_types": dict(entity_types),
+            "unique_entities_by_type": unique_counts,
+            "top_entities": frequencies,
         }
 
 
@@ -286,7 +277,7 @@ def extract_entities_simple(
     texts: List[str],
     entity_types: Optional[List[str]] = None,
     threshold: float = 0.5,
-    top_n: int = 20
+    top_n: int = 20,
 ) -> Dict[str, Dict[str, int]]:
     """
     Simple function to extract entity frequencies from texts.
@@ -311,9 +302,7 @@ def extract_entities_simple(
 
 
 def extract_entities_summary(
-    texts: List[str],
-    entity_types: Optional[List[str]] = None,
-    threshold: float = 0.5
+    texts: List[str], entity_types: Optional[List[str]] = None, threshold: float = 0.5
 ) -> Dict:
     """
     Get entity summary statistics.
@@ -328,10 +317,10 @@ def extract_entities_summary(
     """
     if not GLINER_AVAILABLE:
         return {
-            'total_entities': 0,
-            'entity_types': {},
-            'unique_entities_by_type': {},
-            'top_entities': {}
+            "total_entities": 0,
+            "entity_types": {},
+            "unique_entities_by_type": {},
+            "top_entities": {},
         }
 
     try:
@@ -339,8 +328,8 @@ def extract_entities_summary(
         return extractor.summarize_entities(texts, entity_types, threshold)
     except Exception:
         return {
-            'total_entities': 0,
-            'entity_types': {},
-            'unique_entities_by_type': {},
-            'top_entities': {}
+            "total_entities": 0,
+            "entity_types": {},
+            "unique_entities_by_type": {},
+            "top_entities": {},
         }

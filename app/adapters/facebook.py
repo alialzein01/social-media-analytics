@@ -40,14 +40,14 @@ class FacebookAdapter(PlatformAdapter):
             return False
 
         url_lower = url.lower()
-        return 'facebook.com' in url_lower
+        return "facebook.com" in url_lower
 
     def build_actor_input(
         self,
         url: str,
         max_posts: int = 10,
         from_date: Optional[str] = None,
-        to_date: Optional[str] = None
+        to_date: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Build Facebook actor input configuration.
@@ -57,10 +57,7 @@ class FacebookAdapter(PlatformAdapter):
         `from_date`/`to_date` are provided they will be included where
         supported as `onlyPostsNewerThan` / `onlyPostsOlderThan`.
         """
-        actor_input = {
-            "pageUrls": [url],
-            "resultsLimit": max_posts
-        }
+        actor_input = {"pageUrls": [url], "resultsLimit": max_posts}
 
         # Add date filters if provided (ISO format: YYYY-MM-DD or relative like "3 days ago")
         if from_date:
@@ -77,46 +74,41 @@ class FacebookAdapter(PlatformAdapter):
         Maps actor fields to standard schema with Facebook-specific additions.
         """
         # Extract post_id and ensure it's a string
-        post_id = raw_post.get('postId') or raw_post.get('id', '')
+        post_id = raw_post.get("postId") or raw_post.get("id", "")
 
         # Extract text with fallback options
         post_text = (
-            raw_post.get('postText') or
-            raw_post.get('text') or
-            raw_post.get('message') or
-            raw_post.get('caption', '')
+            raw_post.get("postText")
+            or raw_post.get("text")
+            or raw_post.get("message")
+            or raw_post.get("caption", "")
         )
 
         # Build normalized post
         post = {
             # Required fields
-            'post_id': str(post_id) if post_id else '',
-            'published_at': parse_published_at(
-                raw_post.get('time') or
-                raw_post.get('timestamp') or
-                raw_post.get('createdTime', '')
+            "post_id": str(post_id) if post_id else "",
+            "published_at": parse_published_at(
+                raw_post.get("time") or raw_post.get("timestamp") or raw_post.get("createdTime", "")
             ),
-            'text': str(post_text) if post_text and post_text != '' else '',
-
+            "text": str(post_text) if post_text and post_text != "" else "",
             # Engagement metrics
-            'likes': raw_post.get('reactionsCount', 0) or raw_post.get('likes', 0),
-            'comments_count': raw_post.get('commentsCount', 0) or raw_post.get('comments', 0),
-            'shares_count': raw_post.get('shares', 0),
-
+            "likes": raw_post.get("reactionsCount", 0) or raw_post.get("likes", 0),
+            "comments_count": raw_post.get("commentsCount", 0) or raw_post.get("comments", 0),
+            "shares_count": raw_post.get("shares", 0),
             # Facebook-specific
-            'reactions': raw_post.get('reactions', {}),
-            'comments_list': raw_post.get('commentsList', []) or raw_post.get('comments', []),
-
+            "reactions": raw_post.get("reactions", {}),
+            "comments_list": raw_post.get("commentsList", []) or raw_post.get("comments", []),
             # Metadata
-            'post_url': (
-                raw_post.get('url') or
-                raw_post.get('postUrl') or
-                raw_post.get('link') or
-                raw_post.get('facebookUrl') or
-                raw_post.get('pageUrl', '')
+            "post_url": (
+                raw_post.get("url")
+                or raw_post.get("postUrl")
+                or raw_post.get("link")
+                or raw_post.get("facebookUrl")
+                or raw_post.get("pageUrl", "")
             ),
-            'author': raw_post.get('author', {}),
-            'attachments': raw_post.get('attachments', [])
+            "author": raw_post.get("author", {}),
+            "attachments": raw_post.get("attachments", []),
         }
 
         return post
@@ -128,37 +120,56 @@ class FacebookAdapter(PlatformAdapter):
         # Normalize common key variations from different actors
         likes = None
         # numeric-like values may be strings in some actor outputs
-        if 'likes_count' in raw_comment:
-            likes = raw_comment.get('likes_count')
-        elif 'like_count' in raw_comment:
-            likes = raw_comment.get('like_count')
-        elif 'likesCount' in raw_comment:
-            likes = raw_comment.get('likesCount')
+        if "likes_count" in raw_comment:
+            likes = raw_comment.get("likes_count")
+        elif "like_count" in raw_comment:
+            likes = raw_comment.get("like_count")
+        elif "likesCount" in raw_comment:
+            likes = raw_comment.get("likesCount")
 
         # try to coerce likes to int
         try:
-            likes_count = int(likes) if likes is not None and likes != '' else 0
+            likes_count = int(likes) if likes is not None and likes != "" else 0
         except Exception:
             likes_count = 0
 
         # map possible text fields
-        text = raw_comment.get('text') or raw_comment.get('message') or raw_comment.get('commentText') or raw_comment.get('comment', '')
+        text = (
+            raw_comment.get("text")
+            or raw_comment.get("message")
+            or raw_comment.get("commentText")
+            or raw_comment.get("comment", "")
+        )
 
         # author name
-        author = raw_comment.get('author_name') or (raw_comment.get('from') or {}).get('name', '') or raw_comment.get('author')
+        author = (
+            raw_comment.get("author_name")
+            or (raw_comment.get("from") or {}).get("name", "")
+            or raw_comment.get("author")
+        )
 
         # map facebookUrl -> post_url for backward compatibility
-        post_url = raw_comment.get('post_url') or raw_comment.get('facebookUrl') or raw_comment.get('facebook_url') or raw_comment.get('postUrl')
+        post_url = (
+            raw_comment.get("post_url")
+            or raw_comment.get("facebookUrl")
+            or raw_comment.get("facebook_url")
+            or raw_comment.get("postUrl")
+        )
 
         return {
-            'comment_id': raw_comment.get('comment_id') or raw_comment.get('id', '') or raw_comment.get('cid', ''),
-            'text': text,
-            'author_name': author if isinstance(author, str) else str(author),
-            'created_time': raw_comment.get('created_time') or raw_comment.get('created_at') or raw_comment.get('timestamp', ''),
-            'likes_count': likes_count,
-            'parent_id': raw_comment.get('parent_id', '') or raw_comment.get('replyToCid', ''),
-            'replies_count': raw_comment.get('replies_count', 0) or raw_comment.get('replyCount', 0),
-            'post_url': post_url
+            "comment_id": raw_comment.get("comment_id")
+            or raw_comment.get("id", "")
+            or raw_comment.get("cid", ""),
+            "text": text,
+            "author_name": author if isinstance(author, str) else str(author),
+            "created_time": raw_comment.get("created_time")
+            or raw_comment.get("created_at")
+            or raw_comment.get("timestamp", ""),
+            "likes_count": likes_count,
+            "parent_id": raw_comment.get("parent_id", "") or raw_comment.get("replyToCid", ""),
+            "replies_count": raw_comment.get("replies_count", 0)
+            or raw_comment.get("replyCount", 0),
+            "post_url": post_url,
         }
 
     def calculate_engagement_rate(self, post: Dict) -> float:
@@ -168,9 +179,9 @@ class FacebookAdapter(PlatformAdapter):
         Formula: (Reactions + Comments + Shares) / Total Posts * 100
         Note: We don't have follower count, so we normalize per post.
         """
-        reactions = self._count_total_reactions(post.get('reactions', {}))
-        comments = post.get('comments_count', 0)
-        shares = post.get('shares_count', 0)
+        reactions = self._count_total_reactions(post.get("reactions", {}))
+        comments = post.get("comments_count", 0)
+        shares = post.get("shares_count", 0)
 
         total_engagement = reactions + comments + shares
 
@@ -205,11 +216,13 @@ class FacebookAdapter(PlatformAdapter):
         total_reactions = {}
 
         for post in posts:
-            reactions = post.get('reactions', {})
+            reactions = post.get("reactions", {})
             if isinstance(reactions, dict):
                 for reaction_type, count in reactions.items():
                     if isinstance(count, (int, float)):
-                        total_reactions[reaction_type] = total_reactions.get(reaction_type, 0) + count
+                        total_reactions[reaction_type] = (
+                            total_reactions.get(reaction_type, 0) + count
+                        )
 
         return total_reactions
 
@@ -226,13 +239,9 @@ class FacebookAdapter(PlatformAdapter):
         """
         # Add total_reactions field to each post
         for post in posts:
-            post['total_reactions'] = self._count_total_reactions(post.get('reactions', {}))
+            post["total_reactions"] = self._count_total_reactions(post.get("reactions", {}))
 
         # Sort by total reactions
-        sorted_posts = sorted(
-            posts,
-            key=lambda p: p.get('total_reactions', 0),
-            reverse=True
-        )
+        sorted_posts = sorted(posts, key=lambda p: p.get("total_reactions", 0), reverse=True)
 
         return sorted_posts[:top_n]

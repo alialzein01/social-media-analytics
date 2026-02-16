@@ -115,7 +115,7 @@ def _should_retry(e: Exception) -> bool:
 
 def _backoff_with_jitter(attempt: int) -> float:
     """Exponential backoff with jitter."""
-    backoff = min(INITIAL_BACKOFF_SECS * (2 ** attempt), MAX_BACKOFF_SECS)
+    backoff = min(INITIAL_BACKOFF_SECS * (2**attempt), MAX_BACKOFF_SECS)
     jitter = backoff * JITTER_FRACTION * (2 * random.random() - 1)
     return max(0.1, backoff + jitter)
 
@@ -221,6 +221,7 @@ def _validate_run(run: Any, actor_id: str) -> Dict[str, Any]:
 
 def get_run_status(client: ApifyClient, run_id: str) -> Dict[str, Any]:
     """Get status of an actor run by ID."""
+
     # ApifyClient has client.run(run_id).get()
     def _get():
         run = client.run(run_id).get()
@@ -252,6 +253,7 @@ def get_dataset_items(
     Returns:
         List of item dicts.
     """
+
     def _fetch() -> List[Dict[str, Any]]:
         dataset = client.dataset(dataset_id)
         items: List[Dict[str, Any]] = []
@@ -275,6 +277,7 @@ def get_key_value_store_record(
     key: str,
 ) -> Any:
     """Get a record from a key-value store."""
+
     def _get():
         return client.key_value_store(store_id).get_record(key)
 

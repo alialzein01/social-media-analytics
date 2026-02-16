@@ -13,8 +13,7 @@ import logging
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -28,7 +27,7 @@ class ErrorHandler:
         title: str = "An Error Occurred",
         show_details: bool = False,
         show_retry: bool = False,
-        retry_callback: Optional[Callable] = None
+        retry_callback: Optional[Callable] = None,
     ):
         """
         Show a user-friendly error message.
@@ -47,7 +46,8 @@ class ErrorHandler:
         user_message = ErrorHandler._get_user_friendly_message(error)
 
         # Show error UI
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div style="
             background: rgba(239, 68, 68, 0.1);
             border-left: 4px solid var(--accent-red);
@@ -63,7 +63,9 @@ class ErrorHandler:
                 {user_message}
             </p>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
         # Show technical details in expander
         if show_details:
@@ -90,42 +92,42 @@ class ErrorHandler:
         error_type = type(error).__name__
 
         # Network/API errors
-        if 'connection' in error_str or 'timeout' in error_str:
+        if "connection" in error_str or "timeout" in error_str:
             return "Unable to connect to the server. Please check your internet connection and try again."
 
-        if 'api' in error_str or 'apify' in error_str:
+        if "api" in error_str or "apify" in error_str:
             return "There was a problem connecting to the data source. Please verify your API credentials and try again."
 
-        if '401' in error_str or 'unauthorized' in error_str:
+        if "401" in error_str or "unauthorized" in error_str:
             return "Authentication failed. Please check your API token in the sidebar."
 
-        if '403' in error_str or 'forbidden' in error_str:
+        if "403" in error_str or "forbidden" in error_str:
             return "Access denied. Please verify you have permission to access this resource."
 
-        if '404' in error_str or 'not found' in error_str:
+        if "404" in error_str or "not found" in error_str:
             return "The requested resource was not found. Please verify the URL or ID."
 
-        if '429' in error_str or 'rate limit' in error_str:
+        if "429" in error_str or "rate limit" in error_str:
             return "Rate limit exceeded. Please wait a few minutes and try again."
 
-        if '500' in error_str or 'server error' in error_str:
+        if "500" in error_str or "server error" in error_str:
             return "The server encountered an error. Please try again later."
 
         # Data errors
-        if 'keyerror' in error_type.lower():
+        if "keyerror" in error_type.lower():
             return "Missing required data field. The data format may have changed."
 
-        if 'valueerror' in error_type.lower():
+        if "valueerror" in error_type.lower():
             return "Invalid data value encountered. Please verify your input."
 
-        if 'typeerror' in error_type.lower():
+        if "typeerror" in error_type.lower():
             return "Unexpected data type. The data format may be incorrect."
 
         # File errors
-        if 'filenotfound' in error_type.lower():
+        if "filenotfound" in error_type.lower():
             return "File not found. Please check the file path."
 
-        if 'permission' in error_str:
+        if "permission" in error_str:
             return "Permission denied. Please check file permissions."
 
         # Default message
@@ -141,10 +143,7 @@ class ErrorHandler:
             platform: Platform name (Facebook, Instagram, YouTube)
         """
         ErrorHandler.show_error(
-            error,
-            title=f"{platform} API Error",
-            show_details=True,
-            show_retry=False
+            error, title=f"{platform} API Error", show_details=True, show_retry=False
         )
 
         # Show platform-specific help
@@ -168,10 +167,7 @@ class ErrorHandler:
             context: Context where error occurred
         """
         ErrorHandler.show_error(
-            error,
-            title=f"Data Processing Error ({context})",
-            show_details=True,
-            show_retry=False
+            error, title=f"Data Processing Error ({context})", show_details=True, show_retry=False
         )
 
         st.warning("""
@@ -188,7 +184,7 @@ def safe_execute(
     func: Callable,
     error_title: str = "Operation Failed",
     show_details: bool = False,
-    default_return: Any = None
+    default_return: Any = None,
 ) -> Any:
     """
     Safely execute a function with error handling.
@@ -210,9 +206,7 @@ def safe_execute(
 
 
 def with_error_boundary(
-    error_title: str = "Operation Failed",
-    show_details: bool = False,
-    show_retry: bool = False
+    error_title: str = "Operation Failed", show_details: bool = False, show_retry: bool = False
 ):
     """
     Decorator for adding error boundaries to functions.
@@ -228,6 +222,7 @@ def with_error_boundary(
             # Your code here
             return data
     """
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args, **kwargs) -> Any:
@@ -239,10 +234,12 @@ def with_error_boundary(
                     title=error_title,
                     show_details=show_details,
                     show_retry=show_retry,
-                    retry_callback=lambda: func(*args, **kwargs) if show_retry else None
+                    retry_callback=lambda: func(*args, **kwargs) if show_retry else None,
                 )
                 return None
+
         return wrapper
+
     return decorator
 
 
@@ -252,7 +249,7 @@ def validate_input(
     required: bool = True,
     min_length: Optional[int] = None,
     max_length: Optional[int] = None,
-    pattern: Optional[str] = None
+    pattern: Optional[str] = None,
 ) -> bool:
     """
     Validate user input with helpful error messages.
@@ -296,11 +293,7 @@ def validate_input(
     return True
 
 
-def show_warning(
-    message: str,
-    title: str = "Warning",
-    dismissible: bool = True
-):
+def show_warning(message: str, title: str = "Warning", dismissible: bool = True):
     """
     Show a warning message.
 
@@ -309,7 +302,8 @@ def show_warning(
         title: Warning title
         dismissible: Whether warning can be dismissed
     """
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <div style="
         background: rgba(245, 158, 11, 0.1);
         border-left: 4px solid var(--accent-orange);
@@ -325,14 +319,12 @@ def show_warning(
             {message}
         </p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 
-def show_info(
-    message: str,
-    title: str = "Information",
-    icon: str = "ℹ️"
-):
+def show_info(message: str, title: str = "Information", icon: str = "ℹ️"):
     """
     Show an info message.
 
@@ -341,7 +333,8 @@ def show_info(
         title: Info title
         icon: Icon emoji
     """
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <div style="
         background: rgba(59, 130, 246, 0.1);
         border-left: 4px solid var(--accent-blue);
@@ -357,14 +350,12 @@ def show_info(
             {message}
         </p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 
-def show_success(
-    message: str,
-    title: str = "Success",
-    icon: str = "✅"
-):
+def show_success(message: str, title: str = "Success", icon: str = "✅"):
     """
     Show a success message.
 
@@ -373,7 +364,8 @@ def show_success(
         title: Success title
         icon: Icon emoji
     """
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <div style="
         background: rgba(16, 185, 129, 0.1);
         border-left: 4px solid var(--accent-green);
@@ -389,4 +381,6 @@ def show_success(
             {message}
         </p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )

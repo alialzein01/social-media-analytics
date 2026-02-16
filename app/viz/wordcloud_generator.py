@@ -35,8 +35,9 @@ from ..styles.theme import THEME_COLORS, SENTIMENT_COLORS
 try:
     import arabic_reshaper
     from bidi.algorithm import get_display
+
     ARABIC_SUPPORT = True
-    
+
     def reshape_arabic_text(text: str) -> str:
         """Reshape Arabic text for proper display."""
         try:
@@ -46,39 +47,121 @@ try:
             return text
 except ImportError:
     ARABIC_SUPPORT = False
-    
+
     def reshape_arabic_text(text: str) -> str:
         """Fallback for Arabic text when shaping libraries are not available."""
         return text
 
+
 DEFAULT_STOPWORDS = {
-    "the", "and", "for", "with", "that", "this", "you", "your", "our", "from", "are",
-    "was", "were", "have", "has", "had", "will", "can", "just", "about", "they", "them",
-    "but", "not", "all", "out", "new", "more", "some", "when", "what", "who", "how",
-    "http", "https", "www", "com", "amp", "rt", "u", "im", "dont", "didnt", "ive",
-    "post", "posts", "video", "videos", "reel", "reels", "shorts", "content", "channel",
-    "page", "profile", "follow", "followers", "following", "like", "likes", "comment",
-    "comments", "share", "shares", "subscribe", "subscribers", "instagram", "facebook",
-    "youtube", "tiktok", "social", "media", "link", "bio", "today", "tomorrow",
+    "the",
+    "and",
+    "for",
+    "with",
+    "that",
+    "this",
+    "you",
+    "your",
+    "our",
+    "from",
+    "are",
+    "was",
+    "were",
+    "have",
+    "has",
+    "had",
+    "will",
+    "can",
+    "just",
+    "about",
+    "they",
+    "them",
+    "but",
+    "not",
+    "all",
+    "out",
+    "new",
+    "more",
+    "some",
+    "when",
+    "what",
+    "who",
+    "how",
+    "http",
+    "https",
+    "www",
+    "com",
+    "amp",
+    "rt",
+    "u",
+    "im",
+    "dont",
+    "didnt",
+    "ive",
+    "post",
+    "posts",
+    "video",
+    "videos",
+    "reel",
+    "reels",
+    "shorts",
+    "content",
+    "channel",
+    "page",
+    "profile",
+    "follow",
+    "followers",
+    "following",
+    "like",
+    "likes",
+    "comment",
+    "comments",
+    "share",
+    "shares",
+    "subscribe",
+    "subscribers",
+    "instagram",
+    "facebook",
+    "youtube",
+    "tiktok",
+    "social",
+    "media",
+    "link",
+    "bio",
+    "today",
+    "tomorrow",
 }
 
 # Keep this list small and high-signal: remove platform boilerplate so thematic terms dominate.
 DOMAIN_STOPWORDS = {
-    "watch", "watched", "watching", "click", "clicked", "check", "checkout", "join",
-    "support", "official", "account", "story", "stories", "caption", "captions",
+    "watch",
+    "watched",
+    "watching",
+    "click",
+    "clicked",
+    "check",
+    "checkout",
+    "join",
+    "support",
+    "official",
+    "account",
+    "story",
+    "stories",
+    "caption",
+    "captions",
 }
 
 EMOJI_RE = re.compile(
     "["
-    "\U0001F600-\U0001F64F"
-    "\U0001F300-\U0001F5FF"
-    "\U0001F680-\U0001F6FF"
-    "\U0001F700-\U0001F77F"
-    "\U0001F780-\U0001F7FF"
-    "\U0001F800-\U0001F8FF"
-    "\U0001F900-\U0001F9FF"
-    "\U0001FA00-\U0001FA6F"
-    "\U0001FA70-\U0001FAFF"
+    "\U0001f600-\U0001f64f"
+    "\U0001f300-\U0001f5ff"
+    "\U0001f680-\U0001f6ff"
+    "\U0001f700-\U0001f77f"
+    "\U0001f780-\U0001f7ff"
+    "\U0001f800-\U0001f8ff"
+    "\U0001f900-\U0001f9ff"
+    "\U0001fa00-\U0001fa6f"
+    "\U0001fa70-\U0001faff"
     "]+",
     flags=re.UNICODE,
 )
@@ -163,6 +246,7 @@ def _safe_wordnet_lemmatizer():
     """Try to load NLTK lemmatizer; silently fall back if unavailable."""
     try:
         from nltk.stem import WordNetLemmatizer  # type: ignore
+
         return WordNetLemmatizer()
     except Exception:
         return None
@@ -259,7 +343,9 @@ def _make_theme_color_func():
     return color_func
 
 
-def _generate_wordcloud_image(frequencies: Dict[str, int], cfg: WordCloudConfig) -> Optional[np.ndarray]:
+def _generate_wordcloud_image(
+    frequencies: Dict[str, int], cfg: WordCloudConfig
+) -> Optional[np.ndarray]:
     if not frequencies:
         return None
 
@@ -273,7 +359,9 @@ def _generate_wordcloud_image(frequencies: Dict[str, int], cfg: WordCloudConfig)
         random_state=cfg.random_state,
         scale=cfg.scale,
         relative_scaling=0.45,
-        background_color=None if cfg.background_mode == "transparent" else THEME_COLORS["background"],
+        background_color=None
+        if cfg.background_mode == "transparent"
+        else THEME_COLORS["background"],
         mode="RGBA" if cfg.background_mode == "transparent" else "RGB",
         collocations=False,
         color_func=_make_theme_color_func(),
@@ -292,13 +380,22 @@ def _image_to_png_bytes(image_array: np.ndarray, cfg: WordCloudConfig) -> bytes:
     if cfg.background_mode != "transparent":
         fig.patch.set_facecolor(THEME_COLORS["background"])
     buf = io.BytesIO()
-    fig.savefig(buf, format="png", dpi=180, transparent=(cfg.background_mode == "transparent"), bbox_inches="tight", pad_inches=0)
+    fig.savefig(
+        buf,
+        format="png",
+        dpi=180,
+        transparent=(cfg.background_mode == "transparent"),
+        bbox_inches="tight",
+        pad_inches=0,
+    )
     plt.close(fig)
     buf.seek(0)
     return buf.getvalue()
 
 
-def render_wordcloud(text_series: List[str], config_options: Optional[Dict[str, Any]] = None) -> None:
+def render_wordcloud(
+    text_series: List[str], config_options: Optional[Dict[str, Any]] = None
+) -> None:
     """
     Render a polished, insight-focused word cloud in Streamlit.
 
@@ -346,27 +443,30 @@ def render_wordcloud(text_series: List[str], config_options: Optional[Dict[str, 
         key=f"download_wordcloud_{cfg.section_key}",
     )
 
+
 class PhraseWordCloudGenerator:
     """
     Advanced word cloud generator that supports phrases and sentiment coloring.
     """
-    
-    def __init__(self,
-                 width: int = 800,
-                 height: int = 400,
-                 max_words: int = 100,
-                 background_color: str = 'white',
-                 colormap: str = 'viridis',
-                 relative_scaling: float = 0.5,
-                 min_font_size: int = 10,
-                 max_font_size: int = 200,
-                 prefer_horizontal: float = 0.9,
-                 use_phrases: bool = True,
-                 sentiment_coloring: bool = True,
-                 language: str = 'auto'):
+
+    def __init__(
+        self,
+        width: int = 800,
+        height: int = 400,
+        max_words: int = 100,
+        background_color: str = "white",
+        colormap: str = "viridis",
+        relative_scaling: float = 0.5,
+        min_font_size: int = 10,
+        max_font_size: int = 200,
+        prefer_horizontal: float = 0.9,
+        use_phrases: bool = True,
+        sentiment_coloring: bool = True,
+        language: str = "auto",
+    ):
         """
         Initialize the word cloud generator.
-        
+
         Args:
             width: Width of the word cloud
             height: Height of the word cloud
@@ -393,24 +493,24 @@ class PhraseWordCloudGenerator:
         self.use_phrases = use_phrases
         self.sentiment_coloring = sentiment_coloring
         self.language = language
-        
+
         # Initialize components
         if self.use_phrases:
             self.phrase_extractor = PhraseExtractor(language=language)
             self.sentiment_analyzer = PhraseSentimentAnalyzer(language=language)
-        
+
         # Sentiment color mapping from theme
         self.sentiment_colors = dict(SENTIMENT_COLORS)
         # Sentiment color gradients using theme colors
-        bg = THEME_COLORS['background']
-        self.positive_gradient = [bg, SENTIMENT_COLORS['positive'], '#0d9668']
-        self.negative_gradient = [bg, SENTIMENT_COLORS['negative'], '#c2352a']
-        self.neutral_gradient = [bg, SENTIMENT_COLORS['neutral'], '#475569']
-    
+        bg = THEME_COLORS["background"]
+        self.positive_gradient = [bg, SENTIMENT_COLORS["positive"], "#0d9668"]
+        self.negative_gradient = [bg, SENTIMENT_COLORS["negative"], "#c2352a"]
+        self.neutral_gradient = [bg, SENTIMENT_COLORS["neutral"], "#475569"]
+
     def extract_content_for_wordcloud(self, texts: List[str]) -> Dict[str, Dict]:
         """
         Extract words/phrases and their metadata for word cloud generation.
-        
+
         Returns:
             Dictionary with content information:
             {
@@ -421,99 +521,94 @@ class PhraseWordCloudGenerator:
             }
         """
         if not texts:
-            return {
-                'content': {},
-                'sentiment_scores': {},
-                'sentiment_labels': {},
-                'metadata': {}
-            }
-        
+            return {"content": {}, "sentiment_scores": {}, "sentiment_labels": {}, "metadata": {}}
+
         if self.use_phrases:
             # Extract phrases
             phrases = self.phrase_extractor.get_top_phrases(texts, self.max_words)
-            
+
             # Analyze sentiment for each phrase
             sentiment_scores = {}
             sentiment_labels = {}
             metadata = {}
-            
+
             for phrase, frequency in phrases.items():
                 # Get sentiment information
                 sentiment_score = get_phrase_sentiment_score(phrase, self.language)
                 sentiment_label = get_phrase_sentiment_label(phrase, self.language)
-                
+
                 sentiment_scores[phrase] = sentiment_score
                 sentiment_labels[phrase] = sentiment_label
-                
+
                 # Additional metadata
                 metadata[phrase] = {
-                    'frequency': frequency,
-                    'is_phrase': True,
-                    'word_count': len(phrase.split()),
-                    'confidence': abs(sentiment_score)
+                    "frequency": frequency,
+                    "is_phrase": True,
+                    "word_count": len(phrase.split()),
+                    "confidence": abs(sentiment_score),
                 }
-            
+
             return {
-                'content': phrases,
-                'sentiment_scores': sentiment_scores,
-                'sentiment_labels': sentiment_labels,
-                'metadata': metadata
+                "content": phrases,
+                "sentiment_scores": sentiment_scores,
+                "sentiment_labels": sentiment_labels,
+                "metadata": metadata,
             }
         else:
             # Fallback to word-based extraction
             from ..nlp.phrase_extractor import tokenize_arabic
-            
+
             all_tokens = []
             for text in texts:
                 tokens = tokenize_arabic(text)
                 all_tokens.extend(tokens)
-            
+
             word_freqs = Counter(all_tokens)
             top_words = dict(word_freqs.most_common(self.max_words))
-            
+
             # Simple sentiment analysis for words
             sentiment_scores = {}
             sentiment_labels = {}
             metadata = {}
-            
+
             for word, frequency in top_words.items():
                 sentiment_score = get_phrase_sentiment_score(word, self.language)
                 sentiment_label = get_phrase_sentiment_label(word, self.language)
-                
+
                 sentiment_scores[word] = sentiment_score
                 sentiment_labels[word] = sentiment_label
-                
+
                 metadata[word] = {
-                    'frequency': frequency,
-                    'is_phrase': False,
-                    'word_count': 1,
-                    'confidence': abs(sentiment_score)
+                    "frequency": frequency,
+                    "is_phrase": False,
+                    "word_count": 1,
+                    "confidence": abs(sentiment_score),
                 }
-            
+
             return {
-                'content': top_words,
-                'sentiment_scores': sentiment_scores,
-                'sentiment_labels': sentiment_labels,
-                'metadata': metadata
+                "content": top_words,
+                "sentiment_scores": sentiment_scores,
+                "sentiment_labels": sentiment_labels,
+                "metadata": metadata,
             }
-    
+
     def create_sentiment_color_func(self, content_data: Dict[str, Dict]) -> callable:
         """
         Create a color function based on sentiment scores.
-        
+
         Returns:
             Function that maps words to colors based on sentiment
         """
-        sentiment_scores = content_data['sentiment_scores']
-        sentiment_labels = content_data['sentiment_labels']
-        
+        sentiment_scores = content_data["sentiment_scores"]
+        sentiment_labels = content_data["sentiment_labels"]
+
         def color_func(word, font_size, position, orientation, random_state=None, **kwargs):
             # Get sentiment information
             sentiment_score = sentiment_scores.get(word, 0.0)
-            sentiment_label = sentiment_labels.get(word, 'neutral')
-            
+            sentiment_label = sentiment_labels.get(word, "neutral")
+
             # Map sentiment to color
-            if sentiment_label == 'positive':
+            if sentiment_label == "positive":
                 # Use positive gradient based on score strength
                 if sentiment_score >= 0.8:
                     return self.positive_gradient[2]  # Strong positive
@@ -521,7 +616,7 @@ class PhraseWordCloudGenerator:
                     return self.positive_gradient[1]  # Moderate positive
                 else:
                     return self.positive_gradient[0]  # Mild positive
-            elif sentiment_label == 'negative':
+            elif sentiment_label == "negative":
                 # Use negative gradient based on score strength
                 if sentiment_score <= -0.8:
                     return self.negative_gradient[2]  # Strong negative
@@ -532,89 +627,142 @@ class PhraseWordCloudGenerator:
             else:
                 # Neutral - use neutral gradient
                 return self.neutral_gradient[1]
-        
+
         return color_func
-    
+
     def prepare_text_for_display(self, text: str) -> str:
         """
         Prepare text for display in word cloud (handle Arabic shaping).
         """
         if not text:
             return ""
-        
+
         # Handle Arabic text shaping
         if ARABIC_SUPPORT and self._is_arabic_text(text):
             return reshape_arabic_text(text)
-        
+
         return text
-    
+
     def _is_arabic_text(self, text: str) -> bool:
         """Check if text contains Arabic characters."""
-        arabic_pattern = re.compile(r'[\u0600-\u06FF]')
+        arabic_pattern = re.compile(r"[\u0600-\u06FF]")
         return bool(arabic_pattern.search(text))
-    
-    def generate_wordcloud(self, texts: List[str], title: str = None) -> Tuple[plt.Figure, plt.Axes]:
+
+    def generate_wordcloud(
+        self, texts: List[str], title: str = None
+    ) -> Tuple[plt.Figure, plt.Axes]:
         """
         Generate a word cloud with phrase support and sentiment coloring.
-        
+
         Args:
             texts: List of texts to analyze
             title: Optional title for the plot
-            
+
         Returns:
             Tuple of (figure, axes) for the generated plot
         """
         if not texts:
             # Create empty plot
             fig, ax = plt.subplots(figsize=(12, 6))
-            ax.text(0.5, 0.5, 'No data available for word cloud', 
-                   ha='center', va='center', fontsize=16, color='gray')
+            ax.text(
+                0.5,
+                0.5,
+                "No data available for word cloud",
+                ha="center",
+                va="center",
+                fontsize=16,
+                color="gray",
+            )
             ax.set_xlim(0, 1)
             ax.set_ylim(0, 1)
-            ax.axis('off')
+            ax.axis("off")
             return fig, ax
-        
+
         # Extract content for word cloud
         content_data = self.extract_content_for_wordcloud(texts)
-        content = content_data['content']
-        
+        content = content_data["content"]
+
         if not content:
             # Create empty plot with more helpful message
             fig, ax = plt.subplots(figsize=(12, 6))
-            ax.text(0.5, 0.7, 'No meaningful content found', 
-                   ha='center', va='center', fontsize=16, color='gray', weight='bold')
-            ax.text(0.5, 0.5, 'This could be because:', 
-                   ha='center', va='center', fontsize=12, color='gray')
-            ax.text(0.5, 0.4, '• Comments are too short or contain only common words', 
-                   ha='center', va='center', fontsize=10, color='gray')
-            ax.text(0.5, 0.35, '• Comments are in a language not well supported', 
-                   ha='center', va='center', fontsize=10, color='gray')
-            ax.text(0.5, 0.3, '• Comments contain mostly emojis or special characters', 
-                   ha='center', va='center', fontsize=10, color='gray')
-            ax.text(0.5, 0.2, 'Try using the simple word cloud option in settings', 
-                   ha='center', va='center', fontsize=10, color='blue', style='italic')
+            ax.text(
+                0.5,
+                0.7,
+                "No meaningful content found",
+                ha="center",
+                va="center",
+                fontsize=16,
+                color="gray",
+                weight="bold",
+            )
+            ax.text(
+                0.5,
+                0.5,
+                "This could be because:",
+                ha="center",
+                va="center",
+                fontsize=12,
+                color="gray",
+            )
+            ax.text(
+                0.5,
+                0.4,
+                "• Comments are too short or contain only common words",
+                ha="center",
+                va="center",
+                fontsize=10,
+                color="gray",
+            )
+            ax.text(
+                0.5,
+                0.35,
+                "• Comments are in a language not well supported",
+                ha="center",
+                va="center",
+                fontsize=10,
+                color="gray",
+            )
+            ax.text(
+                0.5,
+                0.3,
+                "• Comments contain mostly emojis or special characters",
+                ha="center",
+                va="center",
+                fontsize=10,
+                color="gray",
+            )
+            ax.text(
+                0.5,
+                0.2,
+                "Try using the simple word cloud option in settings",
+                ha="center",
+                va="center",
+                fontsize=10,
+                color="blue",
+                style="italic",
+            )
             ax.set_xlim(0, 1)
             ax.set_ylim(0, 1)
-            ax.axis('off')
+            ax.axis("off")
             return fig, ax
-        
+
         # Prepare text for display (handle Arabic shaping)
         display_content = {}
         for text, frequency in content.items():
             display_text = self.prepare_text_for_display(text)
             display_content[display_text] = frequency
-        
+
         # Create color function
         if self.sentiment_coloring:
             color_func = self.create_sentiment_color_func(content_data)
         else:
             color_func = None
-        
+
         # Generate word cloud
         wordcloud = WordCloud(
             width=self.width,
             height=self.height,
-            background_color=THEME_COLORS['background'],
+            background_color=THEME_COLORS["background"],
             max_words=self.max_words,
             relative_scaling=self.relative_scaling,
             min_font_size=self.min_font_size,
@@ -626,97 +774,100 @@ class PhraseWordCloudGenerator:
             regexp=r"\S+",  # Match any non-whitespace sequence
             collocations=False,  # We handle phrases ourselves
         ).generate_from_frequencies(display_content)
-        
+
         # Create plot
-        fig, ax = plt.subplots(figsize=(12, 6), facecolor=THEME_COLORS['background'])
-        ax.imshow(wordcloud, interpolation='bilinear')
-        ax.axis('off')
-        fig.patch.set_facecolor(THEME_COLORS['background'])
-        
+        fig, ax = plt.subplots(figsize=(12, 6), facecolor=THEME_COLORS["background"])
+        ax.imshow(wordcloud, interpolation="bilinear")
+        ax.axis("off")
+        fig.patch.set_facecolor(THEME_COLORS["background"])
+
         if title:
-            ax.set_title(title, fontsize=16, fontweight='bold', pad=20, color=THEME_COLORS['text'])
-        
+            ax.set_title(title, fontsize=16, fontweight="bold", pad=20, color=THEME_COLORS["text"])
+
         # Add legend if using sentiment coloring
         if self.sentiment_coloring:
             self._add_sentiment_legend(ax, content_data)
-        
+
         plt.tight_layout()
         return fig, ax
-    
+
     def _add_sentiment_legend(self, ax: plt.Axes, content_data: Dict[str, Dict]):
         """Add sentiment legend to the plot."""
-        sentiment_labels = content_data['sentiment_labels']
-        
+        sentiment_labels = content_data["sentiment_labels"]
+
         # Count sentiment distribution
         sentiment_counts = Counter(sentiment_labels.values())
-        
+
         # Create legend
         legend_elements = []
         for sentiment, count in sentiment_counts.items():
             if count > 0:
-                color = self.sentiment_colors.get(sentiment, '#95a5a6')
+                color = self.sentiment_colors.get(sentiment, "#95a5a6")
                 legend_elements.append(
-                    plt.Rectangle((0, 0), 1, 1, facecolor=color, 
-                                label=f'{sentiment.title()} ({count})')
+                    plt.Rectangle(
+                        (0, 0), 1, 1, facecolor=color, label=f"{sentiment.title()} ({count})"
+                    )
                 )
-        
+
         if legend_elements:
-            ax.legend(handles=legend_elements, loc='upper right', 
-                     bbox_to_anchor=(1, 1), fontsize=10)
-    
-    def generate_comparison_wordclouds(self, texts_by_category: Dict[str, List[str]], 
-                                     title: str = None) -> Tuple[plt.Figure, List[plt.Axes]]:
+            ax.legend(
+                handles=legend_elements, loc="upper right", bbox_to_anchor=(1, 1), fontsize=10
+            )
+
+    def generate_comparison_wordclouds(
+        self, texts_by_category: Dict[str, List[str]], title: str = None
+    ) -> Tuple[plt.Figure, List[plt.Axes]]:
         """
         Generate multiple word clouds for comparison.
-        
+
         Args:
             texts_by_category: Dictionary mapping category names to text lists
             title: Optional overall title
-            
+
         Returns:
             Tuple of (figure, list of axes)
         """
         num_categories = len(texts_by_category)
         if num_categories == 0:
             return self.generate_wordcloud([], title)
-        
+
         # Create subplots
         cols = min(3, num_categories)
         rows = (num_categories + cols - 1) // cols
-        
-        fig, axes = plt.subplots(rows, cols, figsize=(4*cols, 3*rows))
+
+        fig, axes = plt.subplots(rows, cols, figsize=(4 * cols, 3 * rows))
         if num_categories == 1:
             axes = [axes]
         elif rows == 1:
             axes = axes if isinstance(axes, list) else [axes]
         else:
             axes = axes.flatten()
-        
+
         # Generate word cloud for each category
         for i, (category, texts) in enumerate(texts_by_category.items()):
             if i < len(axes):
                 # Generate word cloud
                 content_data = self.extract_content_for_wordcloud(texts)
-                content = content_data['content']
-                
+                content = content_data["content"]
+
                 if content:
                     # Prepare text for display
                     display_content = {}
                     for text, frequency in content.items():
                         display_text = self.prepare_text_for_display(text)
                         display_content[display_text] = frequency
-                    
+
                     # Create color function
                     if self.sentiment_coloring:
                         color_func = self.create_sentiment_color_func(content_data)
                     else:
                         color_func = None
-                    
+
                     # Generate word cloud
                     wordcloud = WordCloud(
                         width=400,
                         height=300,
-                        background_color=THEME_COLORS['background'],
+                        background_color=THEME_COLORS["background"],
                         max_words=50,  # Fewer words for subplots
                         relative_scaling=self.relative_scaling,
                         min_font_size=8,
@@ -726,71 +877,71 @@ class PhraseWordCloudGenerator:
                         color_func=color_func,
                         collocations=False,
                     ).generate_from_frequencies(display_content)
-                    
-                    axes[i].imshow(wordcloud, interpolation='bilinear')
-                    axes[i].set_title(f'{category}', fontsize=12, fontweight='bold', color=THEME_COLORS['text'])
+
+                    axes[i].imshow(wordcloud, interpolation="bilinear")
+                    axes[i].set_title(
+                        f"{category}", fontsize=12, fontweight="bold", color=THEME_COLORS["text"]
+                    )
                 else:
-                    axes[i].text(0.5, 0.5, 'No content', ha='center', va='center', 
-                               fontsize=12, color='gray')
-                    axes[i].set_title(f'{category}', fontsize=12, fontweight='bold')
-                
-                axes[i].axis('off')
-        
+                    axes[i].text(
+                        0.5, 0.5, "No content", ha="center", va="center", fontsize=12, color="gray"
+                    )
+                    axes[i].set_title(f"{category}", fontsize=12, fontweight="bold")
+
+                axes[i].axis("off")
+
         # Hide unused subplots
         for i in range(num_categories, len(axes)):
-            axes[i].axis('off')
-        
+            axes[i].axis("off")
+
         if title:
-            fig.suptitle(title, fontsize=16, fontweight='bold')
-        
+            fig.suptitle(title, fontsize=16, fontweight="bold")
+
         plt.tight_layout()
         return fig, axes
 
 
 # Convenience functions for easy integration
-def create_phrase_wordcloud(texts: List[str], 
-                          title: str = None,
-                          use_sentiment_coloring: bool = True,
-                          language: str = 'auto') -> Tuple[plt.Figure, plt.Axes]:
+def create_phrase_wordcloud(
+    texts: List[str], title: str = None, use_sentiment_coloring: bool = True, language: str = "auto"
+) -> Tuple[plt.Figure, plt.Axes]:
     """
     Create a phrase-based word cloud with sentiment coloring.
-    
+
     Args:
         texts: List of texts to analyze
         title: Optional title
         use_sentiment_coloring: Whether to use sentiment-based colors
         language: Language mode
-        
+
     Returns:
         Tuple of (figure, axes)
     """
     generator = PhraseWordCloudGenerator(
-        use_phrases=True,
-        sentiment_coloring=use_sentiment_coloring,
-        language=language
+        use_phrases=True, sentiment_coloring=use_sentiment_coloring, language=language
     )
     return generator.generate_wordcloud(texts, title)
 
 
-def create_comparison_wordclouds(texts_by_category: Dict[str, List[str]],
-                               title: str = None,
-                               use_sentiment_coloring: bool = True,
-                               language: str = 'auto') -> Tuple[plt.Figure, List[plt.Axes]]:
+def create_comparison_wordclouds(
+    texts_by_category: Dict[str, List[str]],
+    title: str = None,
+    use_sentiment_coloring: bool = True,
+    language: str = "auto",
+) -> Tuple[plt.Figure, List[plt.Axes]]:
     """
     Create comparison word clouds for different categories.
-    
+
     Args:
         texts_by_category: Dictionary mapping categories to text lists
         title: Optional title
         use_sentiment_coloring: Whether to use sentiment-based colors
         language: Language mode
-        
+
     Returns:
         Tuple of (figure, list of axes)
     """
     generator = PhraseWordCloudGenerator(
-        use_phrases=True,
-        sentiment_coloring=use_sentiment_coloring,
-        language=language
+        use_phrases=True, sentiment_coloring=use_sentiment_coloring, language=language
     )
     return generator.generate_comparison_wordclouds(texts_by_category, title)
